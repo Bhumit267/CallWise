@@ -1,5 +1,6 @@
 """Command Line Interface for Callwise using Typer."""
 
+from datetime import datetime
 import json
 from typing import Optional
 import uuid
@@ -273,6 +274,49 @@ def cli_search_knowledge(
             tablefmt="grid",
         )
     )
+
+
+@app.command("check-hours")
+def cli_check_hours(
+    business_id: str = typer.Option(..., "--business-id", "-b", help="Business tenant UUID"),
+    at_timestamp: Optional[str] = typer.Option(None, "--at", help="Optional ISO datetime to test (e.g. 2026-11-02T14:30:00Z)"),
+):
+    """Check whether a business is currently open or closed with timezone awareness."""
+    try:
+        biz_uuid = uuid.UUID(business_id)
+    except ValueError:
+        typer.secho(f"Invalid business UUID: {business_id}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    at_dt = None
+    if at_timestamp:
+        try:
+            at_dt = datetime.fromisoformat(at_timestamp.replace("Z", "+00:00"))
+        except ValueError as err:
+            typer.secho(f"Invalid timestamp format: {err}", fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+
+    with get_sync_session() as session:
+        business = session.get(Business, biz_uuid)
+        if not business:
+            typer.secho(f"Business not found: {business_id}", fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+
+        from callwise.agent.hours import get_business_hours_status
+        status = get_business_hours_status(business, at_time=at_dt)
+
+    typer.secho(f"=== {business.name} Business Hours ===", bold=True)
+    if status.is_open:
+        typer.secho(f"Status: [OPEN NOW]", fg=typer.colors.GREEN, bold=True)
+    else:
+        typer.secho(f"Status: [CLOSED]", fg=typer.colors.YELLOW, bold=True)
+
+    typer.echo(f"Local Time: {status.current_time_local}")
+    typer.echo(f"Today ({status.day_of_week}): {status.today_schedule}")
+    if status.next_open_time:
+        typer.echo(f"Next Open: {status.next_open_time}")
+    typer.echo(f"Spoken Answer: \"{status.spoken_summary}\"")
+    typer.echo(f"\nWeekly Schedule:\n{status.weekly_schedule_summary}")
 
 
 if __name__ == "__main__":
