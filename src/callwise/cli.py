@@ -395,6 +395,12 @@ def cli_chat(
 @app.command("run-agent")
 def cli_run_agent(
     business_id: str = typer.Option(..., "--business-id", "-b", help="Business tenant UUID"),
+    mode: str = typer.Option(
+        "dev",
+        "--mode",
+        "-m",
+        help="Worker mode: 'dev' (connect to LiveKit Cloud / Playground) or 'console' (local mic/speaker)",
+    ),
 ):
     """Launch the LiveKit voice agent worker for a business tenant."""
     try:
@@ -403,9 +409,9 @@ def cli_run_agent(
         typer.secho(f"Invalid business UUID: {business_id}", fg=typer.colors.RED)
         raise typer.Exit(code=1)
 
-    typer.echo(f"Starting LiveKit voice agent worker for business {business_id}...")
+    typer.echo(f"Starting LiveKit voice agent worker for business {business_id} in '{mode}' mode...")
     from callwise.agent.voice_agent import start_voice_worker
-    start_voice_worker(biz_uuid)
+    start_voice_worker(biz_uuid, mode=mode)
 
 
 @app.command("list-calls")

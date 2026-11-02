@@ -86,7 +86,7 @@ def create_voice_agent(
     return agent, session
 
 
-def start_voice_worker(business_id: uuid.UUID):
+def start_voice_worker(business_id: uuid.UUID, mode: str = "dev"):
     """
     Launch the LiveKit worker for a given business tenant.
     Supports console testing, playground testing, or production room WebRTC.
@@ -117,4 +117,6 @@ def start_voice_worker(business_id: uuid.UUID):
         logger.info(f"Speaking initial greeting: \"{greeting}\"")
         await session.say(greeting)
 
+    import sys
+    sys.argv = ["voice_agent.py", mode]
     cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
