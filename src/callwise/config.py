@@ -36,8 +36,8 @@ class Settings(BaseSettings):
     )
     groq_api_key: str = Field(default="", description="Groq API Key")
     groq_model: str = Field(
-        default="llama-3.3-70b-versatile",
-        description="Groq model ID",
+        default="qwen/qwen3.8-27b",
+        description="Groq model ID (e.g. qwen/qwen3.8-27b, openai/gpt-oss-120b)",
     )
 
     gemini_api_key: str = Field(default="", description="Google Gemini API Key")

@@ -76,6 +76,25 @@ TOOL_DEFINITIONS = [
 ]
 
 
+def clean_speech_text(text: str) -> str:
+    """Normalize unicode special characters and strip markdown for speech/console output."""
+    replacements = {
+        "\u2010": "-",
+        "\u2011": "-",
+        "\u2012": "-",
+        "\u2013": "-",
+        "\u2014": "-",
+        "\u2018": "'",
+        "\u2019": "'",
+        "\u201c": '"',
+        "\u201d": '"',
+        "\u2026": "...",
+    }
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+    return text.strip()
+
+
 class TextAgent:
     """Simulates the conversational voice agent in text mode without requiring audio WebRTC."""
 
@@ -118,11 +137,13 @@ class TextAgent:
 
         # Branch based on provider
         if self.provider_name == "groq":
-            return await self._run_groq_turn()
+            raw_reply = await self._run_groq_turn()
         elif self.provider_name == "gemini":
-            return await self._run_gemini_turn(user_message)
+            raw_reply = await self._run_gemini_turn(user_message)
         else:
-            return await self._run_prompt_loop_turn(user_message)
+            raw_reply = await self._run_prompt_loop_turn(user_message)
+
+        return clean_speech_text(raw_reply)
 
     async def _run_groq_turn(self) -> str:
         """Execute turn using Groq with native tool calling."""
@@ -142,7 +163,23 @@ class TextAgent:
 
             msg = response.choices[0].message
             if msg.tool_calls:
-                self.conversation_history.append(msg)
+                self.conversation_history.append(
+                    {
+                        "role": "assistant",
+                        "content": msg.content or "",
+                        "tool_calls": [
+                            {
+                                "id": tc.id,
+                                "type": "function",
+                                "function": {
+                                    "name": tc.function.name,
+                                    "arguments": tc.function.arguments,
+                                },
+                            }
+                            for tc in msg.tool_calls
+                        ],
+                    }
+                )
                 for tc in msg.tool_calls:
                     fn_name = tc.function.name
                     try:
@@ -166,6 +203,7 @@ class TextAgent:
 
         # Fallback if loop finishes on tool output
         return "Thank you. Is there anything else I can help you with today?"
+
 
     async def _run_gemini_turn(self, user_message: str) -> str:
         """Execute turn using Google Gemini with direct tool execution."""
