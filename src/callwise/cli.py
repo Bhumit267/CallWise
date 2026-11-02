@@ -224,5 +224,56 @@ def cli_list_documents(
         )
 
 
+@app.command("search-knowledge")
+def cli_search_knowledge(
+    business_id: str = typer.Option(..., "--business-id", "-b", help="Business tenant UUID"),
+    query: str = typer.Option(..., "--query", "-q", help="Search question or keyword"),
+    threshold: Optional[float] = typer.Option(None, "--threshold", help="Custom similarity threshold cutoff"),
+    top_k: int = typer.Option(3, "--top-k", "-k", help="Maximum number of matches"),
+):
+    """Search tenant knowledge base and display matches or explicit NO_MATCH."""
+    try:
+        biz_uuid = uuid.UUID(business_id)
+    except ValueError:
+        typer.secho(f"Invalid business UUID: {business_id}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    typer.echo(f"Searching knowledge for business {business_id}...")
+    typer.echo(f"Query: \"{query}\"")
+
+    from callwise.knowledge.search import search_knowledge
+    result = search_knowledge(
+        business_id=biz_uuid,
+        query=query,
+        threshold=threshold,
+        top_k=top_k,
+    )
+
+    if not result.is_match:
+        typer.secho(f"[NO MATCH] {result.message}", fg=typer.colors.YELLOW, bold=True)
+        if result.top_score > 0:
+            typer.echo(f"Top candidate score was: {result.top_score:.4f}")
+        return
+
+    typer.secho(
+        f"[MATCH FOUND] {len(result.matches)} chunk(s) matched (Top score: {result.top_score:.4f}):",
+        fg=typer.colors.GREEN,
+        bold=True,
+    )
+
+    rows = []
+    for m in result.matches:
+        snippet = m.content[:90] + ("..." if len(m.content) > 90 else "")
+        rows.append([f"{m.similarity:.4f}", m.source_title, snippet])
+
+    typer.echo(
+        tabulate(
+            rows,
+            headers=["Similarity", "Source Title", "Content Snippet"],
+            tablefmt="grid",
+        )
+    )
+
+
 if __name__ == "__main__":
     app()
