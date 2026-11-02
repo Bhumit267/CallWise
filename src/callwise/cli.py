@@ -368,13 +368,13 @@ def cli_chat(
         response = asyncio.run(agent.ask(user_input))
         typer.secho(f"Receptionist: {response}", fg=typer.colors.GREEN)
 
-    with get_sync_session() as session:
-        call_rec = session.get(Call, call_id)
-        if call_rec:
-            call_rec.ended_at = datetime.now(timezone.utc)
-            if call_rec.started_at:
-                call_rec.duration_seconds = max(0.0, (call_rec.ended_at - call_rec.started_at).total_seconds())
-
+    # Clean up call session and generate executive summary
+    typer.echo("\nClosing call session and generating summary...")
+    from callwise.calls.manager import end_call
+    finished_call = end_call(call_id, generate_summary=True)
+    if finished_call and finished_call.summary:
+        typer.secho(f"\n[Call Summary]: {finished_call.summary}", fg=typer.colors.CYAN, bold=True)
+        typer.echo(f"Duration: {finished_call.duration_seconds:.1f}s | Recorded Turns: {len(finished_call.turns)}\n")
 
 
 @app.command("run-agent")
@@ -391,6 +391,196 @@ def cli_run_agent(
     typer.echo(f"Starting LiveKit voice agent worker for business {business_id}...")
     from callwise.agent.voice_agent import start_voice_worker
     start_voice_worker(biz_uuid)
+
+
+@app.command("list-calls")
+def cli_list_calls(
+    business_id: Optional[str] = typer.Option(None, "--business-id", "-b", help="Filter by business UUID"),
+    limit: int = typer.Option(20, "--limit", "-n", help="Max calls to return"),
+):
+    """List recent phone/chat calls, durations, and AI summaries."""
+    with get_sync_session() as session:
+        from callwise.db.models import Call
+        stmt = select(Call).order_by(Call.started_at.desc()).limit(limit)
+        if business_id:
+            try:
+                biz_uuid = uuid.UUID(business_id)
+                stmt = stmt.where(Call.business_id == biz_uuid)
+            except ValueError:
+                typer.secho(f"Invalid business UUID: {business_id}", fg=typer.colors.RED)
+                raise typer.Exit(code=1)
+
+        calls = session.scalars(stmt).all()
+        if not calls:
+            typer.echo("No calls recorded.")
+            return
+
+        rows = []
+        for c in calls:
+            biz_name = c.business.name if c.business else str(c.business_id)[:8]
+            summary_snip = (
+                (c.summary[:55] + "...")
+                if c.summary and len(c.summary) > 55
+                else (c.summary or "In-progress")
+            )
+            started_str = c.started_at.strftime("%Y-%m-%d %H:%M:%S") if c.started_at else "-"
+            rows.append([
+                str(c.id)[:8] + "...",
+                biz_name[:20],
+                c.caller_number or "unknown",
+                started_str,
+                f"{c.duration_seconds:.1f}s",
+                len(c.turns),
+                summary_snip,
+            ])
+
+        typer.echo(
+            tabulate(
+                rows,
+                headers=["Call ID", "Business", "Caller", "Started At", "Duration", "Turns", "Summary"],
+                tablefmt="grid",
+            )
+        )
+
+
+@app.command("show-call")
+def cli_show_call(
+    call_id: str = typer.Option(..., "--call-id", "-c", help="Call UUID to inspect"),
+):
+    """Show turn-by-turn transcript, latencies, messages, and summary for a call."""
+    try:
+        c_uuid = uuid.UUID(call_id)
+    except ValueError:
+        typer.secho(f"Invalid call UUID: {call_id}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    with get_sync_session() as session:
+        from callwise.db.models import Call
+        call_obj = session.get(Call, c_uuid)
+        if not call_obj:
+            typer.secho(f"Call not found: {call_id}", fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+
+        typer.secho(f"\n=== Call Details: {call_obj.id} ===", fg=typer.colors.CYAN, bold=True)
+        typer.echo(f"Business: {call_obj.business.name if call_obj.business else call_obj.business_id}")
+        typer.echo(f"Caller: {call_obj.caller_number or 'unknown'}")
+        typer.echo(f"Started: {call_obj.started_at}")
+        typer.echo(f"Ended: {call_obj.ended_at or 'In-progress'}")
+        typer.echo(f"Duration: {call_obj.duration_seconds:.1f}s")
+        typer.echo(f"LLM Provider: {call_obj.llm_provider or settings.llm_provider} ({call_obj.llm_model or settings.groq_model})")
+
+        if call_obj.messages:
+            typer.secho(f"\n--- Messages Taken ({len(call_obj.messages)}) ---", fg=typer.colors.YELLOW, bold=True)
+            for m in call_obj.messages:
+                typer.echo(f"- From {m.caller_name} ({m.callback_number}): \"{m.reason}\"")
+
+        if call_obj.knowledge_misses:
+            typer.secho(f"\n--- Knowledge Misses ({len(call_obj.knowledge_misses)}) ---", fg=typer.colors.MAGENTA, bold=True)
+            for km in call_obj.knowledge_misses:
+                typer.echo(f"- Query: \"{km.query}\"")
+
+        typer.secho("\n--- Transcript ---", fg=typer.colors.BLUE, bold=True)
+        if not call_obj.turns:
+            typer.echo("No dialogue turns recorded.")
+        else:
+            for t in sorted(call_obj.turns, key=lambda x: x.timestamp):
+                spk = "CALLER" if t.speaker == "caller" else "AGENT "
+                color = typer.colors.WHITE if t.speaker == "caller" else typer.colors.GREEN
+                latency_str = f" [{t.latency_ms:.0f}ms]" if t.latency_ms is not None else ""
+                t_str = t.timestamp.strftime("%H:%M:%S")
+                typer.secho(f"[{t_str}] {spk}{latency_str}: {t.text}", fg=color)
+
+        typer.secho("\n--- AI Executive Summary ---", fg=typer.colors.GREEN, bold=True)
+        typer.echo(call_obj.summary or "No summary generated.")
+        typer.echo("")
+
+
+@app.command("list-messages")
+def cli_list_messages(
+    business_id: Optional[str] = typer.Option(None, "--business-id", "-b", help="Filter by business UUID"),
+    limit: int = typer.Option(20, "--limit", "-n", help="Max messages to return"),
+):
+    """List callback messages taken by the AI receptionist."""
+    with get_sync_session() as session:
+        from callwise.db.models import Message
+        stmt = select(Message).order_by(Message.created_at.desc()).limit(limit)
+        if business_id:
+            try:
+                biz_uuid = uuid.UUID(business_id)
+                stmt = stmt.where(Message.business_id == biz_uuid)
+            except ValueError:
+                typer.secho(f"Invalid business UUID: {business_id}", fg=typer.colors.RED)
+                raise typer.Exit(code=1)
+
+        msgs = session.scalars(stmt).all()
+        if not msgs:
+            typer.echo("No messages found.")
+            return
+
+        rows = []
+        for m in msgs:
+            biz_name = m.business.name if m.business else str(m.business_id)[:8]
+            created_str = m.created_at.strftime("%Y-%m-%d %H:%M:%S") if m.created_at else "-"
+            rows.append([
+                str(m.id)[:8] + "...",
+                biz_name[:20],
+                m.caller_name,
+                m.callback_number,
+                m.reason[:40] + ("..." if len(m.reason) > 40 else ""),
+                str(m.call_id)[:8] + "..." if m.call_id else "-",
+                created_str,
+            ])
+
+        typer.echo(
+            tabulate(
+                rows,
+                headers=["ID", "Business", "Caller", "Phone", "Reason", "Call ID", "Created At"],
+                tablefmt="grid",
+            )
+        )
+
+
+@app.command("list-misses")
+def cli_list_misses(
+    business_id: Optional[str] = typer.Option(None, "--business-id", "-b", help="Filter by business UUID"),
+    limit: int = typer.Option(20, "--limit", "-n", help="Max misses to return"),
+):
+    """List queries where knowledge retrieval was below similarity cutoff."""
+    with get_sync_session() as session:
+        from callwise.db.models import KnowledgeMiss
+        stmt = select(KnowledgeMiss).order_by(KnowledgeMiss.created_at.desc()).limit(limit)
+        if business_id:
+            try:
+                biz_uuid = uuid.UUID(business_id)
+                stmt = stmt.where(KnowledgeMiss.business_id == biz_uuid)
+            except ValueError:
+                typer.secho(f"Invalid business UUID: {business_id}", fg=typer.colors.RED)
+                raise typer.Exit(code=1)
+
+        misses = session.scalars(stmt).all()
+        if not misses:
+            typer.echo("No knowledge misses recorded.")
+            return
+
+        rows = []
+        for km in misses:
+            biz_name = km.business.name if km.business else str(km.business_id)[:8]
+            created_str = km.created_at.strftime("%Y-%m-%d %H:%M:%S") if km.created_at else "-"
+            rows.append([
+                str(km.id)[:8] + "...",
+                biz_name[:20],
+                km.query[:60] + ("..." if len(km.query) > 60 else ""),
+                str(km.call_id)[:8] + "..." if km.call_id else "-",
+                created_str,
+            ])
+
+        typer.echo(
+            tabulate(
+                rows,
+                headers=["ID", "Business", "Query", "Call ID", "Recorded At"],
+                tablefmt="grid",
+            )
+        )
 
 
 if __name__ == "__main__":

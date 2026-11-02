@@ -15,6 +15,7 @@ from livekit.plugins import cartesia, deepgram, google, groq, openai, silero
 
 from callwise.agent.prompt import build_system_prompt
 from callwise.agent.tools import CallwiseToolset
+from callwise.calls.manager import end_call_async
 from callwise.config import settings
 from callwise.db.models import Business
 from callwise.db.session import get_sync_session
@@ -104,6 +105,12 @@ def start_voice_worker(business_id: uuid.UUID):
 
         # Start agent session inside the connected WebRTC room
         await session.start(agent=agent, room=ctx.room)
+
+        async def on_shutdown():
+            logger.info(f"Closing call {call_id} and generating summary...")
+            await end_call_async(call_id)
+
+        ctx.add_shutdown_callback(on_shutdown)
 
         # Greet caller with business-specific greeting
         greeting = business.greeting.strip()

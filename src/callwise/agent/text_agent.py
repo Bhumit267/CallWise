@@ -1,12 +1,17 @@
 """Text-only runner for Callwise agent simulating conversations without audio."""
 
+import asyncio
+from datetime import datetime
 import json
 import logging
+import time
 from typing import Any, Dict, List, Optional
+import unicodedata
 import uuid
 
 from callwise.agent.prompt import build_system_prompt
 from callwise.agent.tools import CallwiseToolset
+from callwise.calls.manager import record_call_turn_async
 from callwise.config import settings
 from callwise.db.models import Business
 from callwise.providers.llm import get_llm_provider
@@ -76,8 +81,6 @@ TOOL_DEFINITIONS = [
 ]
 
 
-import unicodedata
-
 
 def clean_speech_text(text: str) -> str:
     """Normalize unicode special characters and strip markdown for speech/console output."""
@@ -141,7 +144,17 @@ class TextAgent:
         Send a user turn to the agent, executing any tool calls,
         and return the agent's conversational response.
         """
+        # Record caller turn
+        await record_call_turn_async(
+            call_id=self.call_id,
+            business_id=self.business.id,
+            speaker="caller",
+            text=user_message,
+        )
+
         self.conversation_history.append({"role": "user", "content": user_message})
+
+        t_start = time.perf_counter()
 
         # Branch based on provider
         if self.provider_name == "groq":
@@ -151,7 +164,19 @@ class TextAgent:
         else:
             raw_reply = await self._run_prompt_loop_turn(user_message)
 
-        return clean_speech_text(raw_reply)
+        latency_ms = (time.perf_counter() - t_start) * 1000.0
+        clean_reply = clean_speech_text(raw_reply)
+
+        # Record agent turn with measured latency
+        await record_call_turn_async(
+            call_id=self.call_id,
+            business_id=self.business.id,
+            speaker="agent",
+            text=clean_reply,
+            latency_ms=latency_ms,
+        )
+
+        return clean_reply
 
     async def _run_groq_turn(self) -> str:
         """Execute turn using Groq with native tool calling."""
