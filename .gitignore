@@ -45,7 +45,9 @@ htmlcov/
 # Database & logs
 *.log
 *.sqlite
-data/
+/data/
+evals/reports/
+!evals/data/**
 
 # Local skills / agent cache
 .agent/

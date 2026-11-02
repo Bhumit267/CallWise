@@ -1,7 +1,6 @@
 """Local sentence-transformers embedding provider implementation."""
 
-from typing import List, Optional
-from sentence_transformers import SentenceTransformer
+from typing import Any, List, Optional
 
 from callwise.config import settings
 from callwise.providers import EmbeddingProvider
@@ -12,12 +11,13 @@ class LocalEmbeddingProvider(EmbeddingProvider):
 
     def __init__(self, model_name: Optional[str] = None):
         self.model_name = model_name or settings.embedding_model_name
-        self._model: Optional[SentenceTransformer] = None
+        self._model: Optional[Any] = None
 
     @property
-    def model(self) -> SentenceTransformer:
+    def model(self) -> Any:
         """Lazy load the sentence transformer model on first use."""
         if self._model is None:
+            from sentence_transformers import SentenceTransformer
             self._model = SentenceTransformer(self.model_name)
         return self._model
 

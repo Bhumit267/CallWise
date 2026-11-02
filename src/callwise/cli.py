@@ -598,6 +598,43 @@ def cli_list_misses(
         )
 
 
+@app.command("run-evals")
+def cli_run_evals(
+    provider: Optional[str] = typer.Option(None, "--provider", "-p", help="LLM provider (groq or gemini)"),
+    business_id: Optional[str] = typer.Option(None, "--business-id", "-b", help="Filter evals by business UUID"),
+    no_save: bool = typer.Option(False, "--no-save", help="Do not save report to evals/reports/"),
+):
+    """Run evaluation benchmarks across answerable, unanswerable, and prohibited questions."""
+    biz_uuid = None
+    if business_id:
+        try:
+            biz_uuid = uuid.UUID(business_id)
+        except ValueError:
+            typer.secho(f"Invalid business UUID: {business_id}", fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+
+    typer.echo("Starting Callwise evaluation benchmarks...")
+    from evals.eval_runner import format_report_console, run_evaluations, save_report
+
+    try:
+        report = run_evaluations(
+            provider_name=provider,
+            business_id=biz_uuid,
+            save_output=not no_save,
+        )
+        report_output = format_report_console(report)
+        typer.echo(report_output)
+
+        if not no_save:
+            typer.secho(
+                f"\n[OK] Reports saved to evals/reports/ (JSON & Markdown)",
+                fg=typer.colors.GREEN,
+            )
+    except Exception as exc:
+        typer.secho(f"Evaluation run failed: {exc}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+
 if __name__ == "__main__":
     app()
 
