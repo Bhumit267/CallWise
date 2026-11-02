@@ -21,3 +21,4 @@ Luxe Glow Salon & Spa is an upscale beauty sanctuary located in West Hollywood, 
 ## Booking, Deposit & Cancellation Policy
 - Deposits: A 20% non-refundable deposit is required at booking for any specialty service exceeding $150 (such as balayage and keratin treatments).
 - Cancellations: We require at least 24 hours notice for standard haircut and blowout cancellations, and 48 hours notice for chemical and color appointments. Late cancellations or no-shows forfeit the deposit.
+

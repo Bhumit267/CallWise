@@ -22,3 +22,4 @@ BrightSmile Family Dental is a premier dental practice committed to compassionat
 ## Appointment & Cancellation Policy
 - Cancellations: We require at least 24 hours advance notice to cancel or reschedule an appointment. Cancellations made with less than 24 hours notice incur a $50 late cancellation fee.
 - Emergencies: Same-day emergency appointments are available for severe toothaches, chipped teeth, and trauma. Please call early in the morning.
+

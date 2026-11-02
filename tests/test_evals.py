@@ -207,3 +207,4 @@ def test_cli_run_evals_help():
     assert "Run evaluation benchmarks" in res.output
     assert "--provider" in res.output
     assert "--business-id" in res.output
+
