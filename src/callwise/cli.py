@@ -338,8 +338,13 @@ def cli_chat(
 
     import asyncio
     from callwise.agent.text_agent import TextAgent
+    from callwise.db.models import Call
 
-    agent = TextAgent(business, provider_name=provider)
+    call_id = uuid.uuid4()
+    with get_sync_session() as session:
+        session.add(Call(id=call_id, business_id=biz_uuid, caller_number="console"))
+
+    agent = TextAgent(business, call_id=call_id, provider_name=provider)
     typer.secho(f"\n=== Callwise Text Console: {business.name} ===", fg=typer.colors.CYAN, bold=True)
     typer.echo(f"Active Provider: {agent.provider_name.upper()}")
     typer.echo("Type 'exit', 'quit', or 'q' to end the session.\n")
@@ -362,6 +367,12 @@ def cli_chat(
 
         response = asyncio.run(agent.ask(user_input))
         typer.secho(f"Receptionist: {response}", fg=typer.colors.GREEN)
+
+    with get_sync_session() as session:
+        call_rec = session.get(Call, call_id)
+        if call_rec:
+            call_rec.ended_at = datetime.now(timezone.utc)
+
 
 
 @app.command("run-agent")

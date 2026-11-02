@@ -76,8 +76,13 @@ TOOL_DEFINITIONS = [
 ]
 
 
+import unicodedata
+
+
 def clean_speech_text(text: str) -> str:
     """Normalize unicode special characters and strip markdown for speech/console output."""
+    # Normalize unicode to NFKD
+    text = unicodedata.normalize("NFKD", text)
     replacements = {
         "\u2010": "-",
         "\u2011": "-",
@@ -89,10 +94,13 @@ def clean_speech_text(text: str) -> str:
         "\u201c": '"',
         "\u201d": '"',
         "\u2026": "...",
+        "\u202f": " ",
+        "\u00a0": " ",
     }
     for old, new in replacements.items():
         text = text.replace(old, new)
-    return text.strip()
+    # Guarantee standard ASCII compatibility on Windows console cp1252
+    return text.encode("ascii", errors="replace").decode("ascii").strip()
 
 
 class TextAgent:

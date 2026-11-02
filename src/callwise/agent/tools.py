@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from livekit.agents import function_tool
 
 from callwise.agent.hours import get_business_hours_status
-from callwise.db.models import Business, Message
+from callwise.db.models import Business, Call, Message
 from callwise.db.session import get_async_session, get_sync_session
 from callwise.knowledge.search import search_knowledge_async
 
@@ -93,9 +93,23 @@ class CallwiseToolset:
         cleaned_reason = reason.strip()
 
         async with get_async_session() as session:
+            # Ensure parent Call record exists if call_id is supplied
+            valid_call_id = None
+            if self.call_id:
+                call_obj = await session.get(Call, self.call_id)
+                if not call_obj:
+                    call_obj = Call(
+                        id=self.call_id,
+                        business_id=self.business_id,
+                        caller_number="console",
+                    )
+                    session.add(call_obj)
+                    await session.flush()
+                valid_call_id = self.call_id
+
             msg = Message(
                 business_id=self.business_id,
-                call_id=self.call_id,
+                call_id=valid_call_id,
                 caller_name=cleaned_name,
                 callback_number=cleaned_phone,
                 reason=cleaned_reason,
