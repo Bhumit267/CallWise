@@ -1,6 +1,6 @@
 """Command Line Interface for Callwise using Typer."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from typing import Optional
 import uuid
@@ -372,6 +372,8 @@ def cli_chat(
         call_rec = session.get(Call, call_id)
         if call_rec:
             call_rec.ended_at = datetime.now(timezone.utc)
+            if call_rec.started_at:
+                call_rec.duration_seconds = max(0.0, (call_rec.ended_at - call_rec.started_at).total_seconds())
 
 
 
