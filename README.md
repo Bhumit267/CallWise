@@ -99,16 +99,45 @@ Run the test suite using pytest:
 uv run pytest
 ```
 
-### 6. Explore the CLI
-Verify the installation using the Typer CLI:
+### 6. Explore the CLI & Run E2E Workflows
+Verify the installation and test the full feature set using the Typer CLI:
 
 ```bash
 # Show available commands
 uv run callwise --help
 
-# Check version
-uv run callwise version
-
 # View active system settings and providers
 uv run callwise info
+
+# 1. Seed demo businesses (Dental Clinic and Hair Salon)
+uv run callwise seed
+uv run callwise list-businesses
+
+# 2. Ingest business knowledge documents & partner URLs
+uv run callwise ingest-file --business-id 11111111-1111-1111-1111-111111111111 --file evals/data/dental_knowledge.md --title "Dental Clinic Knowledge Base"
+uv run callwise ingest-file --business-id 22222222-2222-2222-2222-222222222222 --file evals/data/salon_knowledge.md --title "Salon & Spa Knowledge Base"
+uv run callwise list-documents --business-id 11111111-1111-1111-1111-111111111111
+
+# 3. Test knowledge retrieval & anti-hallucination logging
+uv run callwise search-knowledge --business-id 11111111-1111-1111-1111-111111111111 --query "How much is teeth whitening?"
+uv run callwise search-knowledge --business-id 11111111-1111-1111-1111-111111111111 --query "Do you fix submarine carburetors?"
+uv run callwise list-misses --business-id 11111111-1111-1111-1111-111111111111
+
+# 4. Check timezone-aware operational hours
+uv run callwise check-hours --business-id 11111111-1111-1111-1111-111111111111
+uv run callwise check-hours --business-id 22222222-2222-2222-2222-222222222222
+
+# 5. Interactive text console chat (no audio required)
+uv run callwise chat --business-id 11111111-1111-1111-1111-111111111111
+
+# 6. Inspect calls, turn-by-turn transcripts, latencies, and summaries
+uv run callwise list-calls
+uv run callwise show-call --call-id <CALL_ID>
+uv run callwise list-messages
+
+# 7. Run automated benchmark evaluations (20 test questions)
+uv run callwise run-evals
+
+# 8. Run LiveKit voice agent worker (for live phone/WebRTC calls)
+uv run callwise run-agent --business-id 11111111-1111-1111-1111-111111111111
 ```
