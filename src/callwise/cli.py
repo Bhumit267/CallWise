@@ -337,44 +337,58 @@ def cli_chat(
             raise typer.Exit(code=1)
 
     import asyncio
-    from callwise.agent.text_agent import TextAgent
-    from callwise.db.models import Call
 
-    call_id = uuid.uuid4()
-    with get_sync_session() as session:
-        session.add(Call(id=call_id, business_id=biz_uuid, caller_number="console"))
+    async def _run_chat_loop():
+        from callwise.agent.text_agent import TextAgent
+        from callwise.calls.manager import end_call_async
+        from callwise.db.models import Call
+        from callwise.db.session import get_async_session
 
-    agent = TextAgent(business, call_id=call_id, provider_name=provider)
-    typer.secho(f"\n=== Callwise Text Console: {business.name} ===", fg=typer.colors.CYAN, bold=True)
-    typer.echo(f"Active Provider: {agent.provider_name.upper()}")
-    typer.echo("Type 'exit', 'quit', or 'q' to end the session.\n")
+        call_id = uuid.uuid4()
+        async with get_async_session() as session:
+            call_obj = Call(
+                id=call_id,
+                business_id=biz_uuid,
+                caller_number="console",
+                llm_provider=provider or settings.llm_provider,
+                llm_model=settings.groq_model,
+            )
+            session.add(call_obj)
+            await session.commit()
 
-    # Spoken initial greeting
-    typer.secho(f"Receptionist: {business.greeting}", fg=typer.colors.GREEN, bold=True)
+        agent = TextAgent(business, call_id=call_id, provider_name=provider)
+        typer.secho(f"\n=== Callwise Text Console: {business.name} ===", fg=typer.colors.CYAN, bold=True)
+        typer.echo(f"Active Provider: {agent.provider_name.upper()}")
+        typer.echo("Type 'exit', 'quit', or 'q' to end the session.\n")
 
-    while True:
-        try:
-            user_input = input("\nYou: ").strip()
-        except (KeyboardInterrupt, EOFError):
-            typer.secho("\n[Session Terminated]", fg=typer.colors.YELLOW)
-            break
+        # Spoken initial greeting
+        typer.secho(f"Receptionist: {business.greeting}", fg=typer.colors.GREEN, bold=True)
 
-        if not user_input:
-            continue
-        if user_input.lower() in ["exit", "quit", "q"]:
-            typer.secho("\n[Call Ended]", fg=typer.colors.YELLOW)
-            break
+        while True:
+            try:
+                user_input = await asyncio.to_thread(input, "\nYou: ")
+                user_input = user_input.strip()
+            except (KeyboardInterrupt, EOFError):
+                typer.secho("\n[Session Terminated]", fg=typer.colors.YELLOW)
+                break
 
-        response = asyncio.run(agent.ask(user_input))
-        typer.secho(f"Receptionist: {response}", fg=typer.colors.GREEN)
+            if not user_input:
+                continue
+            if user_input.lower() in ["exit", "quit", "q"]:
+                typer.secho("\n[Call Ended]", fg=typer.colors.YELLOW)
+                break
 
-    # Clean up call session and generate executive summary
-    typer.echo("\nClosing call session and generating summary...")
-    from callwise.calls.manager import end_call
-    finished_call = end_call(call_id, generate_summary=True)
-    if finished_call and finished_call.summary:
-        typer.secho(f"\n[Call Summary]: {finished_call.summary}", fg=typer.colors.CYAN, bold=True)
-        typer.echo(f"Duration: {finished_call.duration_seconds:.1f}s | Recorded Turns: {len(finished_call.turns)}\n")
+            response = await agent.ask(user_input)
+            typer.secho(f"Receptionist: {response}", fg=typer.colors.GREEN)
+
+        typer.echo("\nClosing call session and generating summary...")
+        finished_call = await end_call_async(call_id, generate_summary=True)
+        if finished_call and finished_call.summary:
+            typer.secho(f"\n[Call Summary]: {finished_call.summary}", fg=typer.colors.CYAN, bold=True)
+            turns_count = len(finished_call.turns) if finished_call.turns else 0
+            typer.echo(f"Duration: {finished_call.duration_seconds:.1f}s | Recorded Turns: {turns_count}\n")
+
+    asyncio.run(_run_chat_loop())
 
 
 @app.command("run-agent")

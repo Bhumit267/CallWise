@@ -18,11 +18,13 @@ class Base(DeclarativeBase):
     pass
 
 
-# Async engine & sessionmaker (used for high-concurrency runtime & agent workflows)
+from sqlalchemy.pool import NullPool
+
+# Async engine & sessionmaker (used for runtime & agent workflows)
 async_engine = create_async_engine(
     settings.database_url,
     echo=False,
-    pool_pre_ping=True,
+    poolclass=NullPool,
 )
 
 AsyncSessionLocal = async_sessionmaker(
