@@ -318,6 +318,68 @@ def cli_check_hours(
     typer.echo(f"Spoken Answer: \"{status.spoken_summary}\"")
     typer.echo(f"\nWeekly Schedule:\n{status.weekly_schedule_summary}")
 
+@app.command("chat")
+def cli_chat(
+    business_id: str = typer.Option(..., "--business-id", "-b", help="Business tenant UUID"),
+    provider: Optional[str] = typer.Option(None, "--provider", "-p", help="LLM Provider: groq, gemini, or ollama"),
+):
+    """Start an interactive console text chat with the receptionist (no audio required)."""
+    try:
+        biz_uuid = uuid.UUID(business_id)
+    except ValueError:
+        typer.secho(f"Invalid business UUID: {business_id}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    with get_sync_session() as session:
+        business = session.get(Business, biz_uuid)
+        if not business:
+            typer.secho(f"Business not found: {business_id}", fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+
+    import asyncio
+    from callwise.agent.text_agent import TextAgent
+
+    agent = TextAgent(business, provider_name=provider)
+    typer.secho(f"\n=== Callwise Text Console: {business.name} ===", fg=typer.colors.CYAN, bold=True)
+    typer.echo(f"Active Provider: {agent.provider_name.upper()}")
+    typer.echo("Type 'exit', 'quit', or 'q' to end the session.\n")
+
+    # Spoken initial greeting
+    typer.secho(f"Receptionist: {business.greeting}", fg=typer.colors.GREEN, bold=True)
+
+    while True:
+        try:
+            user_input = input("\nYou: ").strip()
+        except (KeyboardInterrupt, EOFError):
+            typer.secho("\n[Session Terminated]", fg=typer.colors.YELLOW)
+            break
+
+        if not user_input:
+            continue
+        if user_input.lower() in ["exit", "quit", "q"]:
+            typer.secho("\n[Call Ended]", fg=typer.colors.YELLOW)
+            break
+
+        response = asyncio.run(agent.ask(user_input))
+        typer.secho(f"Receptionist: {response}", fg=typer.colors.GREEN)
+
+
+@app.command("run-agent")
+def cli_run_agent(
+    business_id: str = typer.Option(..., "--business-id", "-b", help="Business tenant UUID"),
+):
+    """Launch the LiveKit voice agent worker for a business tenant."""
+    try:
+        biz_uuid = uuid.UUID(business_id)
+    except ValueError:
+        typer.secho(f"Invalid business UUID: {business_id}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    typer.echo(f"Starting LiveKit voice agent worker for business {business_id}...")
+    from callwise.agent.voice_agent import start_voice_worker
+    start_voice_worker(biz_uuid)
+
 
 if __name__ == "__main__":
     app()
+
