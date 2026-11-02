@@ -139,5 +139,90 @@ def list_businesses():
         typer.echo(tabulate(rows, headers=["ID", "Name", "Type", "Timezone", "Tone"], tablefmt="grid"))
 
 
+@app.command("ingest-file")
+def cli_ingest_file(
+    business_id: str = typer.Option(..., "--business-id", "-b", help="Target business tenant UUID"),
+    file_path: str = typer.Option(..., "--file", "-f", help="Path to PDF, TXT, or Markdown file"),
+    title: Optional[str] = typer.Option(None, "--title", "-t", help="Custom document title"),
+):
+    """Ingest a local document (PDF/TXT/MD) into the business knowledge base."""
+    try:
+        biz_uuid = uuid.UUID(business_id)
+    except ValueError:
+        typer.secho(f"Invalid business UUID: {business_id}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    typer.echo(f"Ingesting file '{file_path}'...")
+    try:
+        from callwise.knowledge.ingest import ingest_file
+        doc = ingest_file(biz_uuid, file_path, title=title)
+        typer.secho(f"[OK] Ingested document: {doc.title}", fg=typer.colors.GREEN, bold=True)
+        typer.echo(f"Document ID: {doc.id}")
+        typer.echo(f"Source: {doc.source_uri}")
+    except Exception as err:
+        typer.secho(f"Ingestion failed: {err}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+
+@app.command("ingest-url")
+def cli_ingest_url(
+    business_id: str = typer.Option(..., "--business-id", "-b", help="Target business tenant UUID"),
+    url: str = typer.Option(..., "--url", "-u", help="Public http(s) URL to scrape"),
+    title: Optional[str] = typer.Option(None, "--title", "-t", help="Custom document title"),
+):
+    """Ingest a public web page into the business knowledge base (SSRF protected)."""
+    try:
+        biz_uuid = uuid.UUID(business_id)
+    except ValueError:
+        typer.secho(f"Invalid business UUID: {business_id}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    typer.echo(f"Fetching and ingesting URL: {url}...")
+    try:
+        from callwise.knowledge.ingest import ingest_url
+        doc = ingest_url(biz_uuid, url, title=title)
+        typer.secho(f"[OK] Ingested document: {doc.title}", fg=typer.colors.GREEN, bold=True)
+        typer.echo(f"Document ID: {doc.id}")
+        typer.echo(f"Source: {doc.source_uri}")
+    except Exception as err:
+        typer.secho(f"Ingestion failed: {err}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+
+@app.command("list-documents")
+def cli_list_documents(
+    business_id: str = typer.Option(..., "--business-id", "-b", help="Business tenant UUID"),
+):
+    """List all ingested documents for a business tenant."""
+    try:
+        biz_uuid = uuid.UUID(business_id)
+    except ValueError:
+        typer.secho(f"Invalid business UUID: {business_id}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    with get_sync_session() as session:
+        from callwise.db.models import Document
+        docs = session.scalars(
+            select(Document).where(Document.business_id == biz_uuid).order_by(Document.created_at)
+        ).all()
+
+        if not docs:
+            typer.echo(f"No documents found for business '{business_id}'.")
+            return
+
+        rows = []
+        for d in docs:
+            chunk_count = len(d.chunks)
+            rows.append([str(d.id), d.title, d.source_type, chunk_count, d.source_uri[:40]])
+
+        typer.echo(
+            tabulate(
+                rows,
+                headers=["ID", "Title", "Type", "Chunks", "Source"],
+                tablefmt="grid",
+            )
+        )
+
+
 if __name__ == "__main__":
     app()
