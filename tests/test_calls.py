@@ -135,6 +135,8 @@ async def test_end_call_lifecycle_and_summary(seeded_call):
     assert finished.duration_seconds >= 0.0
     assert finished.summary is not None
     assert len(finished.summary) > 10
+    # Verify turns can be accessed without DetachedInstanceError
+    assert len(finished.turns) == 2
 
 
 def test_cli_call_inspection_commands(seeded_call):

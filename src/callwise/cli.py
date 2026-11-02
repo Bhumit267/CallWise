@@ -385,8 +385,9 @@ def cli_chat(
         finished_call = await end_call_async(call_id, generate_summary=True)
         if finished_call and finished_call.summary:
             typer.secho(f"\n[Call Summary]: {finished_call.summary}", fg=typer.colors.CYAN, bold=True)
-            turns_count = len(finished_call.turns) if finished_call.turns else 0
-            typer.echo(f"Duration: {finished_call.duration_seconds:.1f}s | Recorded Turns: {turns_count}\n")
+            turns_count = len(finished_call.turns) if finished_call and finished_call.turns else 0
+            dur = finished_call.duration_seconds or 0.0
+            typer.echo(f"Duration: {dur:.1f}s | Recorded Turns: {turns_count}\n")
 
     asyncio.run(_run_chat_loop())
 

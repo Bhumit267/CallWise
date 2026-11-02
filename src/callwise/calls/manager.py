@@ -182,7 +182,11 @@ async def end_call_async(
         summary_text = await generate_call_summary_async(call_id, provider_name=provider_name)
 
     async with get_async_session() as session:
-        call_obj = await session.get(Call, call_id)
+        call_obj = await session.scalar(
+            select(Call)
+            .where(Call.id == call_id)
+            .options(selectinload(Call.turns), selectinload(Call.messages))
+        )
         if not call_obj:
             return None
 
@@ -194,7 +198,6 @@ async def end_call_async(
             call_obj.summary = summary_text
 
         await session.commit()
-        await session.refresh(call_obj)
         return call_obj
 
 
@@ -211,7 +214,11 @@ def end_call(
         summary_text = generate_call_summary(call_id, provider_name=provider_name)
 
     with get_sync_session() as session:
-        call_obj = session.get(Call, call_id)
+        call_obj = session.scalar(
+            select(Call)
+            .where(Call.id == call_id)
+            .options(selectinload(Call.turns), selectinload(Call.messages))
+        )
         if not call_obj:
             return None
 
@@ -223,5 +230,4 @@ def end_call(
             call_obj.summary = summary_text
 
         session.commit()
-        session.refresh(call_obj)
         return call_obj
