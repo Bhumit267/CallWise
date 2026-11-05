@@ -239,3 +239,4 @@ def test_cli_add_service_validation():
     )
     assert res3.exit_code != 0
     assert "non-negative" in res3.output
+

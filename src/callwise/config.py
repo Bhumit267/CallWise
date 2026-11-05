@@ -1,6 +1,6 @@
 """Application configuration loaded from environment variables."""
 
-from typing import Literal
+from typing import Literal, Optional
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -90,6 +90,20 @@ class Settings(BaseSettings):
     similarity_threshold: float = Field(
         default=0.45,
         description="Cosine similarity cutoff for knowledge retrieval",
+    )
+
+    # Calendar & Booking
+    calendar_provider: Literal["local", "google"] = Field(
+        default="local",
+        description="Calendar provider: local or google",
+    )
+    min_booking_notice_hours: int = Field(
+        default=2,
+        description="Minimum notice in hours required before a booking slot",
+    )
+    google_calendar_credentials_file: Optional[str] = Field(
+        default=None,
+        description="Path to Google Calendar service account JSON credentials",
     )
 
 

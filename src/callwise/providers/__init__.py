@@ -3,6 +3,13 @@
 from abc import ABC, abstractmethod
 from typing import Any, AsyncIterator, List
 
+from callwise.providers.calendar import (
+    CalendarProvider,
+    LocalCalendarProvider,
+    TimeSlot,
+    get_calendar_provider,
+)
+
 
 class LLMProvider(ABC):
     """Abstract interface for text generation and agent LLMs."""
