@@ -736,6 +736,133 @@ def cli_add_service(
         )
 
 
+@app.command("book")
+def cli_book(
+    business_id: str = typer.Option(..., "--business-id", "-b", help="Business tenant UUID"),
+    service_id: str = typer.Option(..., "--service-id", "-s", help="Service UUID"),
+    start: str = typer.Option(..., "--start", help="Appointment start time in ISO-8601 (e.g. 2026-11-10T14:00:00)"),
+    name: str = typer.Option(..., "--name", "-n", help="Customer full name"),
+    phone: str = typer.Option(..., "--phone", "-p", help="Customer phone number"),
+    email: Optional[str] = typer.Option(None, "--email", "-e", help="Customer email address (optional)"),
+):
+    """Book a new appointment for a customer with double-booking prevention."""
+    import asyncio
+    from datetime import datetime
+    from callwise.booking.service import (
+        BookingError,
+        book_appointment,
+        mask_phone_number,
+    )
+    from callwise.db.session import AsyncSessionLocal
+
+    try:
+        biz_uuid = uuid.UUID(business_id)
+        svc_uuid = uuid.UUID(service_id)
+    except ValueError:
+        typer.secho("Invalid business or service UUID format.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    try:
+        start_dt = datetime.fromisoformat(start)
+    except Exception as exc:
+        typer.secho(f"Invalid date/time format: {start} ({exc})", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    async def _do_book():
+        async with AsyncSessionLocal() as session:
+            async with session.begin():
+                result = await book_appointment(
+                    session=session,
+                    business_id=biz_uuid,
+                    service_id=svc_uuid,
+                    start_time=start_dt,
+                    customer_name=name,
+                    customer_phone=phone,
+                    customer_email=email,
+                )
+                return result
+
+    try:
+        res = asyncio.run(_do_book())
+        appt = res.appointment
+        typer.secho("\n[SUCCESS] Appointment Booked!", fg=typer.colors.GREEN, bold=True)
+        typer.echo(f"Appointment ID: {appt.id}")
+        typer.echo(f"Customer:       {appt.customer_name} ({mask_phone_number(appt.customer_phone)})")
+        if appt.customer_email:
+            typer.echo(f"Email:          {appt.customer_email}")
+        typer.echo(f"Start Time:     {appt.start_at.isoformat()} (UTC)")
+        typer.echo(f"End Time:       {appt.end_at.isoformat()} (UTC)")
+        typer.echo(f"Status:         {appt.status}")
+        typer.secho(f"Booking Code:   {res.booking_code}", fg=typer.colors.YELLOW, bold=True)
+        typer.echo(f"External Event: {appt.external_event_id or 'N/A'}")
+        typer.echo("\n(Provide the booking code to caller for verification when modifying or cancelling)")
+    except BookingError as exc:
+        typer.secho(f"\n[BOOKING ERROR] {exc}", fg=typer.colors.RED, bold=True)
+        raise typer.Exit(code=1)
+    except Exception as exc:
+        typer.secho(f"\n[UNEXPECTED ERROR] {exc}", fg=typer.colors.RED, bold=True)
+        raise typer.Exit(code=1)
+
+
+@app.command("list-appointments")
+def cli_list_appointments(
+    business_id: str = typer.Option(..., "--business-id", "-b", help="Business tenant UUID"),
+    status: Optional[str] = typer.Option(None, "--status", help="Filter by status (booked/cancelled/completed)"),
+):
+    """List appointments for a business tenant."""
+    import asyncio
+    from callwise.booking.service import list_appointments, mask_phone_number
+    from callwise.db.session import AsyncSessionLocal
+    from callwise.db.models import Service
+
+    try:
+        biz_uuid = uuid.UUID(business_id)
+    except ValueError:
+        typer.secho(f"Invalid business UUID: {business_id}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    async def _fetch():
+        async with AsyncSessionLocal() as session:
+            appts = await list_appointments(session, biz_uuid, status)
+            # Fetch services map
+            svc_res = await session.execute(
+                select(Service).where(Service.business_id == biz_uuid)
+            )
+            svc_map = {s.id: s.name for s in svc_res.scalars().all()}
+            return appts, svc_map
+
+    appts, svc_map = asyncio.run(_fetch())
+
+    if not appts:
+        typer.echo(f"No appointments found for business {business_id}" + (f" with status '{status}'." if status else "."))
+        return
+
+    rows = []
+    for a in appts:
+        s_name = svc_map.get(a.service_id, str(a.service_id)[:8])
+        phone_masked = mask_phone_number(a.customer_phone)
+        start_str = a.start_at.strftime("%Y-%m-%d %H:%M")
+        end_str = a.end_at.strftime("%H:%M")
+        rows.append([
+            str(a.id)[:8] + "...",
+            s_name,
+            a.customer_name,
+            phone_masked,
+            f"{start_str} - {end_str}",
+            a.status,
+            a.booking_code_hash[:8] + "...",
+        ])
+
+    typer.echo(f"\nAppointments for business {business_id}:")
+    typer.echo(
+        tabulate(
+            rows,
+            headers=["ID", "Service", "Customer", "Phone", "Time (UTC)", "Status", "Code Hash"],
+            tablefmt="grid",
+        )
+    )
+
+
 if __name__ == "__main__":
     app()
 

@@ -4,6 +4,40 @@ from callwise.booking.availability import (
     format_spoken_availability,
     get_available_slots,
 )
+from callwise.booking.service import (
+    BookingError,
+    BookingResult,
+    BusinessNotFoundError,
+    DoubleBookingError,
+    MinimumNoticeError,
+    OutsideBusinessHoursError,
+    PastTimeError,
+    ServiceInactiveError,
+    ServiceNotFoundError,
+    book_appointment,
+    generate_booking_code,
+    hash_booking_code,
+    list_appointments,
+    mask_phone_number,
+    normalize_booking_code,
+)
 
-__all__ = ["get_available_slots", "format_spoken_availability"]
-
+__all__ = [
+    "get_available_slots",
+    "format_spoken_availability",
+    "book_appointment",
+    "list_appointments",
+    "BookingResult",
+    "BookingError",
+    "BusinessNotFoundError",
+    "ServiceNotFoundError",
+    "ServiceInactiveError",
+    "PastTimeError",
+    "MinimumNoticeError",
+    "OutsideBusinessHoursError",
+    "DoubleBookingError",
+    "generate_booking_code",
+    "hash_booking_code",
+    "normalize_booking_code",
+    "mask_phone_number",
+]

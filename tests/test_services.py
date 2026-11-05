@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta, timezone
 import uuid
 import pytest
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from typer.testing import CliRunner
 
 from callwise.cli import app
@@ -187,6 +187,7 @@ def test_cli_list_and_add_service():
     assert "$350.00" in res1.output
 
     # Test add-service
+    test_svc_name = f"Fluoride Treatment {uuid.uuid4().hex[:6]}"
     res2 = runner.invoke(
         app,
         [
@@ -194,7 +195,7 @@ def test_cli_list_and_add_service():
             "--business-id",
             str(DENTAL_CLINIC_ID),
             "--name",
-            "Fluoride Treatment",
+            test_svc_name,
             "--duration",
             "15",
             "--price",
@@ -204,14 +205,24 @@ def test_cli_list_and_add_service():
         ],
     )
     assert res2.exit_code == 0
-    assert "Fluoride Treatment" in res2.output
+    assert test_svc_name in res2.output
     assert "$45.00" in res2.output
 
     # Verify newly added service appears in list-services
     res3 = runner.invoke(app, ["list-services", "--business-id", str(DENTAL_CLINIC_ID)])
     assert res3.exit_code == 0
-    assert "Fluoride Treatment" in res3.output
+    assert test_svc_name in res3.output
     assert "$45.00" in res3.output
+
+    # Cleanup the test service
+    with get_sync_session() as session:
+        session.execute(
+            delete(Service).where(
+                Service.business_id == DENTAL_CLINIC_ID,
+                Service.name == test_svc_name,
+            )
+        )
+        session.commit()
 
 
 def test_cli_add_service_validation():
