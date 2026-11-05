@@ -6,3 +6,4 @@ from callwise.booking.availability import (
 )
 
 __all__ = ["get_available_slots", "format_spoken_availability"]
+

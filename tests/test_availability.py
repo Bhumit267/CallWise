@@ -301,3 +301,4 @@ def test_local_calendar_provider_db_integration():
     assert len(busy) == 1
     assert busy[0].start_at == appt.start_at
     assert busy[0].end_at == appt.end_at
+

@@ -178,3 +178,4 @@ def format_spoken_availability(
         f"We have openings for {service.name} on {date_formatted} at {options_text}. "
         "Would any of those times work for you?"
     )
+

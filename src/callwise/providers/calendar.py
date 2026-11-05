@@ -156,3 +156,4 @@ def get_calendar_provider(provider_type: Optional[str] = None) -> CalendarProvid
             return LocalCalendarProvider()
     else:
         raise ValueError(f"Unsupported calendar provider: {chosen}")
+
