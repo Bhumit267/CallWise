@@ -641,6 +641,101 @@ def cli_run_evals(
         raise typer.Exit(code=1)
 
 
+@app.command("list-services")
+def cli_list_services(
+    business_id: str = typer.Option(..., "--business-id", "-b", help="Business tenant UUID"),
+):
+    """List all bookable services and pricing for a business tenant."""
+    try:
+        biz_uuid = uuid.UUID(business_id)
+    except ValueError:
+        typer.secho(f"Invalid business UUID: {business_id}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    with get_sync_session() as session:
+        from callwise.db.models import Service, Business
+
+        biz = session.get(Business, biz_uuid)
+        if not biz:
+            typer.secho(f"Business not found: {business_id}", fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+
+        stmt = select(Service).where(Service.business_id == biz_uuid).order_by(Service.name)
+        services = session.scalars(stmt).all()
+
+        if not services:
+            typer.echo(f"No services found for {biz.name} ({biz_uuid}).")
+            return
+
+        rows = []
+        for s in services:
+            rows.append([
+                str(s.id),
+                s.name,
+                f"{s.duration_minutes} min",
+                f"${s.price:.2f}",
+                "Yes" if s.is_active else "No",
+                (s.description[:40] + "...") if s.description and len(s.description) > 40 else (s.description or "-"),
+            ])
+
+        typer.echo(f"\nServices for {biz.name}:")
+        typer.echo(
+            tabulate(
+                rows,
+                headers=["Service ID", "Name", "Duration", "Price", "Active", "Description"],
+                tablefmt="grid",
+            )
+        )
+
+
+@app.command("add-service")
+def cli_add_service(
+    business_id: str = typer.Option(..., "--business-id", "-b", help="Business tenant UUID"),
+    name: str = typer.Option(..., "--name", "-n", help="Service name"),
+    duration: int = typer.Option(..., "--duration", "-d", help="Duration in minutes"),
+    price: float = typer.Option(..., "--price", "-p", help="Service price in USD"),
+    description: Optional[str] = typer.Option(None, "--description", help="Service description"),
+):
+    """Add a new bookable service for a business tenant."""
+    try:
+        biz_uuid = uuid.UUID(business_id)
+    except ValueError:
+        typer.secho(f"Invalid business UUID: {business_id}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    if duration <= 0:
+        typer.secho("Duration must be a positive integer.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+    if price < 0:
+        typer.secho("Price must be non-negative.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    with get_sync_session() as session:
+        from callwise.db.models import Service, Business
+
+        biz = session.get(Business, biz_uuid)
+        if not biz:
+            typer.secho(f"Business not found: {business_id}", fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+
+        svc = Service(
+            business_id=biz_uuid,
+            name=name.strip(),
+            duration_minutes=duration,
+            price=price,
+            description=description.strip() if description else None,
+            is_active=True,
+        )
+        session.add(svc)
+        session.commit()
+        session.refresh(svc)
+
+        typer.secho(
+            f"[OK] Added service '{svc.name}' ({svc.duration_minutes}m, ${svc.price:.2f}) for {biz.name} [ID: {svc.id}]",
+            fg=typer.colors.GREEN,
+        )
+
+
 if __name__ == "__main__":
     app()
 
