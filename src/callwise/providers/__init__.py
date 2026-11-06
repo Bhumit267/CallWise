@@ -5,6 +5,7 @@ from typing import Any, AsyncIterator, List
 
 from callwise.providers.calendar import (
     CalendarProvider,
+    GoogleCalendarProvider,
     LocalCalendarProvider,
     TimeSlot,
     get_calendar_provider,
@@ -63,6 +64,7 @@ __all__ = [
     "EmbeddingProvider",
     "CalendarProvider",
     "LocalCalendarProvider",
+    "GoogleCalendarProvider",
     "TimeSlot",
     "get_calendar_provider",
     "EmailProvider",
