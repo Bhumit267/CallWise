@@ -28,8 +28,8 @@ TOOL_DEFINITIONS = [
                 "type": "object",
                 "properties": {
                     "day": {
-                        "type": "string",
-                        "description": "Optional day of the week (e.g. 'Monday', 'Friday').",
+                        "type": ["string", "null"],
+                        "description": "Optional day of the week (e.g. 'Monday', 'Friday'). Pass null if checking general/current hours.",
                     }
                 },
                 "required": [],
@@ -136,7 +136,7 @@ TOOL_DEFINITIONS = [
                         "description": "Customer contact phone number.",
                     },
                     "customer_email": {
-                        "type": "string",
+                        "type": ["string", "null"],
                         "description": "Optional email for confirmation.",
                     },
                 },
@@ -157,11 +157,11 @@ TOOL_DEFINITIONS = [
                         "description": "6-character booking code (e.g. BK-4X2).",
                     },
                     "caller_name": {
-                        "type": "string",
+                        "type": ["string", "null"],
                         "description": "Customer full name for identity verification.",
                     },
                     "caller_phone": {
-                        "type": "string",
+                        "type": ["string", "null"],
                         "description": "Customer phone number for identity verification.",
                     },
                 },
@@ -186,11 +186,11 @@ TOOL_DEFINITIONS = [
                         "description": "New appointment start time in YYYY-MM-DD HH:MM format.",
                     },
                     "caller_name": {
-                        "type": "string",
+                        "type": ["string", "null"],
                         "description": "Customer full name for verification.",
                     },
                     "caller_phone": {
-                        "type": "string",
+                        "type": ["string", "null"],
                         "description": "Customer phone number for verification.",
                     },
                 },
@@ -262,7 +262,10 @@ class TextAgent:
     async def _execute_tool(self, name: str, args: Dict[str, Any]) -> str:
         """Route tool call execution to CallwiseToolset."""
         if name == "get_business_hours":
-            return self.toolset.get_business_hours(day=args.get("day"))
+            day_val = args.get("day")
+            if day_val and str(day_val).strip().lower() in ("null", "none"):
+                day_val = None
+            return self.toolset.get_business_hours(day=day_val)
         elif name == "search_knowledge":
             return await self.toolset.search_knowledge(query=args.get("query", ""))
         elif name == "take_message":

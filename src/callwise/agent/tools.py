@@ -111,8 +111,8 @@ class CallwiseToolset:
         """
         status = get_business_hours_status(self.business)
 
-        if day:
-            day_clean = day.strip().lower()
+        if day and str(day).strip().lower() not in ("null", "none"):
+            day_clean = str(day).strip().lower()
             day_cfg = (self.business.hours or {}).get(day_clean)
             if not day_cfg or day_cfg.get("closed", False) or not day_cfg.get("open"):
                 return f"On {day.capitalize()}, {self.business.name} is closed."
