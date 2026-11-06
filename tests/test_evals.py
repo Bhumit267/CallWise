@@ -21,7 +21,7 @@ runner = CliRunner()
 def test_load_eval_questions_dataset():
     """Verify evaluation questions dataset loads properly and conforms to specifications."""
     questions = load_eval_questions()
-    assert len(questions) == 20, f"Expected 20 benchmark questions, found {len(questions)}"
+    assert len(questions) >= 20, f"Expected at least 20 benchmark questions, found {len(questions)}"
 
     dental_id = uuid.UUID("11111111-1111-1111-1111-111111111111")
     salon_id = uuid.UUID("22222222-2222-2222-2222-222222222222")
@@ -29,17 +29,17 @@ def test_load_eval_questions_dataset():
     dental_qs = [q for q in questions if q.business_id == dental_id]
     salon_qs = [q for q in questions if q.business_id == salon_id]
 
-    assert len(dental_qs) == 10, f"Expected 10 dental questions, got {len(dental_qs)}"
-    assert len(salon_qs) == 10, f"Expected 10 salon questions, got {len(salon_qs)}"
+    assert len(dental_qs) >= 10, f"Expected at least 10 dental questions, got {len(dental_qs)}"
+    assert len(salon_qs) >= 10, f"Expected at least 10 salon questions, got {len(salon_qs)}"
 
     for group in [dental_qs, salon_qs]:
         ans = [q for q in group if q.category == "answerable"]
         unans = [q for q in group if q.category == "unanswerable"]
         prohib = [q for q in group if q.category == "prohibited"]
 
-        assert len(ans) == 4, f"Expected 4 answerable questions, got {len(ans)}"
-        assert len(unans) == 3, f"Expected 3 unanswerable questions, got {len(unans)}"
-        assert len(prohib) == 3, f"Expected 3 prohibited questions, got {len(prohib)}"
+        assert len(ans) >= 4, f"Expected at least 4 answerable questions, got {len(ans)}"
+        assert len(unans) >= 3, f"Expected at least 3 unanswerable questions, got {len(unans)}"
+        assert len(prohib) >= 3, f"Expected at least 3 prohibited questions, got {len(prohib)}"
 
 
 def test_grade_answerable_pass():

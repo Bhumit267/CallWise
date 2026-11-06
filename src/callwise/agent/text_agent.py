@@ -78,13 +78,148 @@ TOOL_DEFINITIONS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_services",
+            "description": "List all active bookable services, durations, and pricing.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "check_availability",
+            "description": "Check available appointment slots for a service on a given date.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "service_name": {
+                        "type": "string",
+                        "description": "Name of the service to check (e.g. 'Routine Dental Cleaning').",
+                    },
+                    "date": {
+                        "type": "string",
+                        "description": "Target date string (e.g. 'today', 'tomorrow', 'YYYY-MM-DD').",
+                    },
+                },
+                "required": ["service_name", "date"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "book_appointment",
+            "description": "Reserve an appointment. STRICT: Read back full details and get explicit caller confirmation before calling this.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "service_name": {
+                        "type": "string",
+                        "description": "Name of the service.",
+                    },
+                    "start_time": {
+                        "type": "string",
+                        "description": "Start time in YYYY-MM-DD HH:MM format.",
+                    },
+                    "customer_name": {
+                        "type": "string",
+                        "description": "Customer full name.",
+                    },
+                    "customer_phone": {
+                        "type": "string",
+                        "description": "Customer contact phone number.",
+                    },
+                    "customer_email": {
+                        "type": "string",
+                        "description": "Optional email for confirmation.",
+                    },
+                },
+                "required": ["service_name", "start_time", "customer_name", "customer_phone"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "cancel_appointment",
+            "description": "Cancel an existing appointment with booking code and verified customer name or phone.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "booking_code": {
+                        "type": "string",
+                        "description": "6-character booking code (e.g. BK-4X2).",
+                    },
+                    "caller_name": {
+                        "type": "string",
+                        "description": "Customer full name for identity verification.",
+                    },
+                    "caller_phone": {
+                        "type": "string",
+                        "description": "Customer phone number for identity verification.",
+                    },
+                },
+                "required": ["booking_code"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "reschedule_appointment",
+            "description": "Reschedule an existing appointment to a new date/time with verification.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "booking_code": {
+                        "type": "string",
+                        "description": "6-character booking code (e.g. BK-4X2).",
+                    },
+                    "new_time": {
+                        "type": "string",
+                        "description": "New appointment start time in YYYY-MM-DD HH:MM format.",
+                    },
+                    "caller_name": {
+                        "type": "string",
+                        "description": "Customer full name for verification.",
+                    },
+                    "caller_phone": {
+                        "type": "string",
+                        "description": "Customer phone number for verification.",
+                    },
+                },
+                "required": ["booking_code", "new_time"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "transfer_to_human",
+            "description": "Transfer the caller to a human representative or staff member.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "description": "Reason for human escalation.",
+                    },
+                },
+                "required": ["reason"],
+            },
+        },
+    },
 ]
-
 
 
 def clean_speech_text(text: str) -> str:
     """Normalize unicode special characters and strip markdown for speech/console output."""
-    # Normalize unicode to NFKD
     text = unicodedata.normalize("NFKD", text)
     replacements = {
         "\u2010": "-",
@@ -98,16 +233,16 @@ def clean_speech_text(text: str) -> str:
         "\u201d": '"',
         "\u2026": "...",
         "\u202f": " ",
-        "\u00a0": " ",
     }
     for old, new in replacements.items():
         text = text.replace(old, new)
-    # Guarantee standard ASCII compatibility on Windows console cp1252
-    return text.encode("ascii", errors="replace").decode("ascii").strip()
+    for md_char in ["*", "#", "`", "_", "[", "]"]:
+        text = text.replace(md_char, "")
+    return " ".join(text.split())
 
 
 class TextAgent:
-    """Simulates the conversational voice agent in text mode without requiring audio WebRTC."""
+    """Runs interactive multi-turn dialogue through the LLM with tool calling."""
 
     def __init__(
         self,
@@ -117,7 +252,7 @@ class TextAgent:
     ):
         self.business = business
         self.call_id = call_id or uuid.uuid4()
-        self.provider_name = (provider_name or settings.llm_provider).lower()
+        self.provider_name = (provider_name or settings.llm_provider).lower().strip()
         self.toolset = CallwiseToolset(business, call_id=self.call_id)
         self.system_prompt = build_system_prompt(business)
         self.conversation_history: List[Dict[str, Any]] = [
@@ -125,26 +260,53 @@ class TextAgent:
         ]
 
     async def _execute_tool(self, name: str, args: Dict[str, Any]) -> str:
-        """Dispatch tool calls to CallwiseToolset."""
+        """Route tool call execution to CallwiseToolset."""
         if name == "get_business_hours":
             return self.toolset.get_business_hours(day=args.get("day"))
         elif name == "search_knowledge":
-            query = args.get("query", "")
-            return await self.toolset.search_knowledge(query=query)
+            return await self.toolset.search_knowledge(query=args.get("query", ""))
         elif name == "take_message":
             return await self.toolset.take_message(
                 caller_name=args.get("caller_name", "Anonymous"),
                 callback_number=args.get("callback_number", "Unknown"),
                 reason=args.get("reason", "No reason provided"),
             )
+        elif name == "list_services":
+            return await self.toolset.list_services()
+        elif name == "check_availability":
+            return await self.toolset.check_availability(
+                service_name=args.get("service_name", ""),
+                date_str=args.get("date", "today"),
+            )
+        elif name == "book_appointment":
+            return await self.toolset.book_appointment(
+                service_name=args.get("service_name", ""),
+                start_time=args.get("start_time", ""),
+                customer_name=args.get("customer_name", ""),
+                customer_phone=args.get("customer_phone", ""),
+                customer_email=args.get("customer_email"),
+            )
+        elif name == "cancel_appointment":
+            return await self.toolset.cancel_appointment(
+                booking_code=args.get("booking_code", ""),
+                caller_name=args.get("caller_name"),
+                caller_phone=args.get("caller_phone"),
+            )
+        elif name == "reschedule_appointment":
+            return await self.toolset.reschedule_appointment(
+                booking_code=args.get("booking_code", ""),
+                new_time=args.get("new_time", ""),
+                caller_name=args.get("caller_name"),
+                caller_phone=args.get("caller_phone"),
+            )
+        elif name == "transfer_to_human":
+            return await self.toolset.transfer_to_human(
+                reason=args.get("reason", "Caller requested transfer"),
+            )
         return f"Unknown tool: {name}"
 
     async def ask(self, user_message: str) -> str:
-        """
-        Send a user turn to the agent, executing any tool calls,
-        and return the agent's conversational response.
-        """
-        # Record caller turn
+        """Send a user turn to the agent, executing any tool calls, and return conversational reply."""
         await record_call_turn_async(
             call_id=self.call_id,
             business_id=self.business.id,
@@ -156,7 +318,6 @@ class TextAgent:
 
         t_start = time.perf_counter()
 
-        # Branch based on provider
         if self.provider_name == "groq":
             raw_reply = await self._run_groq_turn()
         elif self.provider_name == "gemini":
@@ -167,7 +328,6 @@ class TextAgent:
         latency_ms = (time.perf_counter() - t_start) * 1000.0
         clean_reply = clean_speech_text(raw_reply)
 
-        # Record agent turn with measured latency
         await record_call_turn_async(
             call_id=self.call_id,
             business_id=self.business.id,
@@ -183,8 +343,7 @@ class TextAgent:
         import groq
         client = groq.AsyncGroq(api_key=settings.groq_api_key)
 
-        # Allow up to 2 tool execution iterations per turn
-        for _ in range(2):
+        for _ in range(3):
             response = await client.chat.completions.create(
                 model=settings.groq_model,
                 messages=self.conversation_history,
@@ -193,7 +352,6 @@ class TextAgent:
                 temperature=0.3,
                 max_tokens=400,
             )
-
             msg = response.choices[0].message
             if msg.tool_calls:
                 self.conversation_history.append(
@@ -234,9 +392,7 @@ class TextAgent:
                 self.conversation_history.append({"role": "assistant", "content": agent_reply})
                 return agent_reply
 
-        # Fallback if loop finishes on tool output
         return "Thank you. Is there anything else I can help you with today?"
-
 
     async def _run_gemini_turn(self, user_message: str) -> str:
         """Execute turn using Google Gemini with direct tool execution."""
@@ -245,28 +401,20 @@ class TextAgent:
 
         client = genai.Client(api_key=settings.gemini_api_key)
 
-        # Tool declaration for Gemini
-        def get_business_hours(day: str = "") -> str:
-            """Check opening hours."""
-            return self.toolset.get_business_hours(day=day or None)
-
-        async def search_knowledge(query: str) -> str:
-            """Search knowledge base."""
-            return await self.toolset.search_knowledge(query=query)
-
-        async def take_message(caller_name: str, callback_number: str, reason: str) -> str:
-            """Take a message."""
-            return await self.toolset.take_message(caller_name, callback_number, reason)
-
-        # Quick intent routing for Gemini text mode
         lower_q = user_message.lower()
         tool_context = ""
 
         if any(w in lower_q for w in ["hour", "open", "close", "schedule", "when do you", "are you open"]):
             tool_context = f"\n[System Tool Result for get_business_hours]:\n{self.toolset.get_business_hours()}\n"
-        elif any(w in lower_q for w in ["price", "cost", "how much", "insurance", "service", "where", "located", "policy"]):
+        elif any(w in lower_q for w in ["what services", "services do you", "list services", "bookable services"]):
+            services_res = await self.toolset.list_services()
+            tool_context = f"\n[System Tool Result for list_services]:\n{services_res}\n"
+        elif any(w in lower_q for w in ["price", "cost", "how much", "insurance", "where", "located", "policy"]):
             search_res = await self.toolset.search_knowledge(user_message)
             tool_context = f"\n[System Tool Result for search_knowledge]:\n{search_res}\n"
+        elif any(w in lower_q for w in ["transfer", "speak to someone", "human", "representative", "manager"]):
+            transfer_res = await self.toolset.transfer_to_human("Caller requested transfer to staff")
+            tool_context = f"\n[System Tool Result for transfer_to_human]:\n{transfer_res}\n"
         elif any(w in lower_q for w in ["take a message", "leave a message", "call me back"]):
             tool_context = "\n[System Tool Instruction]: Ask for the caller's full name, phone number, and brief reason for callback.\n"
 
@@ -292,8 +440,12 @@ class TextAgent:
         context_inject = ""
         if any(w in lower_q for w in ["hour", "open", "close", "schedule", "when do you"]):
             context_inject = f"\n[Hours Info]: {self.toolset.get_business_hours()}"
+        elif any(w in lower_q for w in ["what services", "services do you", "list services"]):
+            context_inject = f"\n[Services List]: {await self.toolset.list_services()}"
         elif any(w in lower_q for w in ["price", "cost", "insurance", "service", "where", "how much"]):
             context_inject = f"\n[Records]: {await self.toolset.search_knowledge(user_message)}"
+        elif any(w in lower_q for w in ["transfer", "speak to someone", "representative", "operator"]):
+            context_inject = f"\n[Transfer]: {await self.toolset.transfer_to_human('Caller requested human')}"
 
         prompt = f"Caller: {user_message}{context_inject}\nAI Receptionist:"
         reply = await llm.generate_response(prompt, system_prompt=self.system_prompt)
