@@ -352,14 +352,37 @@ class CallwiseToolset:
                     call_id=valid_call_id,
                 )
             except DoubleBookingError:
+                slots = get_available_slots(
+                    business=self.business,
+                    service=matched_service,
+                    target_date=start_dt.date(),
+                )
+                if slots:
+                    avail_txt = format_spoken_availability(
+                        slots, self.business, matched_service, start_dt.date()
+                    )
+                    return f"I apologize, but {start_dt.strftime('%I:%M %p').lstrip('0')} is already booked. {avail_txt}"
                 return (
-                    "I apologize, but that specific time slot is already booked. "
-                    "Would you like me to check other available times on that day?"
+                    f"I apologize, but {start_dt.strftime('%I:%M %p').lstrip('0')} is already booked, "
+                    f"and there are no other openings on {start_dt.strftime('%A, %B %d')}. Would you like to check another date?"
                 )
             except OutsideBusinessHoursError:
+                slots = get_available_slots(
+                    business=self.business,
+                    service=matched_service,
+                    target_date=start_dt.date(),
+                )
+                if slots:
+                    avail_txt = format_spoken_availability(
+                        slots, self.business, matched_service, start_dt.date()
+                    )
+                    return (
+                        f"The requested time of {start_dt.strftime('%I:%M %p').lstrip('0')} is outside our office operating hours or ends after closing time. "
+                        f"{avail_txt}"
+                    )
                 return (
-                    "The requested time is outside our office operating hours or falls on a day we are closed. "
-                    "Would you like to pick a time during normal business hours?"
+                    f"The requested time is outside our office operating hours, and we are closed or have no openings on {start_dt.strftime('%A, %B %d')}. "
+                    "Would you like to check our hours or look at another date?"
                 )
             except (PastTimeError, MinimumNoticeError) as e:
                 return f"I cannot book that slot: {e}. Please choose a time further in advance."
