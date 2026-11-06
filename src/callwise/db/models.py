@@ -46,6 +46,8 @@ class Business(Base):
     hours: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     transfer_number: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     notification_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    retention_days: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, default=90)
+    website_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now
@@ -84,6 +86,24 @@ class Business(Base):
     )
     reminders: Mapped[List["Reminder"]] = relationship(
         "Reminder", back_populates="business", cascade="all, delete-orphan"
+    )
+    memberships: Mapped[List["Membership"]] = relationship(
+        "Membership", back_populates="business", cascade="all, delete-orphan"
+    )
+    invites: Mapped[List["Invite"]] = relationship(
+        "Invite", back_populates="business", cascade="all, delete-orphan"
+    )
+    audit_logs: Mapped[List["AuditLog"]] = relationship(
+        "AuditLog", back_populates="business", cascade="all, delete-orphan"
+    )
+    jobs: Mapped[List["Job"]] = relationship(
+        "Job", back_populates="business", cascade="all, delete-orphan"
+    )
+    contacts: Mapped[List["Contact"]] = relationship(
+        "Contact", back_populates="business", cascade="all, delete-orphan"
+    )
+    follow_ups: Mapped[List["FollowUp"]] = relationship(
+        "FollowUp", back_populates="business", cascade="all, delete-orphan"
     )
 
 
@@ -162,6 +182,12 @@ class Call(Base):
         index=True,
     )
     caller_number: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, default="unknown")
+    contact_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("contacts.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     ended_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     duration_seconds: Mapped[float] = mapped_column(Float, default=0.0)
@@ -172,6 +198,7 @@ class Call(Base):
     stt_provider: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
 
     business: Mapped["Business"] = relationship("Business", back_populates="calls")
+    contact: Mapped[Optional["Contact"]] = relationship("Contact", back_populates="calls")
     turns: Mapped[List["CallTurn"]] = relationship(
         "CallTurn", back_populates="call", cascade="all, delete-orphan", order_by="CallTurn.timestamp"
     )
@@ -247,11 +274,18 @@ class Message(Base):
     )
     caller_name: Mapped[str] = mapped_column(String(255), nullable=False)
     callback_number: Mapped[str] = mapped_column(String(50), nullable=False)
+    contact_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("contacts.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     reason: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
     business: Mapped["Business"] = relationship("Business", back_populates="messages")
     call: Mapped[Optional["Call"]] = relationship("Call", back_populates="messages")
+    contact: Mapped[Optional["Contact"]] = relationship("Contact", back_populates="messages")
 
 
 class KnowledgeMiss(Base):
@@ -277,6 +311,9 @@ class KnowledgeMiss(Base):
         index=True,
     )
     query: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="unresolved", index=True)
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    resolved_answer: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
     business: Mapped["Business"] = relationship("Business", back_populates="knowledge_misses")
@@ -345,6 +382,12 @@ class Appointment(Base):
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="booked")  # booked, cancelled, completed, no_show
     booking_code_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     external_event_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    contact_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("contacts.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     call_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("calls.id", ondelete="SET NULL"),
@@ -358,6 +401,7 @@ class Appointment(Base):
 
     business: Mapped["Business"] = relationship("Business", back_populates="appointments")
     service: Mapped["Service"] = relationship("Service", back_populates="appointments")
+    contact: Mapped[Optional["Contact"]] = relationship("Contact", back_populates="appointments")
     call: Mapped[Optional["Call"]] = relationship("Call", back_populates="appointments")
     verification_attempts: Mapped[List["VerificationAttempt"]] = relationship(
         "VerificationAttempt", back_populates="appointment", cascade="all, delete-orphan"
@@ -492,3 +536,304 @@ class Reminder(Base):
 
     business: Mapped["Business"] = relationship("Business", back_populates="reminders")
     appointment: Mapped["Appointment"] = relationship("Appointment", back_populates="reminders")
+
+
+class User(Base):
+    """Registered team user account."""
+
+    __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+    memberships: Mapped[List["Membership"]] = relationship(
+        "Membership", back_populates="user", cascade="all, delete-orphan"
+    )
+    sessions: Mapped[List["Session"]] = relationship(
+        "Session", back_populates="user", cascade="all, delete-orphan"
+    )
+    audit_logs: Mapped[List["AuditLog"]] = relationship(
+        "AuditLog", back_populates="user"
+    )
+
+
+class Membership(Base):
+    """User membership in a business tenant with RBAC role."""
+
+    __tablename__ = "memberships"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    business_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    role: Mapped[str] = mapped_column(String(50), nullable=False)  # owner, manager, staff
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+    user: Mapped["User"] = relationship("User", back_populates="memberships")
+    business: Mapped["Business"] = relationship("Business", back_populates="memberships")
+
+    __table_args__ = (
+        Index("uq_memberships_user_business", "user_id", "business_id", unique=True),
+    )
+
+
+class Session(Base):
+    """Server-side authenticated session."""
+
+    __tablename__ = "sessions"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    session_token_hash: Mapped[str] = mapped_column(
+        String(64), unique=True, index=True, nullable=False
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    current_business_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id", ondelete="CASCADE"),
+        nullable=True,
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    ip_address: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    user_agent: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    last_active_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+    user: Mapped["User"] = relationship("User", back_populates="sessions")
+    current_business: Mapped[Optional["Business"]] = relationship("Business")
+
+
+class Invite(Base):
+    """Pending team invitations sent via email."""
+
+    __tablename__ = "invites"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    business_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    role: Mapped[str] = mapped_column(String(50), nullable=False)  # owner, manager, staff
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    invited_by_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    accepted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+    business: Mapped["Business"] = relationship("Business", back_populates="invites")
+    invited_by: Mapped[Optional["User"]] = relationship("User")
+
+
+class PasswordReset(Base):
+    """Single-use password reset tokens."""
+
+    __tablename__ = "password_resets"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    used_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+    user: Mapped["User"] = relationship("User")
+
+
+class AuditLog(Base):
+    """Immutable audit trail of actions taken in the dashboard."""
+
+    __tablename__ = "audit_log"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    business_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    action: Mapped[str] = mapped_column(String(100), nullable=False)
+    resource_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    resource_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    changes: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    ip_address: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)
+
+    business: Mapped["Business"] = relationship("Business", back_populates="audit_logs")
+    user: Mapped[Optional["User"]] = relationship("User", back_populates="audit_logs")
+
+
+class Job(Base):
+    """Asynchronous background work item for document/website ingestion."""
+
+    __tablename__ = "jobs"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    business_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    type: Mapped[str] = mapped_column(String(100), nullable=False)  # document_ingestion, url_ingestion, retention_cleanup
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True)
+    payload: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    progress: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    result: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)
+    started_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    business: Mapped["Business"] = relationship("Business", back_populates="jobs")
+
+
+class Contact(Base):
+    """Customer identity merged across calls, messages, and appointments."""
+
+    __tablename__ = "contacts"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    business_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    phone: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+    email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    do_not_contact: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+    business: Mapped["Business"] = relationship("Business", back_populates="contacts")
+    calls: Mapped[List["Call"]] = relationship("Call", back_populates="contact")
+    messages: Mapped[List["Message"]] = relationship("Message", back_populates="contact")
+    appointments: Mapped[List["Appointment"]] = relationship("Appointment", back_populates="contact")
+    follow_ups: Mapped[List["FollowUp"]] = relationship("FollowUp", back_populates="contact")
+
+    __table_args__ = (
+        Index("ix_contacts_business_phone", "business_id", "phone"),
+        Index("ix_contacts_business_email", "business_id", "email"),
+    )
+
+
+class FollowUp(Base):
+    """Actionable tasks for business staff derived from calls, messages, and misses."""
+
+    __tablename__ = "follow_ups"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    business_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    contact_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("contacts.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    assigned_to_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    source: Mapped[str] = mapped_column(String(50), nullable=False)  # message, failed_transfer, missed_question, manual
+    source_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True)  # open, done, snoozed
+    snoozed_until: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    due_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+    business: Mapped["Business"] = relationship("Business", back_populates="follow_ups")
+    contact: Mapped[Optional["Contact"]] = relationship("Contact", back_populates="follow_ups")
+    assigned_to: Mapped[Optional["User"]] = relationship("User")
+
