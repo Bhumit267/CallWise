@@ -21,6 +21,19 @@ from callwise.booking.service import (
     mask_phone_number,
     normalize_booking_code,
 )
+from callwise.booking.verification import (
+    AppointmentAlreadyCancelledError,
+    AppointmentNotFoundError,
+    VerificationError,
+    VerificationFailedError,
+    VerificationLockoutError,
+    cancel_appointment,
+    name_matches,
+    normalize_phone,
+    phone_matches,
+    reschedule_appointment,
+    verify_caller,
+)
 
 __all__ = [
     "get_available_slots",
@@ -40,4 +53,15 @@ __all__ = [
     "hash_booking_code",
     "normalize_booking_code",
     "mask_phone_number",
+    "verify_caller",
+    "cancel_appointment",
+    "reschedule_appointment",
+    "VerificationError",
+    "AppointmentNotFoundError",
+    "VerificationFailedError",
+    "VerificationLockoutError",
+    "AppointmentAlreadyCancelledError",
+    "name_matches",
+    "phone_matches",
+    "normalize_phone",
 ]

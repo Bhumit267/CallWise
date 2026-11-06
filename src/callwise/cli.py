@@ -863,6 +863,119 @@ def cli_list_appointments(
     )
 
 
+@app.command("cancel-appointment")
+def cli_cancel_appointment(
+    business_id: str = typer.Option(..., "--business-id", "-b", help="Business tenant UUID"),
+    code: str = typer.Option(..., "--code", "-c", help="6-character booking code (e.g. BK-4X2)"),
+    name: Optional[str] = typer.Option(None, "--name", "-n", help="Customer name for verification"),
+    phone: Optional[str] = typer.Option(None, "--phone", "-p", help="Customer phone for verification"),
+):
+    """Cancel an appointment with caller verification."""
+    import asyncio
+    from callwise.booking.verification import (
+        VerificationError,
+        cancel_appointment,
+    )
+    from callwise.booking.service import mask_phone_number
+    from callwise.db.session import AsyncSessionLocal
+
+    try:
+        biz_uuid = uuid.UUID(business_id)
+    except ValueError:
+        typer.secho("Invalid business UUID format.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    if not name and not phone:
+        typer.secho("Must provide at least customer name or phone for verification.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    async def _do_cancel():
+        async with AsyncSessionLocal() as session:
+            async with session.begin():
+                return await cancel_appointment(
+                    session=session,
+                    business_id=biz_uuid,
+                    booking_code=code,
+                    caller_name=name,
+                    caller_phone=phone,
+                )
+
+    try:
+        appt = asyncio.run(_do_cancel())
+        typer.secho("\n[SUCCESS] Appointment Cancelled!", fg=typer.colors.GREEN, bold=True)
+        typer.echo(f"Appointment ID: {appt.id}")
+        typer.echo(f"Customer:       {appt.customer_name} ({mask_phone_number(appt.customer_phone)})")
+        typer.echo(f"Time (UTC):     {appt.start_at.isoformat()}")
+        typer.echo(f"Status:         {appt.status}")
+    except VerificationError as exc:
+        typer.secho(f"\n[VERIFICATION / CANCELLATION ERROR] {exc}", fg=typer.colors.RED, bold=True)
+        raise typer.Exit(code=1)
+    except Exception as exc:
+        typer.secho(f"\n[UNEXPECTED ERROR] {exc}", fg=typer.colors.RED, bold=True)
+        raise typer.Exit(code=1)
+
+
+@app.command("reschedule-appointment")
+def cli_reschedule_appointment(
+    business_id: str = typer.Option(..., "--business-id", "-b", help="Business tenant UUID"),
+    code: str = typer.Option(..., "--code", "-c", help="6-character booking code (e.g. BK-4X2)"),
+    new_start: str = typer.Option(..., "--new-start", help="New appointment start time in ISO-8601"),
+    name: Optional[str] = typer.Option(None, "--name", "-n", help="Customer name for verification"),
+    phone: Optional[str] = typer.Option(None, "--phone", "-p", help="Customer phone for verification"),
+):
+    """Reschedule an existing appointment to a new time slot with caller verification."""
+    import asyncio
+    from datetime import datetime
+    from callwise.booking.service import BookingError, mask_phone_number
+    from callwise.booking.verification import (
+        VerificationError,
+        reschedule_appointment,
+    )
+    from callwise.db.session import AsyncSessionLocal
+
+    try:
+        biz_uuid = uuid.UUID(business_id)
+    except ValueError:
+        typer.secho("Invalid business UUID format.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    if not name and not phone:
+        typer.secho("Must provide at least customer name or phone for verification.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    try:
+        start_dt = datetime.fromisoformat(new_start)
+    except Exception as exc:
+        typer.secho(f"Invalid new start datetime format: {new_start} ({exc})", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    async def _do_reschedule():
+        async with AsyncSessionLocal() as session:
+            async with session.begin():
+                return await reschedule_appointment(
+                    session=session,
+                    business_id=biz_uuid,
+                    booking_code=code,
+                    new_start_time=start_dt,
+                    caller_name=name,
+                    caller_phone=phone,
+                )
+
+    try:
+        appt = asyncio.run(_do_reschedule())
+        typer.secho("\n[SUCCESS] Appointment Rescheduled!", fg=typer.colors.GREEN, bold=True)
+        typer.echo(f"Appointment ID: {appt.id}")
+        typer.echo(f"Customer:       {appt.customer_name} ({mask_phone_number(appt.customer_phone)})")
+        typer.echo(f"New Time (UTC): {appt.start_at.isoformat()} - {appt.end_at.isoformat()}")
+        typer.echo(f"Status:         {appt.status}")
+    except (VerificationError, BookingError) as exc:
+        typer.secho(f"\n[RESCHEDULING ERROR] {exc}", fg=typer.colors.RED, bold=True)
+        raise typer.Exit(code=1)
+    except Exception as exc:
+        typer.secho(f"\n[UNEXPECTED ERROR] {exc}", fg=typer.colors.RED, bold=True)
+        raise typer.Exit(code=1)
+
+
 if __name__ == "__main__":
     app()
 
