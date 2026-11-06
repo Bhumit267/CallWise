@@ -125,6 +125,8 @@ Configure your API keys in `.env`:
 - `GROQ_API_KEY`: Groq API key for Llama 3.3 70B
 - `DEEPGRAM_API_KEY`: Deepgram API key for STT & TTS
 - `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`: LiveKit Cloud project credentials
+- `CALENDAR_PROVIDER`: `local` (default, zero-setup PostgreSQL scheduling) or `google` (real Google Calendar)
+- For setting up Google Cloud / Google Calendar live sync, see [docs/GOOGLE_CALENDAR_SETUP.md](docs/GOOGLE_CALENDAR_SETUP.md).
 - Optional: `GEMINI_API_KEY`, `CARTESIA_API_KEY`, `SMTP_*`, `SIP_TRUNK_URI`
 
 ### 3. Start PostgreSQL with pgvector

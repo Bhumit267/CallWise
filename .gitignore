@@ -29,6 +29,8 @@ env/
 # Environment variables & secrets
 .env
 *.local
+credentials/
+*.json.secret
 
 # Testing and coverage
 .pytest_cache/
