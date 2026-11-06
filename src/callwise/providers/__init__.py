@@ -1,4 +1,4 @@
-"""Provider interfaces for interchangeable LLM, TTS, and Embedding engines."""
+"""Provider interfaces for interchangeable LLM, TTS, Embedding, Calendar, and Email engines."""
 
 from abc import ABC, abstractmethod
 from typing import Any, AsyncIterator, List
@@ -8,6 +8,13 @@ from callwise.providers.calendar import (
     LocalCalendarProvider,
     TimeSlot,
     get_calendar_provider,
+)
+from callwise.providers.email import (
+    ConsoleEmailProvider,
+    EmailMessage,
+    EmailProvider,
+    SMTPEmailProvider,
+    get_email_provider,
 )
 
 
@@ -41,3 +48,19 @@ class EmbeddingProvider(ABC):
     def embed_batch(self, texts: List[str]) -> List[List[float]]:
         """Convert a batch of texts into embedding vectors."""
         pass
+
+
+__all__ = [
+    "LLMProvider",
+    "TTSProvider",
+    "EmbeddingProvider",
+    "CalendarProvider",
+    "LocalCalendarProvider",
+    "TimeSlot",
+    "get_calendar_provider",
+    "EmailProvider",
+    "ConsoleEmailProvider",
+    "SMTPEmailProvider",
+    "EmailMessage",
+    "get_email_provider",
+]

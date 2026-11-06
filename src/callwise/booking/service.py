@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from callwise.config import settings
 from callwise.db.models import Appointment, Business, Service
 from callwise.providers.calendar import CalendarProvider, TimeSlot, get_calendar_provider
+from callwise.providers.email import EmailProvider
 
 logger = logging.getLogger(__name__)
 
@@ -106,8 +107,10 @@ async def book_appointment(
     customer_email: Optional[str] = None,
     call_id: Optional[uuid.UUID] = None,
     calendar_provider: Optional[CalendarProvider] = None,
+    email_provider: Optional[EmailProvider] = None,
     reference_now: Optional[datetime] = None,
     min_notice_hours: Optional[int] = None,
+    send_notifications: bool = True,
 ) -> BookingResult:
     """
     Book an appointment with row-level transaction locking to guarantee zero double-booking.
@@ -331,6 +334,20 @@ async def book_appointment(
         f"Booked appointment {appointment.id} for {customer_name.strip()} ({masked_phone}) "
         f"at {start_utc.isoformat()} [Code Hash: {code_hash[:8]}...]"
     )
+
+    if send_notifications:
+        try:
+            from callwise.notifications.service import notify_booking
+            await notify_booking(
+                session=session,
+                business=business,
+                appointment=appointment,
+                service=service,
+                booking_code=code,
+                email_provider=email_provider,
+            )
+        except Exception as exc:
+            logger.error(f"Error dispatching booking notifications: {exc}")
 
     return BookingResult(
         appointment=appointment,

@@ -106,5 +106,35 @@ class Settings(BaseSettings):
         description="Path to Google Calendar service account JSON credentials",
     )
 
+    # Email & Notifications
+    email_provider: Literal["console", "smtp"] = Field(
+        default="console",
+        description="Email delivery provider: console or smtp",
+    )
+    smtp_host: str = Field(
+        default="smtp.gmail.com",
+        description="SMTP server hostname",
+    )
+    smtp_port: int = Field(
+        default=587,
+        description="SMTP server port",
+    )
+    smtp_user: Optional[str] = Field(
+        default=None,
+        description="SMTP authentication username",
+    )
+    smtp_password: Optional[str] = Field(
+        default=None,
+        description="SMTP authentication password / app password",
+    )
+    smtp_from_email: str = Field(
+        default="noreply@callwise.ai",
+        description="Default sender email address",
+    )
+    smtp_use_tls: bool = Field(
+        default=True,
+        description="Enable STARTTLS for SMTP connections",
+    )
+
 
 settings = Settings()

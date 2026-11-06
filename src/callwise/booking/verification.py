@@ -20,6 +20,7 @@ from callwise.booking.service import (
 from callwise.config import settings
 from callwise.db.models import Appointment, Business, Service, VerificationAttempt
 from callwise.providers.calendar import CalendarProvider, TimeSlot, get_calendar_provider
+from callwise.providers.email import EmailProvider
 
 logger = logging.getLogger(__name__)
 
@@ -216,6 +217,8 @@ async def cancel_appointment(
     caller_phone: Optional[str] = None,
     call_id: Optional[uuid.UUID] = None,
     calendar_provider: Optional[CalendarProvider] = None,
+    email_provider: Optional[EmailProvider] = None,
+    send_notifications: bool = True,
 ) -> Appointment:
     """
     Cancel an appointment after successful caller verification.
@@ -229,6 +232,8 @@ async def cancel_appointment(
         caller_phone: Caller phone for verification.
         call_id: Call session UUID.
         calendar_provider: Optional CalendarProvider.
+        email_provider: Optional EmailProvider for dispatching cancel alerts.
+        send_notifications: Whether to dispatch cancellation emails.
 
     Returns:
         Updated Appointment record with status='cancelled'.
@@ -268,6 +273,25 @@ async def cancel_appointment(
         f"Cancelled appointment {appointment.id} for {appointment.customer_name} "
         f"({mask_phone_number(appointment.customer_phone)})"
     )
+
+    if send_notifications:
+        try:
+            biz_stmt = select(Business).where(Business.id == business_id)
+            biz = (await session.execute(biz_stmt)).scalar_one_or_none()
+            svc_stmt = select(Service).where(Service.id == appointment.service_id)
+            svc = (await session.execute(svc_stmt)).scalar_one_or_none()
+            if biz and svc:
+                from callwise.notifications.service import notify_cancellation
+                await notify_cancellation(
+                    session=session,
+                    business=biz,
+                    appointment=appointment,
+                    service=svc,
+                    email_provider=email_provider,
+                )
+        except Exception as exc:
+            logger.error(f"Error dispatching cancellation notifications: {exc}")
+
     return appointment
 
 
@@ -280,8 +304,10 @@ async def reschedule_appointment(
     caller_phone: Optional[str] = None,
     call_id: Optional[uuid.UUID] = None,
     calendar_provider: Optional[CalendarProvider] = None,
+    email_provider: Optional[EmailProvider] = None,
     reference_now: Optional[datetime] = None,
     min_notice_hours: Optional[int] = None,
+    send_notifications: bool = True,
 ) -> Appointment:
     """
     Reschedule an appointment to a new verified time slot after caller verification.
@@ -450,6 +476,7 @@ async def reschedule_appointment(
             )
 
     # 10. Update appointment record
+    old_start_utc = appointment.start_at
     appointment.start_at = new_start_utc
     appointment.end_at = new_end_utc
     appointment.status = "booked"
@@ -461,5 +488,21 @@ async def reschedule_appointment(
         f"Rescheduled appointment {appointment.id} for {appointment.customer_name} "
         f"to {new_start_utc.isoformat()} (UTC)"
     )
+
+    if send_notifications:
+        try:
+            from callwise.notifications.service import notify_reschedule
+            await notify_reschedule(
+                session=session,
+                business=business,
+                appointment=appointment,
+                service=service,
+                old_start_utc=old_start_utc,
+                new_start_utc=new_start_utc,
+                email_provider=email_provider,
+            )
+        except Exception as exc:
+            logger.error(f"Error dispatching reschedule notifications: {exc}")
+
     return appointment
 

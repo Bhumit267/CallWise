@@ -1,7 +1,10 @@
 """LLM tool definitions: get_business_hours, search_knowledge, and take_message."""
 
 from typing import Any, Callable, Dict, List, Optional
+import logging
 import uuid
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 from livekit.agents import function_tool
 
@@ -115,6 +118,14 @@ class CallwiseToolset:
                 reason=cleaned_reason,
             )
             session.add(msg)
+            await session.flush()
+
+            try:
+                from callwise.notifications.service import notify_message
+                await notify_message(session=session, business=self.business, message=msg)
+            except Exception as exc:
+                logger.error(f"Error dispatching message notification: {exc}")
+
             await session.commit()
 
         return (
