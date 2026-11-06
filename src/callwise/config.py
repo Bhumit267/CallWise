@@ -136,5 +136,15 @@ class Settings(BaseSettings):
         description="Enable STARTTLS for SMTP connections",
     )
 
+    # Telephony & Call Transfer
+    telephony_provider: Literal["mock", "sip"] = Field(
+        default="mock",
+        description="Telephony provider: mock or sip",
+    )
+    sip_trunk_uri: Optional[str] = Field(
+        default=None,
+        description="Outbound SIP trunk URI (e.g. sip:trunk@sip.provider.com)",
+    )
+
 
 settings = Settings()

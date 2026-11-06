@@ -16,6 +16,13 @@ from callwise.providers.email import (
     SMTPEmailProvider,
     get_email_provider,
 )
+from callwise.providers.telephony import (
+    MockTelephonyProvider,
+    SIPTelephonyProvider,
+    TelephonyProvider,
+    TransferResult,
+    get_telephony_provider,
+)
 
 
 class LLMProvider(ABC):
@@ -63,4 +70,9 @@ __all__ = [
     "SMTPEmailProvider",
     "EmailMessage",
     "get_email_provider",
+    "TelephonyProvider",
+    "MockTelephonyProvider",
+    "SIPTelephonyProvider",
+    "TransferResult",
+    "get_telephony_provider",
 ]

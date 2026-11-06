@@ -21,6 +21,7 @@ from callwise.booking.service import (
     mask_phone_number,
     normalize_booking_code,
 )
+from callwise.booking.transfer import execute_transfer
 from callwise.booking.verification import (
     AppointmentAlreadyCancelledError,
     AppointmentNotFoundError,
@@ -53,6 +54,7 @@ __all__ = [
     "hash_booking_code",
     "normalize_booking_code",
     "mask_phone_number",
+    "execute_transfer",
     "verify_caller",
     "cancel_appointment",
     "reschedule_appointment",

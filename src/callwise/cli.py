@@ -976,6 +976,61 @@ def cli_reschedule_appointment(
         raise typer.Exit(code=1)
 
 
+@app.command("transfer")
+def cli_transfer(
+    business_id: str = typer.Option(..., "--business-id", "-b", help="Business tenant UUID"),
+    reason: str = typer.Option(..., "--reason", "-r", help="Reason for transfer request"),
+    call_id: Optional[str] = typer.Option(None, "--call-id", help="Active call session UUID"),
+):
+    """Initiate a live call transfer to human staff."""
+    import asyncio
+    from callwise.booking.transfer import execute_transfer
+    from callwise.db.session import AsyncSessionLocal
+
+    try:
+        biz_uuid = uuid.UUID(business_id)
+    except ValueError:
+        typer.secho("Invalid business UUID format.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    c_uuid = None
+    if call_id:
+        try:
+            c_uuid = uuid.UUID(call_id)
+        except ValueError:
+            typer.secho("Invalid call UUID format.", fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+
+    async def _do_transfer():
+        async with AsyncSessionLocal() as session:
+            async with session.begin():
+                return await execute_transfer(
+                    session=session,
+                    business_id=biz_uuid,
+                    call_id=c_uuid,
+                    reason=reason,
+                )
+
+    try:
+        res = asyncio.run(_do_transfer())
+        if res.success:
+            typer.secho("\n[TRANSFER CONNECTED]", fg=typer.colors.GREEN, bold=True)
+            typer.echo(f"Status:       {res.status}")
+            typer.echo(f"Target Phone: {res.target_phone}")
+            typer.echo(f"Message:      {res.message}")
+        elif res.status == "fallback_message":
+            typer.secho("\n[TRANSFER FALLBACK: OFFICE CLOSED / NO NUMBER]", fg=typer.colors.YELLOW, bold=True)
+            typer.echo(f"Status:  {res.status}")
+            typer.echo(f"Message: {res.message}")
+        else:
+            typer.secho("\n[TRANSFER FAILED: LINE BUSY / ERROR]", fg=typer.colors.RED, bold=True)
+            typer.echo(f"Status:  {res.status}")
+            typer.echo(f"Message: {res.message}")
+    except Exception as exc:
+        typer.secho(f"\n[TRANSFER ERROR] {exc}", fg=typer.colors.RED, bold=True)
+        raise typer.Exit(code=1)
+
+
 @app.command("run-scheduler")
 def cli_run_scheduler(
     interval: int = typer.Option(60, "--interval", "-i", help="Polling interval in seconds"),
