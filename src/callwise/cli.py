@@ -976,6 +976,90 @@ def cli_reschedule_appointment(
         raise typer.Exit(code=1)
 
 
+@app.command("run-scheduler")
+def cli_run_scheduler(
+    interval: int = typer.Option(60, "--interval", "-i", help="Polling interval in seconds"),
+    once: bool = typer.Option(False, "--once", help="Run a single pass and exit immediately"),
+):
+    """Run the appointment reminder background scheduler."""
+    import asyncio
+    from callwise.reminders.scheduler import process_due_reminders, run_scheduler
+    from callwise.db.session import AsyncSessionLocal
+
+    if once:
+        typer.echo("Executing single-pass reminder scheduler check...")
+
+        async def _run_once():
+            async with AsyncSessionLocal() as session:
+                async with session.begin():
+                    return await process_due_reminders(session)
+
+        count = asyncio.run(_run_once())
+        typer.secho(f"[OK] Single-pass complete: Dispatched {count} due reminder(s).", fg=typer.colors.GREEN)
+        return
+
+    typer.echo(f"Starting Callwise Reminder Scheduler daemon (interval: {interval}s)...")
+    typer.echo("Press Ctrl+C to stop.")
+    try:
+        asyncio.run(run_scheduler(poll_interval=interval, run_once=False))
+    except KeyboardInterrupt:
+        typer.echo("\nScheduler stopped.")
+
+
+@app.command("list-reminders")
+def cli_list_reminders(
+    business_id: str = typer.Option(..., "--business-id", "-b", help="Business tenant UUID"),
+    status: Optional[str] = typer.Option(None, "--status", help="Filter by reminder status (pending/sent/cancelled)"),
+):
+    """List scheduled appointment reminders for a business tenant."""
+    import asyncio
+    from callwise.db.models import Reminder, Appointment
+    from callwise.db.session import AsyncSessionLocal
+
+    try:
+        biz_uuid = uuid.UUID(business_id)
+    except ValueError:
+        typer.secho("Invalid business UUID format.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    async def _fetch():
+        async with AsyncSessionLocal() as session:
+            stmt = select(Reminder).where(Reminder.business_id == biz_uuid).order_by(Reminder.send_at.asc())
+            if status:
+                stmt = stmt.where(Reminder.status == status.strip().lower())
+            rems = (await session.execute(stmt)).scalars().all()
+
+            rows = []
+            for r in rems:
+                appt = await session.get(Appointment, r.appointment_id)
+                cust = appt.customer_name if appt else "N/A"
+                contact = (appt.customer_phone if r.channel == "call" else appt.customer_email) if appt else "N/A"
+                rows.append([
+                    str(r.id)[:8] + "...",
+                    str(r.appointment_id)[:8] + "...",
+                    cust,
+                    r.channel.upper(),
+                    contact or "N/A",
+                    r.send_at.strftime("%Y-%m-%d %H:%M UTC"),
+                    r.status,
+                ])
+            return rows
+
+    rows = asyncio.run(_fetch())
+    if not rows:
+        typer.echo(f"No reminders found for business {business_id}" + (f" with status '{status}'." if status else "."))
+        return
+
+    typer.echo(f"\nScheduled Reminders for business {business_id}:")
+    typer.echo(
+        tabulate(
+            rows,
+            headers=["Reminder ID", "Appointment", "Customer", "Channel", "Recipient", "Send At", "Status"],
+            tablefmt="grid",
+        )
+    )
+
+
 if __name__ == "__main__":
     app()
 

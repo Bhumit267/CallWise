@@ -18,7 +18,13 @@ from callwise.booking.service import (
     mask_phone_number,
 )
 from callwise.config import settings
-from callwise.db.models import Appointment, Business, Service, VerificationAttempt
+from callwise.db.models import (
+    Appointment,
+    Business,
+    Reminder,
+    Service,
+    VerificationAttempt,
+)
 from callwise.providers.calendar import CalendarProvider, TimeSlot, get_calendar_provider
 from callwise.providers.email import EmailProvider
 
@@ -253,6 +259,15 @@ async def cancel_appointment(
 
     appointment.status = "cancelled"
 
+    # Cancel any pending reminders for this appointment
+    rem_stmt = select(Reminder).where(
+        Reminder.appointment_id == appointment.id,
+        Reminder.status == "pending",
+    )
+    pending_rems = (await session.execute(rem_stmt)).scalars().all()
+    for r in pending_rems:
+        r.status = "cancelled"
+
     # Remove event from external / local calendar
     if appointment.external_event_id:
         provider = calendar_provider or get_calendar_provider()
@@ -480,6 +495,48 @@ async def reschedule_appointment(
     appointment.start_at = new_start_utc
     appointment.end_at = new_end_utc
     appointment.status = "booked"
+
+    # Update scheduled reminders (24h email and 2h call) to new appointment time
+    rem_stmt = select(Reminder).where(
+        Reminder.appointment_id == appointment.id,
+    )
+    existing_rems = (await session.execute(rem_stmt)).scalars().all()
+    new_email_time = new_start_utc - timedelta(hours=24)
+    new_call_time = new_start_utc - timedelta(hours=2)
+
+    has_call_rem = False
+    has_email_rem = False
+
+    for r in existing_rems:
+        if r.channel == "call":
+            r.send_at = new_call_time
+            has_call_rem = True
+        else:
+            r.send_at = new_email_time
+            has_email_rem = True
+        if r.status in ("sent", "cancelled"):
+            r.status = "pending"
+
+    if not has_call_rem:
+        session.add(
+            Reminder(
+                business_id=business_id,
+                appointment_id=appointment.id,
+                send_at=new_call_time,
+                channel="call",
+                status="pending",
+            )
+        )
+    if not has_email_rem and appointment.customer_email:
+        session.add(
+            Reminder(
+                business_id=business_id,
+                appointment_id=appointment.id,
+                send_at=new_email_time,
+                channel="email",
+                status="pending",
+            )
+        )
 
     await session.flush()
     await session.refresh(appointment)

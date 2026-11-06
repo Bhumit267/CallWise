@@ -13,7 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from callwise.config import settings
-from callwise.db.models import Appointment, Business, Service
+from callwise.db.models import Appointment, Business, Reminder, Service
 from callwise.providers.calendar import CalendarProvider, TimeSlot, get_calendar_provider
 from callwise.providers.email import EmailProvider
 
@@ -329,6 +329,31 @@ async def book_appointment(
     session.add(appointment)
     await session.flush()
     await session.refresh(appointment)
+
+    # 12. Create scheduled reminders:
+    # A. 24-hour advance email reminder (if customer email provided)
+    if customer_email and customer_email.strip():
+        email_reminder_time = start_utc - timedelta(hours=24)
+        email_reminder = Reminder(
+            business_id=business_id,
+            appointment_id=appointment.id,
+            send_at=email_reminder_time,
+            channel="email",
+            status="pending",
+        )
+        session.add(email_reminder)
+
+    # B. 2-hour advance automated phone call reminder to customer_phone
+    call_reminder_time = start_utc - timedelta(hours=2)
+    call_reminder = Reminder(
+        business_id=business_id,
+        appointment_id=appointment.id,
+        send_at=call_reminder_time,
+        channel="call",
+        status="pending",
+    )
+    session.add(call_reminder)
+    await session.flush()
 
     logger.info(
         f"Booked appointment {appointment.id} for {customer_name.strip()} ({masked_phone}) "

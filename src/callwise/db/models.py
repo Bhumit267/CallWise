@@ -483,6 +483,7 @@ class Reminder(Base):
         index=True,
     )
     send_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    channel: Mapped[str] = mapped_column(String(20), nullable=False, default="email")  # "email" or "call"
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending")  # pending, sent, failed, cancelled
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
