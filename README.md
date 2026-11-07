@@ -1,258 +1,202 @@
 # Callwise 📞🤖
 
-Callwise is a production-ready, multi-tenant voice AI receptionist designed for local service businesses (dental clinics, salons, spas, repair shops, and professional offices).
+Callwise is an enterprise-grade, multi-tenant voice and chat AI receptionist platform designed for local service businesses (dental clinics, salons, spas, repair shops, and professional offices).
 
-All tenant data—including knowledge documents, operating hours, service menus, pricing, cancellation policies, transfer routing, and notifications—is driven dynamically from the database with strict tenant isolation.
+All tenant configuration—including knowledge documents, operating hours, service menus, pricing, cancellation policies, telephone routing, chat widget customization, and notification alerts—is driven dynamically from PostgreSQL with kernel-level Row Level Security (RLS) tenant isolation.
 
 ---
 
-## Architecture Overview
+## System Architecture
 
 ```mermaid
 flowchart TD
-    Caller([Caller: Phone or WebRTC]) --> Worker[LiveKit Voice Worker / Text Agent]
-    
-    subgraph Agent Core
-        Worker --> LLM[LLM Provider: Groq / Gemini / Ollama]
-        Worker --> STT[STT: Deepgram Nova-2]
-        Worker --> TTS[TTS: Deepgram Aura / Cartesia]
-        Worker --> VAD[VAD: Silero]
-        Worker --> Tools[CallwiseToolset: 9 Tools]
+    InboundCaller([Caller: Phone or WebRTC]) --> SIP[LiveKit SIP Telephony / Router]
+    WebVisitor([Visitor: Web Chat Widget]) --> WidgetAPI[Chat Widget Endpoint / Router]
+
+    subgraph Ingress & Protection
+        SIP --> InboundRouter[Inbound Router: Blocklist, Rate Limit, Kill Switch]
+        WidgetAPI --> InboundRouter
+        InboundRouter --> KillSwitch{Kill Switch Active?}
+        KillSwitch -- Yes --> FallbackMsg[Fallback Message-Taking Prompt]
+        KillSwitch -- No --> AgentCore[Text & Voice Agent Core]
     end
 
-    subgraph Data & Providers
-        Tools --> KB[Knowledge Engine: pgvector embeddings]
-        Tools --> Hours[Timezone-Aware Hours Engine]
-        Tools --> Booking[Booking & Availability Engine]
-        Tools --> Telephony[TelephonyProvider: Mock / LiveKit SIP]
-        Tools --> Email[EmailProvider: Console / SMTP]
-        Tools --> Calendar[CalendarProvider: Local DB / Google Calendar]
+    subgraph Agent Core & Subsystems
+        AgentCore --> CircuitBreaker[Circuit Breaker: Groq Primary / Gemini Secondary]
+        AgentCore --> VAD[Silero VAD: Silence Detection]
+        AgentCore --> Tools[CallwiseToolset: 9 Dynamic Tools]
+        Tools --> Hours[Operating Hours Engine: Timezone Aware]
+        Tools --> KB[Knowledge Engine: pgvector Vector Search]
+        Tools --> Booking[Booking Engine: Race-Condition Safe]
+        Tools --> Transfer[Live Human Transfer Engine: Hours Gated]
     end
 
-    subgraph Background Services
-        Scheduler[Reminder Scheduler Daemon] --> Email
-        Scheduler --> AutoCall[Automated Voice Reminder Call]
+    subgraph Multi-Tenant Database
+        Booking --> DB[(PostgreSQL 16 + pgvector)]
+        Hours --> DB
+        KB --> DB
+        RLS[PostgreSQL Row Level Security Policies] --> DB
     end
 
-    Booking --> DB[(PostgreSQL + pgvector)]
-    Hours --> DB
-    KB --> DB
-    Scheduler --> DB
+    subgraph Background Daemons & Web Stack
+        Reminders[Reminder Daemon: 24h Email & 2h Voice Call] --> DB
+        Worker[Ingestion Worker: Async Audio & Docs] --> DB
+        Dashboard[Next.js 14 Dashboard: Cookie Auth & RBAC] --> DB
+        Caddy[Caddy Reverse Proxy: Auto HTTPS & Compression] --> Dashboard
+        Caddy --> AgentCore
+    end
 ```
 
 ---
 
-## Key Features
+## Key Features & Phases
 
-### Phase 1: Foundations & Receptionist Core
+### Phase 1: Foundations & Core Receptionist
 - **Multi-Tenant from Day One**: Every database table is indexed and foreign-keyed by `business_id`.
-- **Dynamic Personas**: Receptionist greetings, tone, and policies are built on-the-fly per tenant.
+- **Dynamic Personas**: Spoken greetings, tone, and policies are built dynamically per business tenant.
 - **Strict Hallucination Prevention**: If knowledge similarity falls below the cutoff, the agent declines speculation, logs a `knowledge_miss`, and offers to take a message.
 - **Interchangeable Providers**:
-  - **LLM**: Groq (default: Llama 3.3 70B), Gemini Flash, or local Ollama with exponential backoff on 429 rate limits.
+  - **LLM**: Groq (Llama 3.3 70B), Gemini Flash, or local Ollama with exponential backoff.
   - **STT**: Deepgram Nova-2.
   - **TTS**: Deepgram Aura or Cartesia.
-  - **Embeddings**: Sentence-transformers (`all-MiniLM-L6-v2`) via `pgvector`.
+  - **Embeddings**: Sentence-transformers (`all-MiniLM-L6-v2`) stored via `pgvector`.
   - **Voice Pipeline**: LiveKit Agents Python framework with WebRTC and text-eval fallback mode.
 
 ### Phase 2: Booking, Verification & Live Transfer
-- **Service Menus & Pricing**: Configurable bookable services with durations in minutes and custom prices.
 - **Timezone-Aware Availability Engine**: Generates 30-minute bookable slots conforming to operating hours, excluding existing appointments, and enforcing minimum notice windows.
-- **Double-Booking & Race Condition Prevention**: Uses PostgreSQL tenant row-level locking (`SELECT ... FOR UPDATE`) to eliminate concurrent double-booking vulnerabilities.
+- **Double-Booking & Race Condition Prevention**: Uses PostgreSQL tenant row-level locking (`SELECT ... FOR UPDATE`) to eliminate concurrent double-booking.
 - **6-Character Booking Codes**: Generates secure booking codes (e.g., `BK-4X2`) stored as SHA-256 hashes with phone number masking (`***-***-1234`).
 - **Caller Verification & Lockout Protection**: Modifying or cancelling appointments requires verification against customer name and phone, with strict 3-attempt lockout per session.
 - **Dual-Channel Automated Reminders**:
   - 24 hours prior: Email confirmation and reminder.
   - 2 hours prior: Automated phone reminder call.
   - Background scheduler daemon with `SELECT ... FOR UPDATE SKIP LOCKED` for reliable, zero-duplicate delivery.
-- **Live Call Transfer to Human**:
-  - Gated by business hours: If closed, offers fallback callback message.
-  - Gated by destination phone number configuration.
-  - Supports mock and LiveKit SIP trunk providers (`SIPTelephonyProvider`).
-  - Automatic email alert dispatch to business owners upon transfer attempts.
-- **Google Calendar Synchronization**:
-  - Interchangeable `CalendarProvider` interface (`LocalCalendarProvider` and `GoogleCalendarProvider`).
-  - Fetches busy blocks via Google Calendar v3 REST API, merges with local reservations, and synchronizes events with graceful fallback.
-- **33-Question Benchmark Evaluation Suite**: Automated evaluation across answerable, unanswerable, and prohibited categories with latency tracking and zero-hallucination verification.
+- **Live Call Transfer to Human**: Gated by business hours and transfer destination number with automated fallback message taking and owner alert emails.
+- **Google Calendar Synchronization**: Interchangeable `CalendarProvider` interface (`LocalCalendarProvider` and `GoogleCalendarProvider`) synchronizing busy blocks via Google Calendar v3 REST API.
+
+### Phase 3: Web Dashboard, Multi-Tenant Isolation & Role-Based Access Control
+- **Next.js 14 App Router Dashboard**: Full responsive management interface for Call logs, Transcripts, Scheduling, Knowledge Base, Team, Audit Trail, and Settings.
+- **PostgreSQL Row Level Security (RLS)**: Database-kernel enforced multi-tenant isolation setting `app.current_business_id` per connection.
+- **Argon2id Authentication & Sessions**: Cryptographic 64-character session tokens stored as SHA-256 hashes, with HTTP-only SameSite cookies and progressive rate-limiting lockout.
+- **Role-Based Access Control (RBAC)**: Fine-grained permissions for `Owner`, `Manager`, and `Staff`.
+- **Double-Submit CSRF Defense**: Cryptographic cookie and header tokens validated on all state-mutating requests.
+
+### Phase 4: Production Telephony, Chat Widget, Limits, Observability & Self-Hosting
+- **LiveKit SIP Telephony Routing**: Inbound telephone routing mapping dialed E.164 numbers to business tenants and resolving caller identity.
+- **Website Chat Widget**:
+  - Zero-dependency embeddable script (`web/public/widget.js` and `web-widget/embed.js`).
+  - Standalone isolated iframe interface (`/widget-frame/[key]`).
+  - Dashboard configuration: theme colors, greeting, lead capture, and domain origin restrictions.
+- **Usage Tracking & Limit Enforcement**: Itemized token and duration tracking with cost estimation, monthly minutes/chat quotas, and graceful degradation.
+- **Emergency Kill Switch & Provider Circuit Breaker**:
+  - Dynamic kill switch via CLI (`callwise killswitch enable`) or environment flag.
+  - Three-state circuit breaker (`CLOSED` $\rightarrow$ `OPEN` $\rightarrow$ `HALF_OPEN`) with automatic failover between Groq and Gemini.
+- **Abuse & Flood Protection**: Per-caller hourly rate limits, tenant phone blocklist, and keyboard smash / nonsense repetition detection.
+- **Production Docker Setup with Caddy**: Multi-stage Dockerfiles for backend and Next.js, Caddy reverse proxy with automated TLS and compression, and `docker-compose.prod.yml`.
+- **System Diagnostics & Maintenance**: `callwise doctor` diagnostic command and compressed database backup/restore tools (`scripts/backup.sh`, `scripts/restore.sh`).
+- **Structured JSON Logging & Metrics**: PII redaction filter scrubbing cards/SSNs/passwords and Prometheus exposition endpoint (`/metrics`).
+- **Comparative Evals & Load Testing**: Multi-provider side-by-side benchmark evaluations (`callwise run-evals --compare`) and async concurrency load tester (`scripts/load_test.py`).
 
 ---
 
-## Project Structure
-
-```text
-callwise/
-  docker-compose.yml              (PostgreSQL + pgvector container)
-  .env.example                    (Environment configuration template)
-  README.md                       (System architecture & user guide)
-  pyproject.toml                  (Dependencies and project metadata)
-  alembic/                        (Database schema migrations)
-  src/callwise/
-    config.py                     (Pydantic application settings)
-    db/                           (SQLAlchemy models, migrations, and session management)
-    providers/                    (LLM, TTS, Embedding, Email, Telephony, Calendar providers)
-    knowledge/                    (SSRF-protected loaders, chunker, vector ingest, and search)
-    booking/                      (Availability engine, booking service, verification, transfer)
-    notifications/                (Email dispatch pipeline and formatted templates)
-    reminders/                    (Background reminder scheduler daemon)
-    agent/                        (System prompt builder, 9 LiveKit tools, hours, text & voice agents)
-    calls/                        (Call turn logging, summaries, and latency tracking)
-    cli.py                        (Typer CLI commands)
-  tests/                          (Pytest test suite: 102 automated tests)
-  evals/                          (Q&A evaluation benchmarks and test datasets)
-```
-
----
-
-## Setup Instructions
+## Quickstart & Setup Guide
 
 ### 1. Prerequisites
-- **Python 3.11+** installed
-- **uv** (recommended) or standard `pip` + `venv`
-- **Docker** and **Docker Compose** installed and running
+- **Python 3.12+**
+- **uv** (recommended) or standard `pip`
+- **Node.js 20+** (for frontend dashboard)
+- **Docker & Docker Compose**
 
 ### 2. Configure Environment Variables
 Copy `.env.example` to `.env`:
-
 ```powershell
-# Windows PowerShell
+# Windows
 Copy-Item .env.example .env
 
 # macOS / Linux
 cp .env.example .env
 ```
 
-Configure your API keys in `.env`:
-- `GROQ_API_KEY`: Groq API key for Llama 3.3 70B
-- `DEEPGRAM_API_KEY`: Deepgram API key for STT & TTS
+Configure your credentials in `.env`:
+- `GROQ_API_KEY`: Groq API key (Llama 3.3 70B)
+- `GEMINI_API_KEY`: Google Gemini API key (secondary/fallback LLM)
+- `DEEPGRAM_API_KEY`: Deepgram API key (STT & TTS)
 - `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`: LiveKit Cloud project credentials
-- `CALENDAR_PROVIDER`: `local` (default, zero-setup PostgreSQL scheduling) or `google` (real Google Calendar)
-- For setting up Google Cloud / Google Calendar live sync, see [docs/GOOGLE_CALENDAR_SETUP.md](docs/GOOGLE_CALENDAR_SETUP.md).
-- Optional: `GEMINI_API_KEY`, `CARTESIA_API_KEY`, `SMTP_*`, `SIP_TRUNK_URI`
+- `DATABASE_URL`: `postgresql+asyncpg://postgres:postgres@localhost:5433/callwise`
 
 ### 3. Start PostgreSQL with pgvector
 ```bash
 docker compose up -d
-docker compose ps
 ```
 
-### 4. Install Dependencies
+### 4. Install Dependencies & Run Database Migrations
 ```bash
-uv sync
+uv sync --all-extras
+uv run alembic upgrade head
 ```
 
-### 5. Run the Test Suite
+### 5. Seed Demonstration Tenants
 ```bash
-uv run pytest -v
+uv run python -m callwise.cli seed
 ```
+
+### 6. Run System Diagnostics
+```bash
+uv run python -m callwise.cli doctor
+```
+
+### 7. Launch Web Dashboard & API
+```powershell
+# Terminal 1: Backend API
+uv run python -m uvicorn callwise.api.main:app --host 0.0.0.0 --port 8000
+
+# Terminal 2: Next.js Frontend
+cd web
+npm install
+npm run dev
+```
+
+Log in at [http://localhost:3000/login](http://localhost:3000/login) with:
+- **Email:** `bhumit@gmail.com`
+- **Password:** `Password123!`
+
+---
+
+## Production Deployment with Docker Compose & Caddy
+
+Run the complete multi-container production stack (PostgreSQL + pgvector, FastAPI Backend, Background Ingestion Worker, Appointment Reminder Daemon, Next.js Dashboard, and Caddy Reverse Proxy):
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+Access the unified service via Caddy reverse proxy at [http://localhost](http://localhost) (or configured `DOMAIN`).
 
 ---
 
 ## CLI Command Reference
 
-> [!NOTE]
-> On Windows machines with Application Control / AppLocker policies, execute commands via `uv run python -m callwise.cli <command>`.
+Execute CLI commands with `uv run python -m callwise.cli <command>`:
 
-### Tenant Management & Knowledge Ingestion
-```powershell
-# Seed demo businesses (Dental Clinic and Hair Salon)
-uv run python -m callwise.cli seed
-
-# List registered business tenants
-uv run python -m callwise.cli list-businesses
-
-# Ingest knowledge documents
-uv run python -m callwise.cli ingest-file --business-id 11111111-1111-1111-1111-111111111111 --file evals/data/dental_knowledge.md --title "Dental Clinic Knowledge Base"
-
-# Check operating hours
-uv run python -m callwise.cli check-hours --business-id 11111111-1111-1111-1111-111111111111
-```
-
-### Services, Availability & Booking (Phase 2)
-```powershell
-# 1. List bookable services for a tenant
-uv run python -m callwise.cli list-services --business-id 11111111-1111-1111-1111-111111111111
-
-# 2. Add a new bookable service
-uv run python -m callwise.cli add-service --business-id 11111111-1111-1111-1111-111111111111 --name "Invisalign Consultation" --duration 30 --price 75
-
-# 3. Book an appointment
-uv run python -m callwise.cli book --business-id 11111111-1111-1111-1111-111111111111 --service-id 8b71639d-77bf-4ecd-9909-f32f30382987 --start 2026-11-11T14:00:00 --name "Elenor Vance" --phone "555-0144" --email "elenor@hillhouse.org"
-
-# 4. List booked appointments
-uv run python -m callwise.cli list-appointments --business-id 11111111-1111-1111-1111-111111111111
-
-# 5. Reschedule an appointment (requires caller verification)
-uv run python -m callwise.cli reschedule-appointment --business-id 11111111-1111-1111-1111-111111111111 --code "BK-4X2" --new-start "2026-11-12T10:00:00" --name "Elenor Vance" --phone "555-0144"
-
-# 6. Cancel an appointment (requires caller verification)
-uv run python -m callwise.cli cancel-appointment --business-id 11111111-1111-1111-1111-111111111111 --code "BK-4X2" --name "Elenor Vance" --phone "555-0144"
-```
-
-### Live Call Escalation & Reminders (Phase 2)
-```powershell
-# 1. Test live transfer to human (checks hours & destination number)
-uv run python -m callwise.cli transfer --business-id 11111111-1111-1111-1111-111111111111 --reason "Customer has urgent billing dispute"
-
-# 2. View scheduled reminders (24h email + 2h phone call)
-uv run python -m callwise.cli list-reminders --business-id 11111111-1111-1111-1111-111111111111
-
-# 3. Run background reminder scheduler daemon
-uv run python -m callwise.cli run-scheduler --interval 60
-
-# Or execute a single-pass check
-uv run python -m callwise.cli run-scheduler --once
-```
-
-### Conversational Testing & Benchmark Evals
-```powershell
-# Interactive console text chat with AI receptionist
-uv run python -m callwise.cli chat --business-id 11111111-1111-1111-1111-111111111111
-
-# Run 33-question benchmark evaluation suite
-uv run python -m callwise.cli run-evals
-
-# Start live WebRTC voice agent worker (requires LiveKit Cloud)
-uv run python -m callwise.cli run-agent --business-id 11111111-1111-1111-1111-111111111111
-```
+| Command | Description |
+|---|---|
+| `callwise doctor` | Run comprehensive 12-point system diagnostic health check. |
+| `callwise seed` | Seed database with demo tenants (Apex Dental Clinic and Serenity Spa). |
+| `callwise run-evals [--compare]` | Run benchmark evaluation suite or side-by-side Groq vs Gemini comparison. |
+| `callwise load-test [-n 50] [-c 5]` | Run concurrent traffic and load simulation test. |
+| `callwise killswitch [status\|enable\|disable]` | Inspect or toggle global emergency kill switch. |
+| `callwise blocklist [add\|list\|remove]` | Manage tenant telephone abuse blocklist. |
+| `callwise db backup [--output-dir ...]` | Create compressed database backup (`.sql.gz`). |
+| `callwise db restore <backup_file>` | Restore database from compressed backup archive. |
+| `callwise run-scheduler` | Run appointment reminder daemon (24h email & 2h phone call). |
+| `callwise run-worker` | Run asynchronous background document and audio ingestion worker. |
+| `callwise chat --business-id <UUID>` | Interactive CLI conversational text chat with AI receptionist. |
+| `callwise run-agent --business-id <UUID>` | Start LiveKit WebRTC voice agent worker for live calls. |
 
 ---
 
-## Telephony Setup & Live SIP Testing (Phase 4)
+## Documentation Links
 
-Callwise can receive inbound telephone calls, resolve the dialed number to the correct tenant business, and route the caller to an interactive voice agent.
-
-### Setup Option A: LiveKit SIP Inbound Trunk
-1. In LiveKit Cloud or your self-hosted LiveKit instance, navigate to **SIP** -> **Inbound Trunks**.
-2. Create an Inbound Trunk with your LiveKit SIP URI (e.g. `sip.livekit.cloud`).
-3. Set your environment variables:
-   ```env
-   TELEPHONY_PROVIDER=sip
-   LIVEKIT_URL=wss://your-livekit-server.livekit.cloud
-   LIVEKIT_API_KEY=your_livekit_key
-   LIVEKIT_API_SECRET=your_livekit_secret
-   SIP_TRUNK_URI=sip:trunk@your-sip-domain.com
-   ```
-4. Assign your purchased or ported E.164 phone number (e.g. `+15551234567`) to your business via the API or dashboard.
-
-### Setup Option B: Bring-Your-Own SIP Trunk (Twilio Trial)
-1. Sign up for a free Twilio trial account and purchase a trial phone number.
-2. In the Twilio Console, go to **Voice** -> **SIP Trunking** -> **Create Trunk**.
-3. Set the Origination URI to your LiveKit SIP domain: `sip:your-project.sip.livekit.cloud`.
-4. Configure Inbound Call routing on your Twilio number to point to this SIP Trunk.
-
-### Setup Option C: Free Softphone Testing (Zero Cost)
-You can test the entire SIP telephony and agent routing workflow locally without paying for any carrier or phone number:
-1. Download a free SIP softphone client (such as **Linphone** or **Zoiper**).
-2. Configure a free SIP account (e.g. through `sip2sip.info` or an internal Asterisk/FreeSWITCH container).
-3. In Callwise, assign an E.164 or softphone extension number (e.g. `+15550001`) to your test business via `POST /api/phone-numbers`.
-4. Run `uv run python -m callwise.cli run-agent --business-id <UUID>` or initiate mock SIP transfers via `MockTelephonyProvider`.
-
----
-
-## Known Boundaries & Limitations
-
-In accordance with Phase 2 scope:
-1. **Headless / API & CLI First**: Callwise operates via CLI and voice/text streams; an administrative web dashboard is out of scope for Phase 2.
-2. **Dual-Channel Reminders**: Reminders use Email (24h prior) and Automated Voice Calls (2h prior). SMS text messaging is not included in Phase 2.
-3. **Single Tenant Administrator**: Each business entity has a designated contact phone and notification email; multi-user RBAC and permission hierarchies are not implemented.
-4. **Local and Google Calendar Providers**: Supports local database calendar scheduling and Google Calendar v3 REST synchronization. Outlook / Apple Calendar providers are reserved for future phases.
+- 📖 **[DEMO.md](DEMO.md)**: Full interactive walkthrough guide, softphone setup, curl commands, and conversational transcripts.
+- 📸 **[SCREENSHOTS.md](SCREENSHOTS.md)**: Detailed specifications and checklist of all 14 web dashboard views.
+- 🛡️ **[SECURITY.md](SECURITY.md)**: Defense-in-depth security architecture, threat model, and mitigation matrix.
