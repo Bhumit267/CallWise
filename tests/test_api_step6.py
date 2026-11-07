@@ -352,3 +352,4 @@ async def test_onboarding_wizard_and_test_agent(client: AsyncClient):
     assert agent_data["reply"] is not None
     assert agent_data["latency_ms"] >= 0.0
     assert agent_data["call_id"] is not None
+

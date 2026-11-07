@@ -10,8 +10,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -53,3 +53,10 @@ evals/reports/
 
 # Local skills / agent cache
 .agent/
+
+# Web / Frontend
+web/node_modules/
+web/.next/
+web/out/
+web/.env*.local
+
