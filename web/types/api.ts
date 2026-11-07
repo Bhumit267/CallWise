@@ -126,3 +126,4 @@ export interface TeamInvite {
   expires_at: string;
   created_at: string;
 }
+
