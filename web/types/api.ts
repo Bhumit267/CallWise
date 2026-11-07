@@ -127,9 +127,33 @@ export interface ServiceItem {
   id: string;
   name: string;
   duration_minutes: number;
-  price?: number | null;
+  price: number;
   description?: string | null;
   is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BusinessSettingsResponse {
+  id: string;
+  name: string;
+  business_type: string;
+  greeting: string;
+  tone: string;
+  timezone: string;
+  transfer_number?: string | null;
+  notification_email?: string | null;
+  retention_days?: number;
+  website_url?: string | null;
+  hours: Record<string, { open?: string | null; close?: string | null; closed: boolean }>;
+  providers: {
+    llm_provider: string;
+    tts_provider: string;
+    stt_provider: string;
+    embedding_provider: string;
+    email_notifications_enabled: boolean;
+    google_calendar_enabled: boolean;
+  };
 }
 
 export interface AppointmentListItem {
