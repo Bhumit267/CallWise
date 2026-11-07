@@ -47,6 +47,82 @@ export interface PaginatedResponse<T> {
   pages: number;
 }
 
+export interface InboxItem {
+  id: string;
+  item_type: 'call' | 'message' | 'transfer' | 'appointment';
+  timestamp: string;
+  title: string;
+  description?: string | null;
+  contact_id?: string | null;
+  contact_name?: string | null;
+  phone?: string | null;
+  meta: Record<string, any>;
+}
+
+export interface CallTurnItem {
+  id: string;
+  speaker: 'caller' | 'agent' | string;
+  text: string;
+  latency_ms?: number | null;
+  timestamp: string;
+}
+
+export interface CallDetail {
+  id: string;
+  caller_number?: string | null;
+  contact_id?: string | null;
+  contact_name?: string | null;
+  started_at: string;
+  ended_at?: string | null;
+  duration_seconds: number;
+  summary?: string | null;
+  llm_provider?: string | null;
+  llm_model?: string | null;
+  tts_provider?: string | null;
+  stt_provider?: string | null;
+  audio_url?: string | null;
+  turns: CallTurnItem[];
+  appointments: {
+    id: string;
+    service_id: string;
+    customer_name: string;
+    start_at: string;
+    end_at: string;
+    status: string;
+  }[];
+  messages: {
+    id: string;
+    caller_name: string;
+    callback_number: string;
+    reason: string;
+    created_at: string;
+  }[];
+  transfers: {
+    id: string;
+    reason: string;
+    status: string;
+    timestamp: string;
+  }[];
+  knowledge_misses: {
+    id: string;
+    query: string;
+    status: string;
+    created_at: string;
+  }[];
+}
+
+export interface MessageDetail {
+  id: string;
+  call_id?: string | null;
+  contact_id?: string | null;
+  contact_name?: string | null;
+  caller_name: string;
+  callback_number: string;
+  reason: string;
+  created_at: string;
+  call_summary?: string | null;
+}
+
 export interface CallRecord {
   id: string;
   business_id: string;
@@ -94,7 +170,8 @@ export interface FollowUpRecord {
   contact_id?: string | null;
   contact_phone?: string | null;
   contact_name?: string | null;
-  note: string;
+  title: string;
+  description?: string | null;
   status: 'pending' | 'completed' | 'dismissed';
   due_at?: string | null;
   created_at: string;
@@ -126,4 +203,3 @@ export interface TeamInvite {
   expires_at: string;
   created_at: string;
 }
-
