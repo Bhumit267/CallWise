@@ -4,7 +4,14 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from callwise.api.appointments import router as appointments_router
 from callwise.api.auth import router as auth_router
+from callwise.api.calls import router as calls_router
+from callwise.api.contacts import router as contacts_router
+from callwise.api.follow_ups import router as follow_ups_router
+from callwise.api.inbox import router as inbox_router
+from callwise.api.knowledge_misses import router as knowledge_misses_router
+from callwise.api.messages import router as messages_router
 from callwise.config import settings
 
 
@@ -44,8 +51,17 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Routers
+    # Authentication Router
     app.include_router(auth_router)
+
+    # Core Read & Management Routers under /api
+    app.include_router(calls_router, prefix="/api")
+    app.include_router(messages_router, prefix="/api")
+    app.include_router(appointments_router, prefix="/api")
+    app.include_router(contacts_router, prefix="/api")
+    app.include_router(follow_ups_router, prefix="/api")
+    app.include_router(knowledge_misses_router, prefix="/api")
+    app.include_router(inbox_router, prefix="/api")
 
     @app.get("/api/health")
     async def health_check():
