@@ -233,3 +233,4 @@ async def test_call_source_identification_phone_chat_web(client: AsyncClient):
     detail_res = await client.get(f"/api/calls/{call_chat_id}", headers=headers)
     assert detail_res.status_code == 200
     assert detail_res.json()["source"] == "chat"
+

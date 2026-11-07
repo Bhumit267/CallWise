@@ -29,6 +29,14 @@ export async function apiClient<T = any>(
     headers.set('Content-Type', 'application/json');
   }
 
+  // Auto-inject Bearer token from localStorage for seamless cross-origin / cross-port auth
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('callwise_token');
+    if (token && !headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+  }
+
   // Auto-inject CSRF token for mutating requests if running in browser
   const method = (options.method || 'GET').toUpperCase();
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {

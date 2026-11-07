@@ -17,21 +17,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshAuth = async () => {
     try {
-      const data = await apiClient<{
-        user: User;
-        business: Business;
-        memberships: Membership[];
-      }>('/api/auth/me');
-
+      const data = await apiClient<any>('/api/auth/me');
       setUser(data.user);
-      setCurrentBusiness(data.business);
+      const activeBiz = data.current_business || (data.memberships && data.memberships[0]) || null;
+      setCurrentBusiness(activeBiz);
       setMemberships(data.memberships || []);
-
-      const currentMembership = data.memberships?.find(
-        (m) => m.business_id === data.business.id
-      );
-      setRole(currentMembership ? currentMembership.role : null);
+      setRole(activeBiz?.role || null);
     } catch (err) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('callwise_token');
+      }
       setUser(null);
       setCurrentBusiness(null);
       setMemberships([]);
@@ -46,12 +41,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    await apiClient('/api/auth/login', {
+    const res = await apiClient<any>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
-    await refreshAuth();
-    router.push('/inbox');
+    if (res?.session_token && typeof window !== 'undefined') {
+      localStorage.setItem('callwise_token', res.session_token);
+    }
+    if (res?.user) setUser(res.user);
+    if (res?.current_business) setCurrentBusiness(res.current_business);
+    if (res?.memberships) setMemberships(res.memberships);
+    if (res?.current_business?.role) setRole(res.current_business.role);
+    window.location.href = '/inbox';
   };
 
   const signup = async (
@@ -60,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: string,
     businessName: string
   ) => {
-    await apiClient('/api/auth/signup', {
+    const res = await apiClient<any>('/api/auth/signup', {
       method: 'POST',
       body: JSON.stringify({
         full_name: fullName,
@@ -69,8 +70,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         business_name: businessName,
       }),
     });
-    await refreshAuth();
-    router.push('/inbox');
+    if (res?.session_token && typeof window !== 'undefined') {
+      localStorage.setItem('callwise_token', res.session_token);
+    }
+    if (res?.user) setUser(res.user);
+    if (res?.current_business) setCurrentBusiness(res.current_business);
+    if (res?.memberships) setMemberships(res.memberships);
+    if (res?.current_business?.role) setRole(res.current_business.role);
+    window.location.href = '/inbox';
   };
 
   const logout = async () => {
