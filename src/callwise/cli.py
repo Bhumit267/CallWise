@@ -609,6 +609,7 @@ def cli_run_evals(
     provider: Optional[str] = typer.Option(None, "--provider", "-p", help="LLM provider (groq or gemini)"),
     business_id: Optional[str] = typer.Option(None, "--business-id", "-b", help="Filter evals by business UUID"),
     no_save: bool = typer.Option(False, "--no-save", help="Do not save report to evals/reports/"),
+    compare: bool = typer.Option(False, "--compare", "-c", help="Run comparative benchmark across Groq and Gemini"),
 ):
     """Run evaluation benchmarks across answerable, unanswerable, and prohibited questions."""
     biz_uuid = None
@@ -617,6 +618,28 @@ def cli_run_evals(
             biz_uuid = uuid.UUID(business_id)
         except ValueError:
             typer.secho(f"Invalid business UUID: {business_id}", fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+
+    if compare:
+        from evals.eval_runner import format_comparative_report_console, run_comparative_evaluations
+
+        typer.echo("Starting Callwise Multi-Provider Comparative Evaluation (Groq vs Gemini)...")
+        try:
+            comp_report = run_comparative_evaluations(
+                providers=["groq", "gemini"],
+                business_id=biz_uuid,
+                save_output=not no_save,
+            )
+            report_output = format_comparative_report_console(comp_report)
+            typer.echo(report_output)
+            if not no_save:
+                typer.secho(
+                    "\n[OK] Comparative reports saved to evals/reports/ (JSON & Markdown)",
+                    fg=typer.colors.GREEN,
+                )
+            return
+        except Exception as exc:
+            typer.secho(f"Comparative evaluation run failed: {exc}", fg=typer.colors.RED)
             raise typer.Exit(code=1)
 
     typer.echo("Starting Callwise evaluation benchmarks...")
@@ -639,6 +662,40 @@ def cli_run_evals(
     except Exception as exc:
         typer.secho(f"Evaluation run failed: {exc}", fg=typer.colors.RED)
         raise typer.Exit(code=1)
+
+
+@app.command("load-test")
+def cli_load_test(
+    url: str = typer.Option("http://localhost:8000/api/health", "--url", "-u", help="Target URL endpoint"),
+    requests: int = typer.Option(50, "--requests", "-n", help="Total number of requests"),
+    concurrency: int = typer.Option(5, "--concurrency", "-c", help="Number of concurrent workers"),
+    method: str = typer.Option("GET", "--method", "-m", help="HTTP method (GET or POST)"),
+    timeout: float = typer.Option(10.0, "--timeout", "-t", help="Request timeout in seconds"),
+    output: Optional[str] = typer.Option(None, "--output", "-o", help="Save JSON report to file"),
+):
+    """Execute concurrent traffic and load simulation test."""
+    import asyncio
+    from pathlib import Path
+    from scripts.load_test import run_load_test
+
+    typer.echo(f"Launching load test: {requests} requests to {url} (concurrency: {concurrency})...")
+    res = asyncio.run(
+        run_load_test(
+            url=url,
+            total_requests=requests,
+            concurrency=concurrency,
+            method=method,
+            timeout=timeout,
+        )
+    )
+    typer.echo(res.format_console())
+
+    if output:
+        out_path = Path(output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(res.to_dict(), f, indent=2)
+        typer.secho(f"[OK] Report saved to {out_path}", fg=typer.colors.GREEN)
 
 
 @app.command("list-services")

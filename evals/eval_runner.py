@@ -83,6 +83,16 @@ class EvalReport(BaseModel):
     results: List[EvalResult]
 
 
+class ComparativeReport(BaseModel):
+    """Side-by-side comparative evaluation report across multiple AI providers."""
+    timestamp: str
+    providers: List[str]
+    reports: Dict[str, EvalReport]
+    comparison_table: List[Dict[str, Any]]
+    winner_accuracy: str
+    winner_latency: str
+
+
 def load_eval_questions(
     questions_path: Optional[Path] = None,
     business_id: Optional[uuid.UUID] = None,
@@ -499,4 +509,137 @@ def run_evaluations(
     )
     if save_output:
         save_report(report)
+    return report
+
+
+async def run_comparative_evaluations_async(
+    providers: Optional[List[str]] = None,
+    business_id: Optional[uuid.UUID] = None,
+    questions_path: Optional[Path] = None,
+) -> ComparativeReport:
+    """Run benchmark evaluation suite across multiple AI providers and generate side-by-side comparison."""
+    target_providers = [p.lower().strip() for p in (providers or ["groq", "gemini"])]
+    reports: Dict[str, EvalReport] = {}
+
+    for prov in target_providers:
+        logger.info(f"Running evaluation benchmark against provider: '{prov}'...")
+        report = await run_evaluations_async(
+            provider_name=prov,
+            business_id=business_id,
+            questions_path=questions_path,
+        )
+        reports[prov] = report
+
+    # Build side-by-side comparison metrics
+    comparison_table: List[Dict[str, Any]] = []
+
+    metrics_to_compare = [
+        ("Overall Accuracy (%)", lambda rep: f"{rep.overall_accuracy_pct}%"),
+        ("Passed Questions", lambda rep: f"{rep.passed_questions}/{rep.total_questions}"),
+        ("Hallucinations (Target: 0)", lambda rep: str(rep.total_hallucinations)),
+        ("Average Turn Latency", lambda rep: f"{rep.avg_latency_ms:.1f} ms"),
+        ("Answerable Category Acc.", lambda rep: f"{rep.category_breakdown.get('answerable', CategoryStats()).accuracy_pct}%"),
+        ("Unanswerable Category Acc.", lambda rep: f"{rep.category_breakdown.get('unanswerable', CategoryStats()).accuracy_pct}%"),
+        ("Prohibited Refusal Acc.", lambda rep: f"{rep.category_breakdown.get('prohibited', CategoryStats()).accuracy_pct}%"),
+    ]
+
+    for metric_name, getter in metrics_to_compare:
+        row: Dict[str, Any] = {"Metric": metric_name}
+        for prov in target_providers:
+            row[prov.upper()] = getter(reports[prov])
+        comparison_table.append(row)
+
+    # Determine winners
+    acc_ranked = sorted(target_providers, key=lambda p: reports[p].overall_accuracy_pct, reverse=True)
+    lat_ranked = sorted(target_providers, key=lambda p: reports[p].avg_latency_ms)
+
+    winner_accuracy = acc_ranked[0].upper()
+    winner_latency = lat_ranked[0].upper()
+
+    comp_report = ComparativeReport(
+        timestamp=datetime.now(timezone.utc).isoformat(),
+        providers=[p.upper() for p in target_providers],
+        reports=reports,
+        comparison_table=comparison_table,
+        winner_accuracy=winner_accuracy,
+        winner_latency=winner_latency,
+    )
+    return comp_report
+
+
+def format_comparative_report_console(comp_report: ComparativeReport) -> str:
+    """Format comparative evaluation into a side-by-side ASCII terminal table."""
+    output = []
+    output.append("\n" + "=" * 70)
+    output.append(f"  Callwise Multi-Provider Comparative Benchmark Evaluation")
+    output.append(f"  Timestamp: {comp_report.timestamp}")
+    output.append(f"  Evaluated Providers: {', '.join(comp_report.providers)}")
+    output.append("=" * 70 + "\n")
+
+    headers = ["Metric"] + comp_report.providers
+    rows = []
+    for item in comp_report.comparison_table:
+        row = [item["Metric"]] + [item[p] for p in comp_report.providers]
+        rows.append(row)
+
+    output.append(tabulate(rows, headers=headers, tablefmt="grid"))
+    output.append(f"\nSummary:")
+    output.append(f"  * Highest Accuracy: {comp_report.winner_accuracy}")
+    output.append(f"  * Lowest Latency:   {comp_report.winner_latency}\n")
+
+    return "\n".join(output)
+
+
+def save_comparative_report(comp_report: ComparativeReport, filename_prefix: str = "comparative_eval") -> Path:
+    """Save comparative evaluation report to JSON and Markdown in evals/reports/."""
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    ts_str = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    json_path = REPORTS_DIR / f"{filename_prefix}_{ts_str}.json"
+    md_path = REPORTS_DIR / f"{filename_prefix}_{ts_str}.md"
+
+    # Save JSON
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(comp_report.model_dump(), f, indent=2)
+
+    # Save Markdown
+    headers = ["Metric"] + comp_report.providers
+    md_lines = [
+        "# Callwise Multi-Provider Comparative Benchmark Report",
+        f"- **Timestamp**: {comp_report.timestamp}",
+        f"- **Providers Evaluated**: {', '.join(comp_report.providers)}",
+        f"- **Highest Accuracy**: **{comp_report.winner_accuracy}**",
+        f"- **Fastest Average Latency**: **{comp_report.winner_latency}**",
+        "",
+        "## Side-by-Side Performance Comparison",
+        "| " + " | ".join(headers) + " |",
+        "| " + " | ".join(["---"] * len(headers)) + " |",
+    ]
+
+    for item in comp_report.comparison_table:
+        row_vals = [item["Metric"]] + [item[p] for p in comp_report.providers]
+        md_lines.append("| " + " | ".join(row_vals) + " |")
+
+    with open(md_path, "w", encoding="utf-8") as f:
+        f.write("\n".join(md_lines))
+
+    logger.info(f"Saved comparative reports to {json_path} and {md_path}")
+    return json_path
+
+
+def run_comparative_evaluations(
+    providers: Optional[List[str]] = None,
+    business_id: Optional[uuid.UUID] = None,
+    questions_path: Optional[Path] = None,
+    save_output: bool = True,
+) -> ComparativeReport:
+    """Synchronous entry point to run comparative evaluations."""
+    report = asyncio.run(
+        run_comparative_evaluations_async(
+            providers=providers,
+            business_id=business_id,
+            questions_path=questions_path,
+        )
+    )
+    if save_output:
+        save_comparative_report(report)
     return report
