@@ -16,6 +16,7 @@ from callwise.api.knowledge import router as knowledge_router
 from callwise.api.knowledge_misses import router as knowledge_misses_router
 from callwise.api.messages import router as messages_router
 from callwise.api.onboarding import router as onboarding_router
+from callwise.api.phone_numbers import router as phone_numbers_router
 from callwise.api.settings import router as settings_router
 from callwise.api.team import router as team_router
 from callwise.config import settings
@@ -73,6 +74,7 @@ def create_app() -> FastAPI:
     app.include_router(analytics_router, prefix="/api")
     app.include_router(team_router, prefix="/api")
     app.include_router(audit_logs_router, prefix="/api")
+    app.include_router(phone_numbers_router, prefix="/api")
     app.include_router(onboarding_router, prefix="/api")
 
     @app.get("/api/health")

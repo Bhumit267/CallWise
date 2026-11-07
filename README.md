@@ -217,6 +217,38 @@ uv run python -m callwise.cli run-agent --business-id 11111111-1111-1111-1111-11
 
 ---
 
+## Telephony Setup & Live SIP Testing (Phase 4)
+
+Callwise can receive inbound telephone calls, resolve the dialed number to the correct tenant business, and route the caller to an interactive voice agent.
+
+### Setup Option A: LiveKit SIP Inbound Trunk
+1. In LiveKit Cloud or your self-hosted LiveKit instance, navigate to **SIP** -> **Inbound Trunks**.
+2. Create an Inbound Trunk with your LiveKit SIP URI (e.g. `sip.livekit.cloud`).
+3. Set your environment variables:
+   ```env
+   TELEPHONY_PROVIDER=sip
+   LIVEKIT_URL=wss://your-livekit-server.livekit.cloud
+   LIVEKIT_API_KEY=your_livekit_key
+   LIVEKIT_API_SECRET=your_livekit_secret
+   SIP_TRUNK_URI=sip:trunk@your-sip-domain.com
+   ```
+4. Assign your purchased or ported E.164 phone number (e.g. `+15551234567`) to your business via the API or dashboard.
+
+### Setup Option B: Bring-Your-Own SIP Trunk (Twilio Trial)
+1. Sign up for a free Twilio trial account and purchase a trial phone number.
+2. In the Twilio Console, go to **Voice** -> **SIP Trunking** -> **Create Trunk**.
+3. Set the Origination URI to your LiveKit SIP domain: `sip:your-project.sip.livekit.cloud`.
+4. Configure Inbound Call routing on your Twilio number to point to this SIP Trunk.
+
+### Setup Option C: Free Softphone Testing (Zero Cost)
+You can test the entire SIP telephony and agent routing workflow locally without paying for any carrier or phone number:
+1. Download a free SIP softphone client (such as **Linphone** or **Zoiper**).
+2. Configure a free SIP account (e.g. through `sip2sip.info` or an internal Asterisk/FreeSWITCH container).
+3. In Callwise, assign an E.164 or softphone extension number (e.g. `+15550001`) to your test business via `POST /api/phone-numbers`.
+4. Run `uv run python -m callwise.cli run-agent --business-id <UUID>` or initiate mock SIP transfers via `MockTelephonyProvider`.
+
+---
+
 ## Known Boundaries & Limitations
 
 In accordance with Phase 2 scope:

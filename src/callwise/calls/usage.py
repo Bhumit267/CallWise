@@ -313,3 +313,4 @@ async def record_usage_record_async(
         await session.commit()
 
     return record
+
