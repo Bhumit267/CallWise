@@ -105,6 +105,21 @@ class Business(Base):
     follow_ups: Mapped[List["FollowUp"]] = relationship(
         "FollowUp", back_populates="business", cascade="all, delete-orphan"
     )
+    phone_numbers: Mapped[List["PhoneNumber"]] = relationship(
+        "PhoneNumber", back_populates="business", cascade="all, delete-orphan"
+    )
+    usage_records: Mapped[List["UsageRecord"]] = relationship(
+        "UsageRecord", back_populates="business", cascade="all, delete-orphan"
+    )
+    usage_limits: Mapped[Optional["UsageLimits"]] = relationship(
+        "UsageLimits", back_populates="business", uselist=False, cascade="all, delete-orphan"
+    )
+    widget_settings: Mapped[Optional["WidgetSettings"]] = relationship(
+        "WidgetSettings", back_populates="business", uselist=False, cascade="all, delete-orphan"
+    )
+    blocklist_entries: Mapped[List["BlocklistEntry"]] = relationship(
+        "BlocklistEntry", back_populates="business", cascade="all, delete-orphan"
+    )
 
 
 class Document(Base):
@@ -836,4 +851,166 @@ class FollowUp(Base):
     business: Mapped["Business"] = relationship("Business", back_populates="follow_ups")
     contact: Mapped[Optional["Contact"]] = relationship("Contact", back_populates="follow_ups")
     assigned_to: Mapped[Optional["User"]] = relationship("User")
+
+
+class PhoneNumber(Base):
+    """Business inbound or outbound phone numbers mapped to businesses."""
+
+    __tablename__ = "phone_numbers"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    business_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    e164_number: Mapped[str] = mapped_column(String(50), nullable=False, unique=True, index=True)
+    provider: Mapped[str] = mapped_column(String(50), nullable=False, default="livekit")
+    label: Mapped[str] = mapped_column(String(100), nullable=False, default="Main Inbound")
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+    business: Mapped["Business"] = relationship("Business", back_populates="phone_numbers")
+
+
+class UsageRecord(Base):
+    """Detailed usage metrics and cost estimation for every call or chat session."""
+
+    __tablename__ = "usage_records"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    business_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    call_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("calls.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    session_type: Mapped[str] = mapped_column(String(50), nullable=False, default="phone")  # phone, widget, test_console
+    duration_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    stt_seconds: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    tts_characters: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    llm_input_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    llm_output_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    llm_provider: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    llm_model: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    tts_provider: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    stt_provider: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    estimated_cost_usd: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)
+
+    business: Mapped["Business"] = relationship("Business", back_populates="usage_records")
+    call: Mapped[Optional["Call"]] = relationship("Call")
+
+
+class UsageLimits(Base):
+    """Per-tenant usage limits configured by platform admins."""
+
+    __tablename__ = "usage_limits"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    business_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    voice_minutes_per_month: Mapped[int] = mapped_column(Integer, nullable=False, default=300)
+    chat_messages_per_month: Mapped[int] = mapped_column(Integer, nullable=False, default=1000)
+    max_concurrent_calls: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+    max_call_duration_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=600)
+    llm_tokens_per_month: Mapped[int] = mapped_column(Integer, nullable=False, default=500000)
+    hard_limit_enforced: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+    business: Mapped["Business"] = relationship("Business", back_populates="usage_limits")
+
+
+class WidgetSettings(Base):
+    """Settings, styling, and public key authentication for the embeddable chat widget."""
+
+    __tablename__ = "widget_settings"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    business_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    public_key: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    is_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    allowed_origins: Mapped[str] = mapped_column(Text, nullable=False, default="*")
+    primary_color: Mapped[str] = mapped_column(String(30), nullable=False, default="#2563EB")
+    greeting_message: Mapped[str] = mapped_column(Text, nullable=False, default="Hi! How can we help you today?")
+    ask_lead_capture: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    require_lead_name: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    allow_booking: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    rate_limit_rpm: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
+    max_turns_per_session: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+    business: Mapped["Business"] = relationship("Business", back_populates="widget_settings")
+
+
+class BlocklistEntry(Base):
+    """Abuse prevention blocklist for phone numbers and IP addresses."""
+
+    __tablename__ = "blocklist"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    business_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    identifier_type: Mapped[str] = mapped_column(String(30), nullable=False)  # "phone", "ip"
+    identifier_value: Mapped[str] = mapped_column(String(100), nullable=False)
+    reason: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    blocked_until: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+    business: Mapped["Business"] = relationship("Business", back_populates="blocklist_entries")
+
+    __table_args__ = (
+        Index("ix_blocklist_business_identifier", "business_id", "identifier_type", "identifier_value"),
+    )
 
