@@ -1147,6 +1147,179 @@ def cli_run_worker(
         typer.echo("\nWorker stopped.")
 
 
+# ---------------------------------------------------------
+# Kill Switch Sub-CLI
+# ---------------------------------------------------------
+killswitch_app = typer.Typer(name="killswitch", help="Manage global emergency kill switch.")
+app.add_typer(killswitch_app, name="killswitch")
+
+
+@killswitch_app.command("status")
+def cli_killswitch_status():
+    """Display current emergency kill switch status."""
+    from callwise.calls.killswitch import get_kill_switch_status
+
+    status = get_kill_switch_status()
+    typer.echo("\n=== Callwise Emergency Kill Switch Status ===")
+    if status["active"]:
+        typer.secho("Status: ACTIVE (AI voice/chat traffic diverted to message-taking)", fg=typer.colors.RED, bold=True)
+    else:
+        typer.secho("Status: INACTIVE (Normal operations)", fg=typer.colors.GREEN, bold=True)
+
+    typer.echo(f"Active in Env:     {status['env_enabled']}")
+    typer.echo(f"Active via File:   {status['dynamic_enabled']}")
+    if status["reason"]:
+        typer.echo(f"Reason:            {status['reason']}")
+    if status["activated_at"]:
+        typer.echo(f"Activated At:      {status['activated_at']}")
+    if status["activated_by"]:
+        typer.echo(f"Activated By:      {status['activated_by']}")
+    if status["message"]:
+        typer.echo(f"Fallback Prompt:   {status['message']}")
+
+
+@killswitch_app.command("enable")
+def cli_killswitch_enable(
+    reason: str = typer.Option("Manual admin kill switch activation", "--reason", "-r", help="Reason for activation"),
+    activated_by: str = typer.Option("admin", "--by", help="Operator or system identifier"),
+):
+    """Enable the emergency kill switch, diverting traffic to message taking."""
+    from callwise.calls.killswitch import enable_kill_switch
+
+    data = enable_kill_switch(reason=reason, activated_by=activated_by)
+    typer.secho(f"[OK] Emergency kill switch ENABLED.", fg=typer.colors.RED, bold=True)
+    typer.echo(f"Reason: {data['reason']}")
+    typer.echo(f"Activated At: {data['activated_at']}")
+
+
+@killswitch_app.command("disable")
+def cli_killswitch_disable():
+    """Disable the emergency kill switch and resume normal operations."""
+    from callwise.calls.killswitch import disable_kill_switch
+
+    disable_kill_switch()
+    typer.secho("[OK] Emergency kill switch DISABLED. Resumed normal AI operations.", fg=typer.colors.GREEN, bold=True)
+
+
+# ---------------------------------------------------------
+# Blocklist Sub-CLI
+# ---------------------------------------------------------
+blocklist_app = typer.Typer(name="blocklist", help="Manage tenant telephone blocklist.")
+app.add_typer(blocklist_app, name="blocklist")
+
+
+@blocklist_app.command("add")
+def cli_blocklist_add(
+    business_id: str = typer.Argument(..., help="Business tenant UUID"),
+    caller_number: str = typer.Argument(..., help="Caller phone number (e.g. +15551234567)"),
+    reason: str = typer.Option("Spam / Abusive caller", "--reason", "-r", help="Reason for blocking"),
+    days: Optional[int] = typer.Option(None, "--days", "-d", help="Expiration in days (null for indefinite)"),
+):
+    """Add a telephone number to the tenant's blocklist."""
+    import asyncio
+    from callwise.calls.abuse import add_to_blocklist
+    from callwise.db.session import AsyncSessionLocal
+
+    try:
+        biz_uuid = uuid.UUID(business_id)
+    except ValueError:
+        typer.secho("Invalid business UUID format.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    async def _add():
+        async with AsyncSessionLocal() as session:
+            return await add_to_blocklist(
+                session=session,
+                business_id=biz_uuid,
+                caller_number=caller_number,
+                reason=reason,
+                expires_in_days=days,
+            )
+
+    entry = asyncio.run(_add())
+    typer.secho(f"[OK] Blocked caller '{entry.identifier_value}' for business {business_id}.", fg=typer.colors.GREEN)
+    if entry.blocked_until:
+        typer.echo(f"Blocked until: {entry.blocked_until.isoformat()}")
+    else:
+        typer.echo("Blocked indefinitely.")
+
+
+@blocklist_app.command("remove")
+def cli_blocklist_remove(
+    business_id: str = typer.Argument(..., help="Business tenant UUID"),
+    caller_number: str = typer.Argument(..., help="Caller phone number to unblock"),
+):
+    """Remove a telephone number from the tenant's blocklist."""
+    import asyncio
+    from callwise.calls.abuse import remove_from_blocklist
+    from callwise.db.session import AsyncSessionLocal
+
+    try:
+        biz_uuid = uuid.UUID(business_id)
+    except ValueError:
+        typer.secho("Invalid business UUID format.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    async def _remove():
+        async with AsyncSessionLocal() as session:
+            return await remove_from_blocklist(
+                session=session,
+                business_id=biz_uuid,
+                caller_number=caller_number,
+            )
+
+    removed = asyncio.run(_remove())
+    if removed:
+        typer.secho(f"[OK] Caller '{caller_number}' removed from blocklist.", fg=typer.colors.GREEN)
+    else:
+        typer.secho(f"Caller '{caller_number}' was not found in blocklist.", fg=typer.colors.YELLOW)
+
+
+@blocklist_app.command("list")
+def cli_blocklist_list(
+    business_id: str = typer.Argument(..., help="Business tenant UUID"),
+):
+    """List all blocked callers for a business tenant."""
+    import asyncio
+    from callwise.calls.abuse import list_blocklist_entries
+    from callwise.db.session import AsyncSessionLocal
+
+    try:
+        biz_uuid = uuid.UUID(business_id)
+    except ValueError:
+        typer.secho("Invalid business UUID format.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    async def _list():
+        async with AsyncSessionLocal() as session:
+            return await list_blocklist_entries(session=session, business_id=biz_uuid)
+
+    entries = asyncio.run(_list())
+    if not entries:
+        typer.echo(f"No blocked numbers found for business {business_id}.")
+        return
+
+    rows = []
+    for e in entries:
+        rows.append([
+            str(e.id)[:8] + "...",
+            e.identifier_value,
+            e.identifier_type,
+            e.reason or "No reason",
+            e.created_at.strftime("%Y-%m-%d %H:%M UTC"),
+            e.blocked_until.strftime("%Y-%m-%d %H:%M UTC") if e.blocked_until else "Permanent",
+        ])
+
+    typer.echo(f"\nBlocklist for Business {business_id}:")
+    typer.echo(
+        tabulate(
+            rows,
+            headers=["ID", "Identifier", "Type", "Reason", "Blocked At", "Blocked Until"],
+            tablefmt="grid",
+        )
+    )
+
+
 if __name__ == "__main__":
     app()
 

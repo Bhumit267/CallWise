@@ -11,6 +11,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from callwise.calls.abuse import check_caller_rate_limit
+from callwise.calls.killswitch import FALLBACK_MESSAGE_TAKING_PROMPT, is_kill_switch_active
 from callwise.db.models import BlocklistEntry, Business, Call, Contact, PhoneNumber
 from callwise.db.session import get_async_session
 
@@ -78,7 +80,19 @@ async def resolve_inbound_call_async(
 
         business = phone_record.business
 
-        # 2. Check tenant blocklist
+        # 2. Check global kill switch
+        if is_kill_switch_active():
+            logger.warning("[Inbound Router] Global kill switch is active. Diverting call to message taking.")
+            return InboundRouteResult(
+                matched=True,
+                business=business,
+                phone_number=phone_record,
+                is_blocked=False,
+                reject_reason="kill_switch_active",
+                reply_message=FALLBACK_MESSAGE_TAKING_PROMPT,
+            )
+
+        # 3. Check tenant blocklist
         if norm_caller:
             now_utc = datetime.now(timezone.utc)
             block_stmt = select(BlocklistEntry).where(
@@ -102,7 +116,27 @@ async def resolve_inbound_call_async(
                         reply_message="We are unable to connect your call at this time. Goodbye.",
                     )
 
-        # 3. Match or create contact from caller ID
+        # 4. Check per-caller hourly rate limit
+        if norm_caller:
+            is_limited, call_count, limit_msg = await check_caller_rate_limit(
+                session=session,
+                caller_number=norm_caller,
+                business_id=business.id,
+            )
+            if is_limited:
+                logger.warning(
+                    f"[Inbound Router] Caller {norm_caller} hit rate limit ({call_count}) on business {business.id}"
+                )
+                return InboundRouteResult(
+                    matched=True,
+                    business=business,
+                    phone_number=phone_record,
+                    is_blocked=True,
+                    reject_reason="caller_rate_limited",
+                    reply_message=limit_msg,
+                )
+
+        # 5. Match or create contact from caller ID
         # NOTE: Caller ID can be spoofed; contacts matched via caller ID are not verified for bookings.
         contact_record = None
         if norm_caller:

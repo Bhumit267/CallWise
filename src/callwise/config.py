@@ -168,5 +168,27 @@ class Settings(BaseSettings):
         description="Comma-separated allowed CORS origins",
     )
 
+    # Emergency Kill Switch, Circuit Breaker & Abuse Protection (Phase 4 Step 7)
+    kill_switch_enabled: bool = Field(
+        default=False,
+        description="Global emergency kill switch to divert all calls and chats to message-taking",
+    )
+    fallback_llm_provider: str = Field(
+        default="gemini",
+        description="Secondary fallback LLM provider if primary trips circuit breaker",
+    )
+    max_calls_per_caller_hour: int = Field(
+        default=5,
+        description="Maximum inbound calls permitted per caller number per hour",
+    )
+    circuit_breaker_failure_threshold: int = Field(
+        default=3,
+        description="Consecutive failures before circuit trips to OPEN",
+    )
+    circuit_breaker_recovery_seconds: int = Field(
+        default=60,
+        description="Cooldown seconds before probing recovery (HALF_OPEN)",
+    )
+
 
 settings = Settings()

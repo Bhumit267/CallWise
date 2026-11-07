@@ -9,12 +9,16 @@ from typing import Any, Dict, List, Optional
 import unicodedata
 import uuid
 
+from callwise.agent.circuit_breaker import circuit_breaker
 from callwise.agent.prompt import build_system_prompt
 from callwise.agent.tools import CallwiseToolset
+from callwise.calls.abuse import detect_nonsense_repetition
+from callwise.calls.killswitch import FALLBACK_MESSAGE_TAKING_PROMPT, is_kill_switch_active
 from callwise.calls.manager import record_call_turn_async
 from callwise.calls.usage import check_usage_limits_async, record_usage_record_async
 from callwise.config import settings
 from callwise.db.models import Business
+from callwise.notifications.service import notify_abuse_detected_async
 from callwise.providers.llm import get_llm_provider
 
 logger = logging.getLogger(__name__)
@@ -250,16 +254,19 @@ class TextAgent:
         business: Business,
         call_id: Optional[uuid.UUID] = None,
         provider_name: Optional[str] = None,
+        caller_number: Optional[str] = None,
     ):
         self.business = business
         self.call_id = call_id or uuid.uuid4()
         self.provider_name = (provider_name or settings.llm_provider).lower().strip()
+        self.caller_number = caller_number
         self.toolset = CallwiseToolset(business, call_id=self.call_id)
         self.system_prompt = build_system_prompt(business)
         self.conversation_history: List[Dict[str, Any]] = [
             {"role": "system", "content": self.system_prompt}
         ]
         self.consecutive_silence_count: int = 0
+        self.caller_utterances: List[str] = []
         self.is_call_active: bool = True
 
     async def _execute_tool(self, name: str, args: Dict[str, Any]) -> str:
@@ -324,6 +331,23 @@ class TextAgent:
 
         cleaned_input = user_message.strip()
 
+        # Check global emergency kill switch
+        if is_kill_switch_active():
+            logger.warning(f"[TextAgent] Global kill switch active for business {self.business.id}")
+            await record_call_turn_async(
+                call_id=self.call_id,
+                business_id=self.business.id,
+                speaker="caller",
+                text=user_message,
+            )
+            await record_call_turn_async(
+                call_id=self.call_id,
+                business_id=self.business.id,
+                speaker="agent",
+                text=FALLBACK_MESSAGE_TAKING_PROMPT,
+            )
+            return FALLBACK_MESSAGE_TAKING_PROMPT
+
         # Handle Silence / Unresponsive Caller
         if not cleaned_input or cleaned_input.lower() in ("...", "[silence]", "silence"):
             self.consecutive_silence_count += 1
@@ -352,6 +376,35 @@ class TextAgent:
 
         # Reset silence counter upon receiving input
         self.consecutive_silence_count = 0
+
+        # Check for caller abuse: nonsense repetition / flood patterns
+        self.caller_utterances.append(user_message)
+        if detect_nonsense_repetition(self.caller_utterances):
+            logger.warning(f"[TextAgent] Nonsense repetition detected for call {self.call_id}")
+            asyncio.create_task(
+                notify_abuse_detected_async(
+                    business_id=self.business.id,
+                    caller_number=self.caller_number or "Unknown",
+                    reason="Repeated nonsense or keyboard spam input",
+                )
+            )
+            abuse_reply = (
+                "I am having difficulty understanding your request. "
+                "May I take down your name and callback number so someone from our team can follow up directly?"
+            )
+            await record_call_turn_async(
+                call_id=self.call_id,
+                business_id=self.business.id,
+                speaker="caller",
+                text=user_message,
+            )
+            await record_call_turn_async(
+                call_id=self.call_id,
+                business_id=self.business.id,
+                speaker="agent",
+                text=abuse_reply,
+            )
+            return abuse_reply
 
         # 1. Enforce usage limits and call duration cap before processing
         limit_check = await check_usage_limits_async(
@@ -394,12 +447,47 @@ class TextAgent:
 
         t_start = time.perf_counter()
 
-        if self.provider_name == "groq":
-            raw_reply = await self._run_groq_turn()
-        elif self.provider_name == "gemini":
-            raw_reply = await self._run_gemini_turn(user_message)
+        # Circuit Breaker Provider Selection
+        active_provider = circuit_breaker.select_active_provider(
+            primary=self.provider_name,
+            fallback=settings.fallback_llm_provider,
+        )
+
+        raw_reply: Optional[str] = None
+        used_provider = active_provider or self.provider_name
+
+        if not active_provider:
+            # Both primary and fallback circuits are open
+            raw_reply = (
+                "Our AI assistant is temporarily unavailable due to connectivity issues. "
+                "May I take down your name and callback number so our staff can assist you directly?"
+            )
         else:
-            raw_reply = await self._run_prompt_loop_turn(user_message)
+            try:
+                raw_reply = await self._run_provider_turn(active_provider, user_message)
+                circuit_breaker.record_success(active_provider)
+                used_provider = active_provider
+            except Exception as exc:
+                logger.error(f"[TextAgent] Provider '{active_provider}' error: {exc}")
+                circuit_breaker.record_failure(active_provider, exc)
+
+                # Attempt immediate failover if secondary is available
+                fb = (settings.fallback_llm_provider or "").lower().strip()
+                if fb and fb != active_provider and circuit_breaker.is_available(fb):
+                    logger.info(f"[TextAgent] Failing over to secondary provider '{fb}'")
+                    try:
+                        raw_reply = await self._run_provider_turn(fb, user_message)
+                        circuit_breaker.record_success(fb)
+                        used_provider = fb
+                    except Exception as fb_exc:
+                        logger.critical(f"[TextAgent] Secondary provider '{fb}' also failed: {fb_exc}")
+                        circuit_breaker.record_failure(fb, fb_exc)
+
+            if not raw_reply:
+                raw_reply = (
+                    "I apologize, but our voice assistant is currently experiencing technical difficulties. "
+                    "May I take down your name and callback number so someone can assist you directly?"
+                )
 
         latency_ms = (time.perf_counter() - t_start) * 1000.0
         clean_reply = clean_speech_text(raw_reply)
@@ -424,12 +512,21 @@ class TextAgent:
                 duration_seconds=int(latency_ms / 1000.0) if latency_ms else 1,
                 llm_input_tokens=in_tokens,
                 llm_output_tokens=out_tokens,
-                llm_provider=self.provider_name,
+                llm_provider=used_provider,
             )
         except Exception as exc:
             logger.warning(f"[TextAgent] Failed to record usage metric: {exc}")
 
         return clean_reply
+
+    async def _run_provider_turn(self, provider: str, user_message: str) -> str:
+        """Route turn to specified LLM provider."""
+        if provider == "groq":
+            return await self._run_groq_turn()
+        elif provider == "gemini":
+            return await self._run_gemini_turn(user_message)
+        else:
+            return await self._run_prompt_loop_turn(user_message)
 
     async def _run_groq_turn(self) -> str:
         """Execute turn using Groq with native tool calling."""

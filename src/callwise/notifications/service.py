@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from callwise.booking.service import mask_phone_number
+from callwise.config import settings
 from callwise.db.models import (
     Appointment,
     Business,
@@ -351,5 +352,111 @@ async def notify_usage_limit_reached(
         body_text=body,
         email_provider=email_provider,
     )
+
+
+async def notify_circuit_breaker_tripped(
+    session: AsyncSession,
+    business: Business,
+    provider: str,
+    failure_count: int,
+    email_provider: Optional[EmailProvider] = None,
+) -> None:
+    """Notify business owner when an AI provider circuit trips and fails over."""
+    if not business.notification_email:
+        return
+
+    subj = f"Alert: AI Provider '{provider.upper()}' Circuit Breaker Tripped"
+    body = (
+        f"Hello {business.name},\n\n"
+        f"The AI provider '{provider.upper()}' has failed {failure_count} consecutive requests and its circuit has been opened.\n\n"
+        f"Callwise has automatically failed over to your secondary AI provider ({settings.fallback_llm_provider.upper()}).\n"
+        f"Normal operations will automatically probe and resume when the provider recovers.\n\n"
+        f"Best regards,\nThe Callwise Team"
+    )
+    await dispatch_email(
+        session=session,
+        business_id=business.id,
+        notification_type="owner_circuit_breaker_tripped",
+        recipient=business.notification_email,
+        subject=subj,
+        body_text=body,
+        email_provider=email_provider,
+    )
+
+
+async def notify_abuse_detected(
+    session: AsyncSession,
+    business: Business,
+    caller_number: str,
+    reason: str,
+    email_provider: Optional[EmailProvider] = None,
+) -> None:
+    """Notify business owner when caller abuse or flood calls are blocked."""
+    if not business.notification_email:
+        return
+
+    subj = f"Security Alert: Caller Abuse Detected ({caller_number})"
+    body = (
+        f"Hello {business.name},\n\n"
+        f"Suspicious or abusive calling activity was detected on your reception line.\n\n"
+        f"Caller Number: {caller_number}\n"
+        f"Reason:        {reason}\n\n"
+        f"This caller has been restricted according to your abuse protection settings.\n\n"
+        f"Best regards,\nThe Callwise Team"
+    )
+    await dispatch_email(
+        session=session,
+        business_id=business.id,
+        notification_type="owner_abuse_detected",
+        recipient=business.notification_email,
+        subject=subj,
+        body_text=body,
+        email_provider=email_provider,
+    )
+
+
+async def notify_abuse_detected_async(
+    business_id: uuid.UUID,
+    caller_number: str,
+    reason: str,
+) -> None:
+    """Convenience helper to dispatch abuse detection alert asynchronously."""
+    from callwise.db.session import get_async_session
+    try:
+        async with get_async_session() as session:
+            stmt = select(Business).where(Business.id == business_id)
+            biz = (await session.execute(stmt)).scalar_one_or_none()
+            if biz:
+                await notify_abuse_detected(
+                    session=session,
+                    business=biz,
+                    caller_number=caller_number,
+                    reason=reason,
+                )
+    except Exception as exc:
+        logger.error(f"Failed to dispatch abuse detected notification: {exc}")
+
+
+async def notify_circuit_breaker_tripped_async(
+    business_id: uuid.UUID,
+    provider: str,
+    failure_count: int,
+) -> None:
+    """Convenience helper to dispatch circuit breaker tripped alert asynchronously."""
+    from callwise.db.session import get_async_session
+    try:
+        async with get_async_session() as session:
+            stmt = select(Business).where(Business.id == business_id)
+            biz = (await session.execute(stmt)).scalar_one_or_none()
+            if biz:
+                await notify_circuit_breaker_tripped(
+                    session=session,
+                    business=biz,
+                    provider=provider,
+                    failure_count=failure_count,
+                )
+    except Exception as exc:
+        logger.error(f"Failed to dispatch circuit breaker notification: {exc}")
+
 
 
