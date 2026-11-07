@@ -12,6 +12,7 @@ import uuid
 from callwise.agent.prompt import build_system_prompt
 from callwise.agent.tools import CallwiseToolset
 from callwise.calls.manager import record_call_turn_async
+from callwise.calls.usage import check_usage_limits_async, record_usage_record_async
 from callwise.config import settings
 from callwise.db.models import Business
 from callwise.providers.llm import get_llm_provider
@@ -308,8 +309,35 @@ class TextAgent:
             )
         return f"Unknown tool: {name}"
 
-    async def ask(self, user_message: str) -> str:
+    async def ask(self, user_message: str, session_type: str = "chat") -> str:
         """Send a user turn to the agent, executing any tool calls, and return conversational reply."""
+        # 1. Enforce usage limits before processing
+        limit_check = await check_usage_limits_async(
+            business_id=self.business.id,
+            session_type=session_type,
+        )
+        if not limit_check.allowed:
+            logger.warning(
+                f"[TextAgent] Limit reached ({limit_check.limit_type}) for business {self.business.id}"
+            )
+            degrade_reply = (
+                limit_check.graceful_message
+                or "We are currently operating at capacity. May I take down your contact details so our team can follow up?"
+            )
+            await record_call_turn_async(
+                call_id=self.call_id,
+                business_id=self.business.id,
+                speaker="caller",
+                text=user_message,
+            )
+            await record_call_turn_async(
+                call_id=self.call_id,
+                business_id=self.business.id,
+                speaker="agent",
+                text=degrade_reply,
+            )
+            return degrade_reply
+
         await record_call_turn_async(
             call_id=self.call_id,
             business_id=self.business.id,
@@ -338,6 +366,23 @@ class TextAgent:
             text=clean_reply,
             latency_ms=latency_ms,
         )
+
+        # Track usage record for this interaction
+        try:
+            # Estimate tokens roughly (~4 chars per token)
+            in_tokens = max(1, len(user_message) // 4)
+            out_tokens = max(1, len(clean_reply) // 4)
+            await record_usage_record_async(
+                business_id=self.business.id,
+                call_id=self.call_id,
+                session_type=session_type,
+                duration_seconds=int(latency_ms / 1000.0) if latency_ms else 1,
+                llm_input_tokens=in_tokens,
+                llm_output_tokens=out_tokens,
+                llm_provider=self.provider_name,
+            )
+        except Exception as exc:
+            logger.warning(f"[TextAgent] Failed to record usage metric: {exc}")
 
         return clean_reply
 

@@ -317,3 +317,39 @@ async def notify_transfer(
         email_provider=email_provider,
     )
 
+
+async def notify_usage_limit_reached(
+    session: AsyncSession,
+    business: Business,
+    limit_type: str,
+    current_value: float,
+    limit_value: float,
+    email_provider: Optional[EmailProvider] = None,
+) -> None:
+    """Notify business owner when a usage quota limit has been reached."""
+    if not business.notification_email:
+        return
+
+    readable_type = limit_type.replace("_", " ").title()
+    subj = f"Usage Limit Alert: {readable_type} Limit Reached"
+    body = (
+        f"Hello {business.name},\n\n"
+        f"Your Callwise account has reached its monthly {readable_type} allocation.\n\n"
+        f"Limit Type:     {readable_type}\n"
+        f"Current Usage:  {current_value}\n"
+        f"Monthly Limit:  {limit_value}\n\n"
+        f"To protect your service, subsequent calls or chat inquiries will gracefully "
+        f"offer to take a message until your quota resets next month or is increased by support.\n\n"
+        f"Best regards,\nThe Callwise Team"
+    )
+    await dispatch_email(
+        session=session,
+        business_id=business.id,
+        notification_type="owner_limit_reached",
+        recipient=business.notification_email,
+        subject=subj,
+        body_text=body,
+        email_provider=email_provider,
+    )
+
+
