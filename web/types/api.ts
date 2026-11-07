@@ -9,13 +9,18 @@ export interface User {
 export interface Business {
   id: string;
   name: string;
+  business_type?: string | null;
   phone_number?: string | null;
   timezone: string;
   is_active: boolean;
   created_at?: string;
   agent_prompt?: string | null;
   forwarding_number?: string | null;
+  transfer_number?: string | null;
+  notification_email?: string | null;
   greeting?: string | null;
+  tone?: string | null;
+  hours?: Record<string, any> | null;
 }
 
 export interface Membership {
@@ -393,4 +398,48 @@ export interface AuditLogItem {
   changes?: Record<string, any> | null;
   ip_address?: string | null;
   created_at: string;
+}
+
+
+// ============================================================================
+// Onboarding & Test Agent Schemas
+// ============================================================================
+
+export interface OnboardingSetupRequest {
+  name: string;
+  business_type: string;
+  timezone: string;
+  greeting: string;
+  tone: string;
+  hours?: Record<string, any>;
+  transfer_number?: string | null;
+  notification_email?: string | null;
+  website_url?: string | null;
+  retention_days?: number;
+  services?: {
+    name: string;
+    duration_minutes: number;
+    price: number;
+    description?: string | null;
+    is_active?: boolean;
+  }[];
+}
+
+export interface OnboardingSetupResponse {
+  business_id: string;
+  name: string;
+  job_id?: string | null;
+  services_count: number;
+  message: string;
+}
+
+export interface TestAgentRequest {
+  message: string;
+  call_id?: string | null;
+}
+
+export interface TestAgentResponse {
+  call_id: string;
+  reply: string;
+  latency_ms: number;
 }

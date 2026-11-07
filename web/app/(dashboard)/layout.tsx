@@ -32,6 +32,7 @@ const navItems = [
   { name: 'Follow-ups', href: '/follow-ups', icon: Clock },
   { name: 'Knowledge Base', href: '/knowledge', icon: BookOpen },
   { name: 'Missed Questions', href: '/missed-questions', icon: HelpCircle },
+  { name: 'Test Agent', href: '/test-agent', icon: Bot },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Settings', href: '/settings', icon: Settings },
   { name: 'Team & Access', href: '/team', icon: UserCheck },
