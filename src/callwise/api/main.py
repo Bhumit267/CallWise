@@ -19,6 +19,7 @@ from callwise.api.onboarding import router as onboarding_router
 from callwise.api.phone_numbers import router as phone_numbers_router
 from callwise.api.settings import router as settings_router
 from callwise.api.team import router as team_router
+from callwise.api.usage import router as usage_router
 from callwise.api.widget import router as widget_router
 from callwise.config import settings
 
@@ -78,6 +79,7 @@ def create_app() -> FastAPI:
     app.include_router(team_router, prefix="/api")
     app.include_router(audit_logs_router, prefix="/api")
     app.include_router(phone_numbers_router, prefix="/api")
+    app.include_router(usage_router, prefix="/api")
     app.include_router(widget_router, prefix="/api")
     app.include_router(onboarding_router, prefix="/api")
 

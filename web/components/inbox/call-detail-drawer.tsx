@@ -19,6 +19,7 @@ import {
   PlusCircle,
   Loader2,
   CheckCircle2,
+  Globe,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -102,9 +103,27 @@ export function CallDetailDrawer({
               <h2 className="text-base font-bold text-slate-900 truncate">
                 {call?.caller_number || (loading ? 'Loading...' : 'Call Details')}
               </h2>
-              <p className="text-xs text-slate-500">
-                {call?.contact_name ? `Contact: ${call.contact_name}` : 'Unregistered Caller'}
-              </p>
+              <div className="flex items-center space-x-2 mt-0.5">
+                <span className={cn(
+                  "inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold border",
+                  (call as any)?.source === 'chat'
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : (call as any)?.source === 'web'
+                    ? "bg-purple-50 text-purple-700 border-purple-200"
+                    : "bg-blue-50 text-blue-700 border-blue-200"
+                )}>
+                  {(call as any)?.source === 'chat' ? (
+                    <><MessageSquare className="w-3 h-3 mr-1" /> Chat Widget</>
+                  ) : (call as any)?.source === 'web' ? (
+                    <><Globe className="w-3 h-3 mr-1" /> Web Audio</>
+                  ) : (
+                    <><Phone className="w-3 h-3 mr-1" /> Phone Call</>
+                  )}
+                </span>
+                <p className="text-xs text-slate-500 truncate">
+                  {call?.contact_name ? `Contact: ${call.contact_name}` : 'Unregistered Caller'}
+                </p>
+              </div>
             </div>
           </div>
           <div className="flex items-center space-x-2">

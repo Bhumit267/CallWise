@@ -24,6 +24,18 @@ from callwise.db.models import Business, Call, Contact, Session as UserSession, 
 router = APIRouter(prefix="/calls", tags=["Calls"])
 
 
+def resolve_call_source(caller_number: Optional[str]) -> str:
+    """Determine session channel from caller identifier (phone/chat/web)."""
+    if not caller_number:
+        return "phone"
+    num = str(caller_number).strip().lower()
+    if num.startswith("widget_"):
+        return "chat"
+    if num.startswith("web_"):
+        return "web"
+    return "phone"
+
+
 @router.get("", response_model=PaginatedResponse[CallListItem])
 async def list_calls(
     page: int = Query(1, ge=1, description="Page number starting from 1"),
@@ -87,6 +99,7 @@ async def list_calls(
             ended_at=c.ended_at,
             duration_seconds=c.duration_seconds,
             summary=c.summary,
+            source=resolve_call_source(c.caller_number),
             turn_count=len(c.turns),
             has_appointment=len(c.appointments) > 0,
             has_message=len(c.messages) > 0,
@@ -136,6 +149,7 @@ async def get_call_detail(
         ended_at=call.ended_at,
         duration_seconds=call.duration_seconds,
         summary=call.summary,
+        source=resolve_call_source(call.caller_number),
         llm_provider=call.llm_provider,
         llm_model=call.llm_model,
         tts_provider=call.tts_provider,

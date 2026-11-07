@@ -443,3 +443,116 @@ export interface TestAgentResponse {
   reply: string;
   latency_ms: number;
 }
+
+
+// ============================================================================
+// Phase 4: Telephony, Chat Widget & Usage Schemas
+// ============================================================================
+
+export interface PhoneNumberItem {
+  id: string;
+  business_id: string;
+  e164_number: string;
+  provider: 'livekit' | 'twilio' | 'sip' | string;
+  label: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PhoneNumberCreate {
+  e164_number: string;
+  provider: string;
+  label: string;
+  is_active?: boolean;
+}
+
+export interface PhoneNumberUpdate {
+  label?: string;
+  is_active?: boolean;
+}
+
+export interface WidgetSettingsData {
+  id: string;
+  business_id: string;
+  public_key: string;
+  is_enabled: boolean;
+  allowed_origins: string;
+  primary_color: string;
+  greeting_message: string;
+  ask_lead_capture: boolean;
+  require_lead_name: boolean;
+  allow_booking: boolean;
+  rate_limit_rpm: number;
+  max_turns_per_session: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WidgetSettingsUpdate {
+  is_enabled?: boolean;
+  allowed_origins?: string;
+  primary_color?: string;
+  greeting_message?: string;
+  ask_lead_capture?: boolean;
+  require_lead_name?: boolean;
+  allow_booking?: boolean;
+  rate_limit_rpm?: number;
+  max_turns_per_session?: number;
+}
+
+export interface WidgetPublicConfig {
+  business_id: string;
+  business_name: string;
+  primary_color: string;
+  greeting_message: string;
+  ask_lead_capture: boolean;
+  require_lead_name: boolean;
+  allow_booking: boolean;
+}
+
+export interface UsageLimitsData {
+  voice_minutes_per_month: number;
+  chat_messages_per_month: number;
+  max_concurrent_calls: number;
+  max_call_duration_seconds: number;
+  llm_tokens_per_month: number;
+  hard_limit_enforced: boolean;
+}
+
+export interface CurrentMonthUsageData {
+  voice_minutes: number;
+  chat_messages: number;
+  llm_tokens: number;
+  total_cost_usd: number;
+}
+
+export interface DailyUsageItem {
+  date: string;
+  voice_minutes: number;
+  chat_messages: number;
+  total_cost_usd: number;
+}
+
+export interface UsageSummaryResponse {
+  limits: UsageLimitsData;
+  current_month: CurrentMonthUsageData;
+  daily_usage: DailyUsageItem[];
+  pricing_table: Record<string, any>;
+}
+
+export interface UsageRecordItem {
+  id: string;
+  call_id?: string | null;
+  session_type: 'phone' | 'widget' | 'chat' | string;
+  duration_seconds: number;
+  stt_seconds: number;
+  tts_characters: number;
+  llm_input_tokens: number;
+  llm_output_tokens: number;
+  llm_provider?: string | null;
+  llm_model?: string | null;
+  estimated_cost_usd: number;
+  created_at: string;
+}
+

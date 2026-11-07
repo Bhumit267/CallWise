@@ -451,3 +451,4 @@ async def regenerate_widget_public_key(
     widget.updated_at = datetime.now(timezone.utc)
     await db.commit()
     return widget
+

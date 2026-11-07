@@ -69,6 +69,7 @@ class CallListItem(BaseModel):
     duration_seconds: float
     summary: Optional[str] = None
     turn_count: int = 0
+    source: str = "phone"  # "phone", "chat", "web"
     has_appointment: bool = False
     has_message: bool = False
     has_transfer: bool = False
@@ -95,6 +96,7 @@ class CallDetail(BaseModel):
     ended_at: Optional[datetime] = None
     duration_seconds: float
     summary: Optional[str] = None
+    source: str = "phone"  # "phone", "chat", "web"
     llm_provider: Optional[str] = None
     llm_model: Optional[str] = None
     tts_provider: Optional[str] = None
