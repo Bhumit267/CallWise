@@ -163,7 +163,7 @@ export interface AppointmentDetail {
   service_id: string;
   service_name: string;
   customer_name: string;
-  customer_phone: string; // UNMASKED
+  customer_phone: string;
   customer_email?: string | null;
   start_at: string;
   end_at: string;
@@ -200,7 +200,7 @@ export interface ContactListItem {
 export interface ContactDetail {
   id: string;
   name?: string | null;
-  phone: string; // UNMASKED
+  phone: string;
   email?: string | null;
   notes?: string | null;
   do_not_contact: boolean;
@@ -250,13 +250,44 @@ export interface FollowUpListItem {
   created_at: string;
 }
 
-export interface KnowledgeMissRecord {
+export interface DocumentSourceItem {
   id: string;
-  business_id: string;
-  question: string;
-  occurrences: number;
-  status: 'open' | 'resolved' | 'ignored';
+  title: string;
+  source_type: 'file' | 'url' | 'qa_snippet' | string;
+  source_uri: string;
+  chunk_count: number;
   created_at: string;
+}
+
+export interface KnowledgeMissListItem {
+  id: string;
+  call_id?: string | null;
+  query: string;
+  status: 'unresolved' | 'resolved' | 'ignored' | string;
+  resolved_at?: string | null;
+  resolved_answer?: string | null;
+  created_at: string;
+}
+
+export interface KnowledgeMissGroupItem {
+  query: string;
+  count: number;
+  status: string;
+  last_asked_at: string;
+  sample_miss_id_str?: string;
+  sample_miss_id?: string;
+}
+
+export interface JobStatusResponse {
+  id: string;
+  type: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed' | string;
+  progress: number;
+  result?: Record<string, any> | null;
+  error?: string | null;
+  created_at: string;
+  started_at?: string | null;
+  completed_at?: string | null;
 }
 
 export interface TeamMember {
