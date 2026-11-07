@@ -6,7 +6,7 @@ from typing import AsyncGenerator, Optional, Tuple
 import uuid
 
 from fastapi import Cookie, Depends, Header, HTTPException, Request, status
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -130,3 +130,20 @@ async def get_auth_context(
         role = (await db.execute(stmt)).scalar_one_or_none()
 
     return user, current_business, role, user_session
+
+
+async def get_tenant_db(
+    auth_ctx: Tuple[User, Optional[Business], Optional[str], UserSession] = Depends(get_auth_context),
+    db: AsyncSession = Depends(get_db),
+) -> AsyncGenerator[AsyncSession, None]:
+    """
+    Provide an AsyncSession configured with PostgreSQL Row Level Security (RLS)
+    by switching to the non-superuser application role 'callwise_app' and
+    setting transaction-local 'app.current_business_id'.
+    """
+    _, business, _, _ = auth_ctx
+    if business:
+        await db.execute(text("SET LOCAL ROLE callwise_app;"))
+        await db.execute(text(f"SET LOCAL app.current_business_id = '{business.id}';"))
+    yield db
+
