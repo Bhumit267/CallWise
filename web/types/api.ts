@@ -123,56 +123,129 @@ export interface MessageDetail {
   call_summary?: string | null;
 }
 
-export interface CallRecord {
+export interface ServiceItem {
   id: string;
-  business_id: string;
-  caller_phone: string;
-  direction: string;
-  duration_seconds: number;
-  outcome: string;
-  summary?: string | null;
-  sentiment?: string | null;
-  started_at: string;
-  ended_at?: string | null;
-  created_at: string;
+  name: string;
+  duration_minutes: number;
+  price?: number | null;
+  description?: string | null;
+  is_active: boolean;
 }
 
-export interface AppointmentRecord {
+export interface AppointmentListItem {
   id: string;
-  business_id: string;
+  service_id: string;
+  service_name: string;
   customer_name: string;
   customer_phone: string;
   customer_email?: string | null;
-  service_name?: string | null;
-  service_id?: string | null;
   start_at: string;
   end_at: string;
   status: 'booked' | 'completed' | 'cancelled' | 'rescheduled';
-  notes?: string | null;
+  contact_id?: string | null;
+  call_id?: string | null;
   created_at: string;
 }
 
-export interface ContactRecord {
+export interface AppointmentCalendarItem {
   id: string;
-  business_id: string;
+  service_id: string;
+  service_name: string;
+  customer_name: string;
+  customer_phone: string;
+  start_at: string;
+  end_at: string;
+  status: string;
+}
+
+export interface AppointmentDetail {
+  id: string;
+  service_id: string;
+  service_name: string;
+  customer_name: string;
+  customer_phone: string; // UNMASKED
+  customer_email?: string | null;
+  start_at: string;
+  end_at: string;
+  status: 'booked' | 'completed' | 'cancelled' | 'rescheduled';
+  contact_id?: string | null;
+  call_id?: string | null;
+  created_at: string;
+  notes?: string | null;
+  reminders: {
+    id: string;
+    scheduled_at: string;
+    status: string;
+    channel: string;
+  }[];
+  verification_attempts: {
+    id: string;
+    verified: boolean;
+    timestamp: string;
+  }[];
+}
+
+export interface ContactListItem {
+  id: string;
   name?: string | null;
   phone: string;
   email?: string | null;
   notes?: string | null;
-  vip: boolean;
-  dnc: boolean;
+  do_not_contact: boolean;
+  call_count: number;
+  appointment_count: number;
   created_at: string;
 }
 
-export interface FollowUpRecord {
+export interface ContactDetail {
   id: string;
-  business_id: string;
+  name?: string | null;
+  phone: string; // UNMASKED
+  email?: string | null;
+  notes?: string | null;
+  do_not_contact: boolean;
+  created_at: string;
+  calls: {
+    id: string;
+    started_at: string;
+    duration_seconds: number;
+    summary?: string | null;
+  }[];
+  appointments: {
+    id: string;
+    service_id: string;
+    service_name?: string | null;
+    start_at: string;
+    end_at: string;
+    status: string;
+  }[];
+  messages: {
+    id: string;
+    caller_name: string;
+    callback_number: string;
+    reason: string;
+    created_at: string;
+  }[];
+  follow_ups: {
+    id: string;
+    title: string;
+    status: string;
+    due_at?: string | null;
+  }[];
+}
+
+export interface FollowUpListItem {
+  id: string;
   contact_id?: string | null;
-  contact_phone?: string | null;
   contact_name?: string | null;
+  assigned_to_user_id?: string | null;
+  assigned_to_name?: string | null;
   title: string;
   description?: string | null;
-  status: 'pending' | 'completed' | 'dismissed';
+  source: string;
+  source_id?: string | null;
+  status: 'open' | 'done' | 'snoozed';
+  snoozed_until?: string | null;
   due_at?: string | null;
   created_at: string;
 }
