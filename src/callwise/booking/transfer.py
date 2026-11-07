@@ -1,5 +1,6 @@
 """Live call transfer orchestration, business hours gating, and fallback message handling."""
 
+import asyncio
 from datetime import datetime
 import logging
 from typing import Optional
@@ -127,11 +128,23 @@ async def execute_transfer(
 
     # 3. Open and destination configured: Attempt live transfer via telephony provider
     provider = telephony_provider or get_telephony_provider()
-    call_result = await provider.transfer_call(
-        call_id=call_id,
-        target_number=business.transfer_number,
-        reason=reason,
-    )
+    try:
+        call_result = await asyncio.wait_for(
+            provider.transfer_call(
+                call_id=call_id,
+                target_number=business.transfer_number,
+                reason=reason,
+            ),
+            timeout=15.0,  # 15s timeout on SIP transfer
+        )
+    except asyncio.TimeoutError:
+        logger.warning(f"SIP transfer timed out after 15s for business {business.id}")
+        call_result = TransferResult(
+            success=False,
+            status="failed",
+            message="Transfer attempt timed out.",
+            target_phone=business.transfer_number,
+        )
 
     final_status = "completed" if call_result.success else "failed"
 

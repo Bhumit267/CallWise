@@ -128,3 +128,4 @@ async def delete_phone_number(
     )
     await db.delete(phone)
     await db.commit()
+

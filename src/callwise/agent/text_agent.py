@@ -259,6 +259,8 @@ class TextAgent:
         self.conversation_history: List[Dict[str, Any]] = [
             {"role": "system", "content": self.system_prompt}
         ]
+        self.consecutive_silence_count: int = 0
+        self.is_call_active: bool = True
 
     async def _execute_tool(self, name: str, args: Dict[str, Any]) -> str:
         """Route tool call execution to CallwiseToolset."""
@@ -309,17 +311,60 @@ class TextAgent:
             )
         return f"Unknown tool: {name}"
 
-    async def ask(self, user_message: str, session_type: str = "chat") -> str:
+    async def ask(
+        self,
+        user_message: str,
+        session_type: str = "chat",
+        call_duration_seconds: int = 0,
+    ) -> str:
         """Send a user turn to the agent, executing any tool calls, and return conversational reply."""
-        # 1. Enforce usage limits before processing
+        # Check if call is already ended
+        if not self.is_call_active:
+            return "This call has ended. Thank you for calling and have a great day!"
+
+        cleaned_input = user_message.strip()
+
+        # Handle Silence / Unresponsive Caller
+        if not cleaned_input or cleaned_input.lower() in ("...", "[silence]", "silence"):
+            self.consecutive_silence_count += 1
+            if self.consecutive_silence_count == 1:
+                prompt_reply = "Are you still there? How can I help you today?"
+                await record_call_turn_async(
+                    call_id=self.call_id,
+                    business_id=self.business.id,
+                    speaker="agent",
+                    text=prompt_reply,
+                )
+                return prompt_reply
+            else:
+                self.is_call_active = False
+                goodbye_reply = (
+                    "I haven't heard anything from you, so I will let you go for now. "
+                    "Please call us back whenever you are ready. Have a wonderful day! Goodbye."
+                )
+                await record_call_turn_async(
+                    call_id=self.call_id,
+                    business_id=self.business.id,
+                    speaker="agent",
+                    text=goodbye_reply,
+                )
+                return goodbye_reply
+
+        # Reset silence counter upon receiving input
+        self.consecutive_silence_count = 0
+
+        # 1. Enforce usage limits and call duration cap before processing
         limit_check = await check_usage_limits_async(
             business_id=self.business.id,
             session_type=session_type,
+            current_call_duration_seconds=call_duration_seconds,
         )
         if not limit_check.allowed:
             logger.warning(
                 f"[TextAgent] Limit reached ({limit_check.limit_type}) for business {self.business.id}"
             )
+            if limit_check.limit_type == "call_duration":
+                self.is_call_active = False
             degrade_reply = (
                 limit_check.graceful_message
                 or "We are currently operating at capacity. May I take down your contact details so our team can follow up?"
