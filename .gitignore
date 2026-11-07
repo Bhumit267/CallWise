@@ -60,3 +60,7 @@ web/.next/
 web/out/
 web/.env*.local
 
+# Callwise runtime & backups
+backups/*.sql.gz
+.callwise_killswitch.json
+

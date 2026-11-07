@@ -1,0 +1,46 @@
+# ==============================================================================
+# Callwise Production Caddyfile Reverse Proxy Configuration
+# ==============================================================================
+
+{$DOMAIN:localhost} {
+    # Compression for text, JSON, and JavaScript assets
+    encode gzip zstd
+
+    # Security Headers
+    header {
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        -Server
+    }
+
+    # Route backend health check
+    handle /health {
+        reverse_proxy backend:8000
+    }
+
+    # Route all FastAPI REST and WebSocket endpoints
+    handle /api/* {
+        reverse_proxy backend:8000 {
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Real-IP {remote_host}
+        }
+    }
+
+    # Route Next.js dashboard, widget frame, and static pages
+    handle {
+        reverse_proxy web:3000 {
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Real-IP {remote_host}
+        }
+    }
+
+    # Logging
+    log {
+        output stdout
+        format console
+        level INFO
+    }
+}
+

@@ -84,9 +84,27 @@ def create_app() -> FastAPI:
     app.include_router(widget_router, prefix="/api")
     app.include_router(onboarding_router, prefix="/api")
 
+    @app.get("/health", include_in_schema=False)
     @app.get("/api/health")
     async def health_check():
-        return {"status": "ok", "version": "0.1.0"}
+        from callwise.calls.killswitch import is_kill_switch_active
+        from callwise.db.session import get_async_session
+        from sqlalchemy import text
+
+        db_ok = False
+        try:
+            async with get_async_session() as session:
+                await session.execute(text("SELECT 1"))
+                db_ok = True
+        except Exception:
+            db_ok = False
+
+        return {
+            "status": "ok" if db_ok else "degraded",
+            "database": "connected" if db_ok else "unreachable",
+            "kill_switch_active": is_kill_switch_active(),
+            "version": "0.1.0",
+        }
 
     return app
 

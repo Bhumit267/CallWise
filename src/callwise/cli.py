@@ -1320,6 +1320,251 @@ def cli_blocklist_list(
     )
 
 
+# ---------------------------------------------------------
+# Database Maintenance Sub-CLI (Backup & Restore)
+# ---------------------------------------------------------
+db_app = typer.Typer(name="db", help="Database backup and restore maintenance utilities.")
+app.add_typer(db_app, name="db")
+
+
+@db_app.command("backup")
+def cli_db_backup(
+    output_dir: str = typer.Option("backups", "--output-dir", "-o", help="Directory where backup is written"),
+):
+    """Create a compressed database backup archive (.sql.gz)."""
+    from pathlib import Path
+    from callwise.db.backup import create_database_backup
+
+    typer.echo(f"Initiating Callwise database backup to '{output_dir}'...")
+    try:
+        backup_path = create_database_backup(output_dir=Path(output_dir))
+        file_size_kb = backup_path.stat().st_size / 1024.0
+        typer.secho(f"[OK] Database backup created successfully!", fg=typer.colors.GREEN, bold=True)
+        typer.echo(f"File: {backup_path.resolve()}")
+        typer.echo(f"Size: {file_size_kb:.2f} KB")
+    except Exception as exc:
+        typer.secho(f"[ERROR] Database backup failed: {exc}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+
+@db_app.command("restore")
+def cli_db_restore(
+    backup_file: str = typer.Argument(..., help="Path to .sql or .sql.gz backup file"),
+    confirm: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt"),
+):
+    """Restore database schema and data from a backup archive."""
+    from pathlib import Path
+    from callwise.db.backup import restore_database_backup
+
+    file_path = Path(backup_file)
+    if not file_path.exists():
+        typer.secho(f"[ERROR] Backup file '{backup_file}' not found.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    if not confirm:
+        proceed = typer.confirm(
+            f"Are you sure you want to restore the database from '{backup_file}'? "
+            "This will apply SQL statements directly to the target database.",
+            default=False,
+        )
+        if not proceed:
+            typer.echo("Restore cancelled.")
+            return
+
+    typer.echo(f"Restoring database from '{backup_file}'...")
+    try:
+        restore_database_backup(file_path)
+        typer.secho("[OK] Database restore completed successfully!", fg=typer.colors.GREEN, bold=True)
+    except Exception as exc:
+        typer.secho(f"[ERROR] Database restore failed: {exc}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+
+# ---------------------------------------------------------
+# System Diagnostic: doctor
+# ---------------------------------------------------------
+@app.command("doctor")
+def cli_doctor(
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show extra diagnostic details"),
+):
+    """Perform end-to-end environment, database, credentials, and subsystem diagnostic health checks."""
+    import time
+    from pathlib import Path
+    from sqlalchemy import text
+    from callwise.calls.killswitch import is_kill_switch_active, get_kill_switch_status
+    from callwise.agent.circuit_breaker import circuit_breaker
+    from callwise.db.session import sync_engine
+
+    typer.echo("\n" + "=" * 60)
+    typer.secho("         CALLWISE SYSTEM DIAGNOSTIC (DOCTOR)         ", bold=True)
+    typer.echo("=" * 60 + "\n")
+
+    checks = []
+    has_critical_failure = False
+
+    # 1. Database Connectivity & Ping Latency
+    try:
+        t0 = time.perf_counter()
+        engine = sync_engine
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1;"))
+        latency = (time.perf_counter() - t0) * 1000.0
+        checks.append(("Database Connection", "[OK]", f"Connected ({latency:.1f}ms latency)"))
+    except Exception as exc:
+        has_critical_failure = True
+        checks.append(("Database Connection", "[FAIL]", f"Cannot connect: {exc}"))
+
+    # 2. pgvector Extension Check
+    try:
+        engine = sync_engine
+        with engine.connect() as conn:
+            vec_row = conn.execute(
+                text("SELECT extname, extversion FROM pg_extension WHERE extname = 'vector';")
+            ).mappings().first()
+            if vec_row:
+                checks.append(("pgvector Extension", "[OK]", f"Installed (v{vec_row['extversion']})"))
+            else:
+                has_critical_failure = True
+                checks.append(("pgvector Extension", "[FAIL]", "Extension 'vector' is NOT installed in database"))
+    except Exception as exc:
+        checks.append(("pgvector Extension", "[FAIL]", str(exc)))
+
+    # 3. Alembic Migration Head Check
+    try:
+        engine = sync_engine
+        with engine.connect() as conn:
+            rev = conn.execute(text("SELECT version_num FROM alembic_version;")).scalar_one_or_none()
+            if rev:
+                checks.append(("Database Migrations", "[OK]", f"Current head: {rev}"))
+            else:
+                checks.append(("Database Migrations", "[WARN]", "alembic_version table is empty"))
+    except Exception as exc:
+        checks.append(("Database Migrations", "[WARN]", f"Migration check notice: {exc}"))
+
+    # 4. Primary LLM Provider
+    prim_llm = settings.llm_provider.lower().strip()
+    if prim_llm == "groq":
+        if settings.groq_api_key and len(settings.groq_api_key.strip()) > 8:
+            checks.append(("Primary LLM (Groq)", "[OK]", f"Configured (model: {settings.groq_model})"))
+        else:
+            checks.append(("Primary LLM (Groq)", "[WARN]", "GROQ_API_KEY is not set or empty"))
+    elif prim_llm == "gemini":
+        if settings.gemini_api_key and len(settings.gemini_api_key.strip()) > 8:
+            checks.append(("Primary LLM (Gemini)", "[OK]", f"Configured (model: {settings.gemini_model})"))
+        else:
+            checks.append(("Primary LLM (Gemini)", "[WARN]", "GEMINI_API_KEY is not set or empty"))
+    elif prim_llm == "ollama":
+        checks.append(("Primary LLM (Ollama)", "[OK]", f"Configured (base: {settings.ollama_base_url})"))
+
+    # 5. Fallback LLM Provider
+    fb_llm = (settings.fallback_llm_provider or "").lower().strip()
+    if fb_llm == "gemini":
+        has_key = bool(settings.gemini_api_key and len(settings.gemini_api_key.strip()) > 8)
+        checks.append(("Fallback LLM (Gemini)", "[OK]" if has_key else "[WARN]", "Configured & Ready" if has_key else "Missing GEMINI_API_KEY"))
+    elif fb_llm == "groq":
+        has_key = bool(settings.groq_api_key and len(settings.groq_api_key.strip()) > 8)
+        checks.append(("Fallback LLM (Groq)", "[OK]" if has_key else "[WARN]", "Configured & Ready" if has_key else "Missing GROQ_API_KEY"))
+    else:
+        checks.append(("Fallback LLM", "[OK]", f"Configured ({fb_llm})"))
+
+    # 6. Speech-to-Text (STT)
+    stt_p = settings.stt_provider.lower().strip()
+    if stt_p == "deepgram":
+        has_dg = bool(settings.deepgram_api_key and len(settings.deepgram_api_key.strip()) > 6)
+        checks.append(("STT Provider (Deepgram)", "[OK]" if has_dg else "[WARN]", "Ready" if has_dg else "Missing DEEPGRAM_API_KEY"))
+    else:
+        checks.append(("STT Provider", "[OK]", f"Using {stt_p}"))
+
+    # 7. Text-to-Speech (TTS)
+    tts_p = settings.tts_provider.lower().strip()
+    if tts_p == "cartesia":
+        has_car = bool(settings.cartesia_api_key and len(settings.cartesia_api_key.strip()) > 6)
+        checks.append(("TTS Provider (Cartesia)", "[OK]" if has_car else "[WARN]", "Ready" if has_car else "Missing CARTESIA_API_KEY"))
+    else:
+        checks.append(("TTS Provider", "[OK]", f"Using {tts_p}"))
+
+    # 8. Telephony Integration
+    tel_p = settings.telephony_provider.lower().strip()
+    if tel_p == "livekit":
+        has_lk = bool(settings.livekit_url and settings.livekit_api_key)
+        checks.append(("Telephony (LiveKit)", "[OK]" if has_lk else "[WARN]", "SIP dispatch configured" if has_lk else "LIVEKIT_URL or API key not set"))
+    else:
+        checks.append(("Telephony Provider", "[OK]", f"{tel_p} configured"))
+
+    # 9. Email Notifications
+    em_p = settings.email_provider.lower().strip()
+    if em_p == "resend":
+        has_res = bool(settings.resend_api_key and len(settings.resend_api_key.strip()) > 6)
+        checks.append(("Email Provider (Resend)", "[OK]" if has_res else "[WARN]", "API configured" if has_res else "Missing RESEND_API_KEY"))
+    elif em_p == "smtp":
+        has_smtp = bool(settings.smtp_host)
+        checks.append(("Email Provider (SMTP)", "[OK]" if has_smtp else "[WARN]", f"Host: {settings.smtp_host}" if has_smtp else "Missing SMTP_HOST"))
+    else:
+        checks.append(("Email Provider", "[OK]", f"Using {em_p}"))
+
+    # 10. Kill Switch State
+    ks_active = is_kill_switch_active()
+    if ks_active:
+        ks_info = get_kill_switch_status()
+        checks.append(("Emergency Kill Switch", "[WARN]", f"ACTIVE ({ks_info.get('reason') or 'Diverting traffic'})"))
+    else:
+        checks.append(("Emergency Kill Switch", "[OK]", "Inactive (Normal operations)"))
+
+    # 11. Circuit Breaker Registry
+    open_circuits = [p for p in ["groq", "gemini"] if not circuit_breaker.is_available(p)]
+    if open_circuits:
+        checks.append(("Circuit Breakers", "[WARN]", f"Tripped circuits: {', '.join(open_circuits)}"))
+    else:
+        checks.append(("Circuit Breakers", "[OK]", "All circuits closed and healthy"))
+
+    # 12. Workspace Write Access
+    try:
+        test_dir = Path("backups")
+        test_dir.mkdir(parents=True, exist_ok=True)
+        test_file = test_dir / ".doctor_write_check"
+        test_file.write_text("ok")
+        test_file.unlink()
+        checks.append(("Disk Storage Permissions", "[OK]", "Backup directory writable"))
+    except Exception as exc:
+        checks.append(("Disk Storage Permissions", "[WARN]", f"Storage notice: {exc}"))
+
+    # Render formatted table
+    formatted_rows = []
+    for comp, status, details in checks:
+        if status == "[OK]":
+            colored_status = typer.style(status, fg=typer.colors.GREEN, bold=True)
+        elif status == "[WARN]":
+            colored_status = typer.style(status, fg=typer.colors.YELLOW, bold=True)
+        else:
+            colored_status = typer.style(status, fg=typer.colors.RED, bold=True)
+        formatted_rows.append([comp, colored_status, details])
+
+    typer.echo(
+        tabulate(
+            formatted_rows,
+            headers=["Subsystem Component", "Status", "Diagnostic Details"],
+            tablefmt="grid",
+        )
+    )
+
+    ok_count = sum(1 for _, s, _ in checks if s == "[OK]")
+    warn_count = sum(1 for _, s, _ in checks if s == "[WARN]")
+    fail_count = sum(1 for _, s, _ in checks if s == "[FAIL]")
+
+    typer.echo("\nDiagnostic Summary:")
+    typer.secho(f"  Passed:   {ok_count}", fg=typer.colors.GREEN)
+    if warn_count:
+        typer.secho(f"  Warnings: {warn_count}", fg=typer.colors.YELLOW)
+    if fail_count:
+        typer.secho(f"  Failures: {fail_count}", fg=typer.colors.RED, bold=True)
+
+    if has_critical_failure:
+        typer.secho("\nDoctor check failed: Critical dependencies require attention.", fg=typer.colors.RED, bold=True)
+        raise typer.Exit(code=1)
+    else:
+        typer.secho("\nAll critical systems are operational!", fg=typer.colors.GREEN, bold=True)
+
+
 if __name__ == "__main__":
     app()
 
