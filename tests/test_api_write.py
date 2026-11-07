@@ -384,3 +384,4 @@ async def test_background_worker_retention_job():
         assert processed_job.id == job_id
         assert processed_job.status == "completed"
         assert processed_job.progress == 100
+

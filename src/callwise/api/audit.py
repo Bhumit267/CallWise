@@ -34,3 +34,4 @@ async def record_audit_log(
     db.add(log)
     await db.flush()
     return log
+

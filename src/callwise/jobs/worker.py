@@ -158,3 +158,4 @@ async def run_worker(poll_interval: int = 5, run_once: bool = False) -> None:
             if run_once:
                 break
             await asyncio.sleep(poll_interval)
+
