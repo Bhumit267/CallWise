@@ -1115,6 +1115,38 @@ def cli_list_reminders(
     )
 
 
+@app.command("run-worker")
+def cli_run_worker(
+    interval: int = typer.Option(5, "--interval", "-i", help="Polling interval in seconds"),
+    once: bool = typer.Option(False, "--once", help="Run a single pass and exit immediately"),
+):
+    """Run the Callwise asynchronous background ingestion and maintenance worker."""
+    import asyncio
+    from callwise.jobs.worker import process_next_job, run_worker
+    from callwise.db.session import AsyncSessionLocal
+
+    if once:
+        typer.echo("Executing single-pass background worker check...")
+
+        async def _run_once():
+            async with AsyncSessionLocal() as session:
+                return await process_next_job(session)
+
+        job = asyncio.run(_run_once())
+        if job:
+            typer.secho(f"[OK] Processed job {job.id} (type: {job.type}, status: {job.status}).", fg=typer.colors.GREEN)
+        else:
+            typer.echo("No pending background jobs found.")
+        return
+
+    typer.echo(f"Starting Callwise Background Worker daemon (interval: {interval}s)...")
+    typer.echo("Press Ctrl+C to stop.")
+    try:
+        asyncio.run(run_worker(poll_interval=interval, run_once=False))
+    except KeyboardInterrupt:
+        typer.echo("\nWorker stopped.")
+
+
 if __name__ == "__main__":
     app()
 

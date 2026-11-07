@@ -7,7 +7,6 @@ import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from callwise.agent.hours import get_business_hours_status
 from callwise.db.models import Business, Call, Transfer
 from callwise.notifications.service import notify_transfer
 from callwise.providers.email import EmailProvider
@@ -46,6 +45,8 @@ async def execute_transfer(
         raise ValueError(f"Business not found: {business_id}")
 
     # 1. Check business hours
+    from callwise.agent.hours import get_business_hours_status
+
     hours_status = get_business_hours_status(business, at_time=reference_now)
     if not hours_status.is_open:
         transfer_record = Transfer(

@@ -127,3 +127,39 @@ def ingest_url(
 
     with get_sync_session() as session:
         return session.get(Document, doc_id)
+
+
+def ingest_text_snippet(
+    business_id: uuid.UUID,
+    title: str,
+    content: str,
+) -> Document:
+    """
+    Ingest a raw text or Q&A snippet for a tenant business.
+    Splits into chunks, computes embeddings, and stores in PostgreSQL.
+    """
+    chunks = chunk_text(content)
+    if not chunks:
+        cleaned = content.strip()
+        if not cleaned:
+            raise ValueError("Q&A snippet yielded no readable content.")
+        chunks = [cleaned]
+
+    embedding_provider = get_embedding_provider()
+    embeddings = embedding_provider.embed_batch(chunks)
+
+    with get_sync_session() as session:
+        doc = store_document_and_chunks(
+            session=session,
+            business_id=business_id,
+            title=title,
+            source_type="qa_snippet",
+            source_uri=f"snippet://{uuid.uuid4().hex[:12]}",
+            content=content,
+            chunks=chunks,
+            embeddings=embeddings,
+        )
+        doc_id = doc.id
+
+    with get_sync_session() as session:
+        return session.get(Document, doc_id)

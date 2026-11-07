@@ -1,15 +1,18 @@
-"""Contacts API router: list contacts with masked phones, call/appointment counts, and full detail history."""
+"""Contacts API router: list contacts with masked phones, detail history, updates, and GDPR deletion."""
 
-from typing import Optional
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, or_, select
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from callwise.api.audit import record_audit_log
 from callwise.api.deps import get_tenant_db
-from callwise.api.permissions import require_staff
+from callwise.api.permissions import require_owner, require_staff
 from callwise.api.schemas import (
     AppointmentListItem,
     CallListItem,
@@ -23,6 +26,7 @@ from callwise.db.models import (
     Appointment,
     Business,
     Call,
+    CallTurn,
     Contact,
     FollowUp,
     Message,
@@ -31,6 +35,12 @@ from callwise.db.models import (
 )
 
 router = APIRouter(prefix="/contacts", tags=["Contacts"])
+
+
+class ContactUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    notes: Optional[str] = None
+    do_not_contact: Optional[bool] = None
 
 
 @router.get("", response_model=PaginatedResponse[ContactListItem])
@@ -189,3 +199,124 @@ async def get_contact_detail(
             for fu in contact.follow_ups
         ],
     )
+
+
+@router.put("/{contact_id}")
+async def update_contact(
+    contact_id: uuid.UUID,
+    payload: ContactUpdate,
+    request: Request,
+    auth_ctx: tuple[User, Business, str, UserSession] = Depends(require_staff),
+    db: AsyncSession = Depends(get_tenant_db),
+) -> Dict[str, Any]:
+    """Update contact notes or toggle 'do not contact' status."""
+    user, business, _, _ = auth_ctx
+
+    stmt = select(Contact).where(Contact.id == contact_id, Contact.business_id == business.id)
+    contact = (await db.execute(stmt)).scalar_one_or_none()
+
+    if not contact:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Contact '{contact_id}' not found.",
+        )
+
+    changes = {}
+    for field, val in payload.model_dump(exclude_unset=True).items():
+        old_val = getattr(contact, field)
+        if old_val != val:
+            changes[field] = {"old": old_val, "new": val}
+            setattr(contact, field, val)
+
+    if changes:
+        contact.updated_at = datetime.now(timezone.utc)
+        await record_audit_log(
+            db=db,
+            business_id=business.id,
+            user_id=user.id,
+            action="update_contact",
+            resource_type="contact",
+            resource_id=str(contact.id),
+            changes=changes,
+            ip_address=request.client.host if request.client else None,
+        )
+        await db.flush()
+
+    return {"status": "ok", "message": "Contact updated successfully.", "contact_id": str(contact_id)}
+
+
+@router.delete("/{contact_id}/data")
+async def delete_contact_data(
+    contact_id: uuid.UUID,
+    request: Request,
+    auth_ctx: tuple[User, Business, str, UserSession] = Depends(require_owner),
+    db: AsyncSession = Depends(get_tenant_db),
+) -> Dict[str, Any]:
+    """Owner-triggered GDPR data deletion: anonymizes or scrubs contact PII and conversational records."""
+    user, business, _, _ = auth_ctx
+
+    stmt = select(Contact).where(Contact.id == contact_id, Contact.business_id == business.id)
+    contact = (await db.execute(stmt)).scalar_one_or_none()
+
+    if not contact:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Contact '{contact_id}' not found.",
+        )
+
+    # 1. Anonymize contact record
+    contact.name = "[DELETED]"
+    contact.phone = None
+    contact.email = None
+    contact.notes = None
+    contact.do_not_contact = True
+    contact.updated_at = datetime.now(timezone.utc)
+
+    # 2. Anonymize/Scrub calls
+    calls_stmt = select(Call).where(Call.contact_id == contact_id, Call.business_id == business.id)
+    calls = (await db.execute(calls_stmt)).scalars().all()
+    for c in calls:
+        c.caller_number = "[ANONYMIZED]"
+        c.summary = "[ANONYMIZED TRANSCRIPT DELETED]"
+        # Delete detailed dialogue turns
+        await db.execute(delete(CallTurn).where(CallTurn.call_id == c.id))
+
+    # 3. Anonymize messages
+    await db.execute(
+        update(Message)
+        .where(Message.contact_id == contact_id, Message.business_id == business.id)
+        .values(
+            caller_name="[ANONYMIZED]",
+            callback_number="[DELETED]",
+            reason="[DELETED]",
+        )
+    )
+
+    # 4. Anonymize appointments
+    await db.execute(
+        update(Appointment)
+        .where(Appointment.contact_id == contact_id, Appointment.business_id == business.id)
+        .values(
+            customer_name="[ANONYMIZED]",
+            customer_phone="[DELETED]",
+            customer_email=None,
+        )
+    )
+
+    await record_audit_log(
+        db=db,
+        business_id=business.id,
+        user_id=user.id,
+        action="gdpr_delete_contact_data",
+        resource_type="contact",
+        resource_id=str(contact_id),
+        changes={"calls_affected": len(calls)},
+        ip_address=request.client.host if request.client else None,
+    )
+    await db.flush()
+
+    return {
+        "status": "ok",
+        "message": "Contact and associated personal transcript data successfully scrubbed under GDPR compliance.",
+        "contact_id": str(contact_id),
+    }
