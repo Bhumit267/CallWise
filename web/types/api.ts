@@ -314,20 +314,83 @@ export interface JobStatusResponse {
   completed_at?: string | null;
 }
 
-export interface TeamMember {
-  id: string;
+// ============================================================================
+// Analytics & Team Schemas
+// ============================================================================
+
+export interface DailyCalls {
+  date: string;
+  total: number;
+  answered: number;
+  transferred: number;
+  message_taken: number;
+}
+
+export interface TopServiceItem {
+  service_id: string;
+  name: string;
+  booking_count: number;
+  revenue: number;
+}
+
+export interface TopMissedQuestionItem {
+  query: string;
+  count: number;
+  status: string;
+}
+
+export interface LatencyMetrics {
+  median_ms: number;
+  p95_ms: number;
+  sample_count: number;
+}
+
+export interface HourDistribution {
+  hour: number;
+  call_count: number;
+}
+
+export interface AnalyticsOverviewResponse {
+  date_range_start: string;
+  date_range_end: string;
+  timezone: string;
+  total_calls: number;
+  answered_count: number;
+  transferred_count: number;
+  message_taken_count: number;
+  booking_conversion_rate: number;
+  calls_per_day: DailyCalls[];
+  top_services: TopServiceItem[];
+  top_missed_questions: TopMissedQuestionItem[];
+  latency_metrics: LatencyMetrics;
+  busiest_hours: HourDistribution[];
+}
+
+export interface TeamMemberResponse {
   user_id: string;
+  name: string;
   email: string;
-  full_name: string;
-  role: 'owner' | 'admin' | 'staff';
+  role: 'owner' | 'manager' | 'staff' | string;
+  joined_at: string;
+}
+
+export interface InviteResponse {
+  id: string;
+  email: string;
+  role: 'owner' | 'manager' | 'staff' | string;
+  expires_at: string;
   created_at: string;
 }
 
-export interface TeamInvite {
+export interface AuditLogItem {
   id: string;
-  email: string;
-  role: 'owner' | 'admin' | 'staff';
-  token: string;
-  expires_at: string;
+  user_id?: string | null;
+  user_name?: string | null;
+  user_email?: string | null;
+  action: string;
+  resource_type: string;
+  resource_id?: string | null;
+  changes?: Record<string, any> | null;
+  ip_address?: string | null;
   created_at: string;
 }
