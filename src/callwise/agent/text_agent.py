@@ -19,6 +19,7 @@ from callwise.calls.usage import check_usage_limits_async, record_usage_record_a
 from callwise.config import settings
 from callwise.db.models import Business
 from callwise.notifications.service import notify_abuse_detected_async
+from callwise.observability.metrics import metrics
 from callwise.providers.llm import get_llm_provider
 
 logger = logging.getLogger(__name__)
@@ -381,6 +382,7 @@ class TextAgent:
         self.caller_utterances.append(user_message)
         if detect_nonsense_repetition(self.caller_utterances):
             logger.warning(f"[TextAgent] Nonsense repetition detected for call {self.call_id}")
+            metrics.track_abuse_event("nonsense_repetition")
             asyncio.create_task(
                 notify_abuse_detected_async(
                     business_id=self.business.id,
@@ -416,6 +418,7 @@ class TextAgent:
             logger.warning(
                 f"[TextAgent] Limit reached ({limit_check.limit_type}) for business {self.business.id}"
             )
+            metrics.track_rate_limit(limit_check.limit_type)
             if limit_check.limit_type == "call_duration":
                 self.is_call_active = False
             degrade_reply = (
@@ -491,6 +494,12 @@ class TextAgent:
 
         latency_ms = (time.perf_counter() - t_start) * 1000.0
         clean_reply = clean_speech_text(raw_reply)
+
+        metrics.track_llm_turn(
+            provider=used_provider,
+            status="success" if raw_reply else "failure",
+            latency_seconds=latency_ms / 1000.0,
+        )
 
         await record_call_turn_async(
             call_id=self.call_id,

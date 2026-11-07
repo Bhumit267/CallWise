@@ -190,5 +190,19 @@ class Settings(BaseSettings):
         description="Cooldown seconds before probing recovery (HALF_OPEN)",
     )
 
+    # Observability, Structured Logging & Metrics (Phase 4 Step 9)
+    log_format: Literal["text", "json"] = Field(
+        default="text",
+        description="Logging format: 'text' for development or 'json' for production",
+    )
+    log_level: str = Field(
+        default="INFO",
+        description="Application logging level: DEBUG, INFO, WARNING, ERROR",
+    )
+    enable_metrics: bool = Field(
+        default=True,
+        description="Enable Prometheus metrics collection endpoint at /metrics",
+    )
+
 
 settings = Settings()

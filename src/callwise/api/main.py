@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from callwise.api.analytics import router as analytics_router
@@ -84,6 +85,11 @@ def create_app() -> FastAPI:
     app.include_router(widget_router, prefix="/api")
     app.include_router(onboarding_router, prefix="/api")
 
+    # Initialize structured logging and redaction filter
+    from callwise.observability.logging import setup_logging
+    setup_logging()
+
+    # Health Check Endpoints
     @app.get("/health", include_in_schema=False)
     @app.get("/api/health")
     async def health_check():
@@ -105,6 +111,16 @@ def create_app() -> FastAPI:
             "kill_switch_active": is_kill_switch_active(),
             "version": "0.1.0",
         }
+
+    # Prometheus Metrics Exposition Endpoint
+    @app.get("/metrics", response_class=PlainTextResponse, include_in_schema=False)
+    @app.get("/api/metrics", response_class=PlainTextResponse, include_in_schema=False)
+    async def metrics_endpoint():
+        if not settings.enable_metrics:
+            return PlainTextResponse("Metrics collection is disabled.\n", status_code=404)
+        from callwise.observability.metrics import metrics
+        content = metrics.render_prometheus()
+        return PlainTextResponse(content, media_type="text/plain; version=0.0.4; charset=utf-8")
 
     return app
 
