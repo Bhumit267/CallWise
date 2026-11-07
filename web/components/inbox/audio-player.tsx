@@ -162,3 +162,4 @@ export function AudioPlayer({ audioUrl, durationSeconds = 0 }: AudioPlayerProps)
     </div>
   );
 }
+
