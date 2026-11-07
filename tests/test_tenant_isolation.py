@@ -198,6 +198,9 @@ async def test_openapi_automated_endpoint_isolation_scan(client: AsyncClient):
         "/api/health",
         "/api/docs",
         "/api/openapi.json",
+        "/api/widget/config/{public_key}",
+        "/api/widget/chat",
+        "/api/widget/lead",
     }
 
     authenticated_routes = []

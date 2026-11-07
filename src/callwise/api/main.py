@@ -19,6 +19,7 @@ from callwise.api.onboarding import router as onboarding_router
 from callwise.api.phone_numbers import router as phone_numbers_router
 from callwise.api.settings import router as settings_router
 from callwise.api.team import router as team_router
+from callwise.api.widget import router as widget_router
 from callwise.config import settings
 
 
@@ -28,7 +29,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response: Response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
+        # Allow embedding for public widget routes; deny embedding for dashboard pages
+        if not request.url.path.startswith("/api/widget/"):
+            response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
@@ -75,6 +78,7 @@ def create_app() -> FastAPI:
     app.include_router(team_router, prefix="/api")
     app.include_router(audit_logs_router, prefix="/api")
     app.include_router(phone_numbers_router, prefix="/api")
+    app.include_router(widget_router, prefix="/api")
     app.include_router(onboarding_router, prefix="/api")
 
     @app.get("/api/health")
