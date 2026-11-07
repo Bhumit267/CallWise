@@ -146,5 +146,27 @@ class Settings(BaseSettings):
         description="Outbound SIP trunk URI (e.g. sip:trunk@sip.provider.com)",
     )
 
+    # Web Dashboard & Auth (Phase 3)
+    secret_key: str = Field(
+        default="callwise-dev-secret-key-change-in-prod-min32bytes!",
+        description="Secret key for cryptographic HMAC and signing",
+    )
+    cookie_secure: bool = Field(
+        default=False,
+        description="Enforce Secure flag on cookies (set True in production with HTTPS)",
+    )
+    session_expiry_days: int = Field(
+        default=7,
+        description="Session duration in days before requiring re-login",
+    )
+    app_url: str = Field(
+        default="http://localhost:3000",
+        description="Base web URL for generating password reset and invite links",
+    )
+    cors_origins: str = Field(
+        default="http://localhost:3000,http://127.0.0.1:3000",
+        description="Comma-separated allowed CORS origins",
+    )
+
 
 settings = Settings()

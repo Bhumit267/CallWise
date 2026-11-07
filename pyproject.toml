@@ -31,6 +31,11 @@ dependencies = [
     "pytz>=2024.1",
     "tenacity>=8.3.0",
     "tabulate>=0.9.0",
+    "fastapi>=0.162.0",
+    "uvicorn[standard]>=0.54.0",
+    "argon2-cffi>=25.1.0",
+    "python-multipart>=0.0.33",
+    "email-validator>=2.3.0",
 ]
 
 [project.optional-dependencies]
