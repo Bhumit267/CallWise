@@ -1,4 +1,4 @@
-# Python
+# Python artifacts
 __pycache__/
 *.py[cod]
 *$py.class
@@ -28,39 +28,44 @@ env/
 
 # Environment variables & secrets
 .env
+.env*.local
 *.local
 credentials/
 *.json.secret
 
-# Testing and coverage
+# Testing, coverage, and reports
 .pytest_cache/
+test-results/
+playwright-report/
+blob-report/
 .coverage
 htmlcov/
 .tox/
+evals/reports/
+!evals/data/**
 
-# IDE & Editor
+# IDE & OS junk
 .vscode/
 .idea/
 *.swp
 *.swo
+.DS_Store
+Thumbs.db
+Desktop.ini
 
 # Database & logs
 *.log
 *.sqlite
 /data/
-evals/reports/
-!evals/data/**
+backups/*.sql.gz
+.callwise_killswitch.json
 
-# Local skills / agent cache
-.agent/
-
-# Web / Frontend
+# Web & Node
 web/node_modules/
 web/.next/
 web/out/
 web/.env*.local
+*.tsbuildinfo
 
-# Callwise runtime & backups
-backups/*.sql.gz
-.callwise_killswitch.json
-
+# Local AI agent cache
+.agent/
