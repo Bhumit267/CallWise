@@ -1,4 +1,4 @@
-"""Tests for Phase 4 Step 7: Kill switch, circuit breaker, abuse protection, and alert notifications."""
+"""Tests for kill switch, circuit breaker, abuse protection, and alert notifications."""
 
 import asyncio
 from datetime import datetime, timedelta, timezone

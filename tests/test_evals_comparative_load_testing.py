@@ -1,4 +1,4 @@
-"""Tests for Phase 4 Step 10: Multi-provider comparative evals and concurrency load testing."""
+"""Tests for multi-provider comparative evaluations and concurrency load testing."""
 
 import json
 from pathlib import Path

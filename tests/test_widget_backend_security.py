@@ -1,4 +1,4 @@
-"""Tests for Step 5: Chat widget backend (public key, allowed origins, rate limits, injection prevention, lead capture)."""
+"""Tests for chat widget backend (public key, allowed origins, rate limits, injection prevention, lead capture)."""
 
 from datetime import datetime, timezone
 import uuid

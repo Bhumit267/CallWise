@@ -1,4 +1,4 @@
-"""Unit and tenant isolation tests for Step 6 (Analytics, Team & Invites, Audit Logs, Onboarding Wizard)."""
+"""Unit and tenant isolation tests for analytics metrics, team management & invites, audit logs, and onboarding wizard."""
 
 from datetime import datetime, timedelta, timezone
 import uuid

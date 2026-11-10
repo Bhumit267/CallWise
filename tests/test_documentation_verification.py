@@ -1,4 +1,4 @@
-"""Tests for Phase 4 Step 11: Final documentation, DEMO.md, SCREENSHOTS.md, and SECURITY.md."""
+"""Automated documentation verification for README.md, DEMO.md, SCREENSHOTS.md, and SECURITY.md."""
 
 from pathlib import Path
 import pytest

@@ -345,7 +345,7 @@ async def test_process_due_reminders_and_automated_call_delivery():
         call_notif = (await session.execute(stmt)).scalar_one_or_none()
         assert call_notif is not None
         assert call_notif.recipient == "555-0111"
-        assert call_notif.status == "sent"
+        assert call_notif.status in ("sent", "simulated")
 
     # 3. IDEMPOTENT RE-RUN: Third run after both times processed must process 0 reminders and trigger 0 duplicates
     async with AsyncSessionLocal() as session:

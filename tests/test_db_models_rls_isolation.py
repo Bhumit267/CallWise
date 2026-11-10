@@ -1,4 +1,4 @@
-"""Tests for Step 1: Phase 4 database models, relationships, and PostgreSQL RLS policies."""
+"""Tests for database models, relationships, and PostgreSQL RLS tenant isolation policies."""
 
 from datetime import datetime, timezone
 import uuid

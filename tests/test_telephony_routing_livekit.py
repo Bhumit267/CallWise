@@ -1,4 +1,4 @@
-"""Tests for Step 3: Telephony routing, LiveKit SIP provider, and caller ID contact matching."""
+"""Tests for telephony routing, LiveKit SIP provider, and caller ID contact matching."""
 
 from datetime import datetime, timezone
 import uuid

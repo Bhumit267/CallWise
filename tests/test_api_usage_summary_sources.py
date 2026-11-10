@@ -1,4 +1,4 @@
-"""Tests for Phase 4 Step 6: Usage summary API, per-call cost tracking, and call source resolution."""
+"""Tests for usage summary API, per-call cost tracking, and call source resolution."""
 
 from datetime import datetime, timezone
 import uuid

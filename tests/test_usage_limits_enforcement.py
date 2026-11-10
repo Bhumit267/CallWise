@@ -1,4 +1,4 @@
-"""Comprehensive tests for Step 2: usage tracking, cost estimation, and limit enforcement."""
+"""Comprehensive tests for usage tracking, cost estimation, and monthly limit enforcement."""
 
 from datetime import datetime, timezone
 import uuid

@@ -1,4 +1,4 @@
-"""Tests for Phase 4 Step 9: Structured JSON logging, Prometheus metrics, and CI workflow."""
+"""Tests for structured JSON logging, PII data redaction, Prometheus metrics, and CI workflow."""
 
 import json
 import logging

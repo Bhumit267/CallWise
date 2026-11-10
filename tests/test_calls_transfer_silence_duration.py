@@ -1,4 +1,4 @@
-"""Tests for Step 4: Transfer timeout, fallback message taking, silence handling, and max call duration."""
+"""Tests for transfer timeout, fallback message taking, silence handling, and max call duration."""
 
 import asyncio
 from datetime import datetime

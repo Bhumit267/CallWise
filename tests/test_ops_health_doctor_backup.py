@@ -1,4 +1,4 @@
-"""Tests for Phase 4 Step 8: Docker production setup, Caddy, health checks, doctor command, and backup/restore."""
+"""Tests for production container setup, Caddy, health checks, doctor command, and backup/restore."""
 
 from pathlib import Path
 import gzip
