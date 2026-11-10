@@ -14,6 +14,12 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    # Runtime Environment
+    environment: str = Field(
+        default="development",
+        description="Runtime environment (development, staging, production)",
+    )
+
     # Database
     database_url: str = Field(
         default="postgresql+asyncpg://postgres:postgres@localhost:5433/callwise",

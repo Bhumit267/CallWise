@@ -6,7 +6,6 @@ from typing import Any, Callable, Dict, List, Optional
 import uuid
 from zoneinfo import ZoneInfo
 
-from livekit.agents import function_tool
 from sqlalchemy import select
 
 from callwise.agent.hours import get_business_hours_status
@@ -520,6 +519,8 @@ class CallwiseToolset:
 
     def get_livekit_tools(self) -> List[Any]:
         """Wrap all 9 tool methods with LiveKit's @function_tool decorator."""
+        from livekit.agents import function_tool
+
         toolset = self
 
         @function_tool

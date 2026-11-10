@@ -1,5 +1,7 @@
 """LiveKit voice agent and business hours logic."""
 
+from typing import Any
+
 from callwise.agent.hours import (
     BusinessHoursStatus,
     format_time_12h,
@@ -10,7 +12,17 @@ from callwise.agent.hours import (
 from callwise.agent.prompt import build_system_prompt
 from callwise.agent.text_agent import TextAgent
 from callwise.agent.tools import CallwiseToolset
-from callwise.agent.voice_agent import create_voice_agent, start_voice_worker
+
+
+def __getattr__(name: str) -> Any:
+    if name in ("create_voice_agent", "start_voice_worker"):
+        from callwise.agent.voice_agent import create_voice_agent, start_voice_worker
+
+        if name == "create_voice_agent":
+            return create_voice_agent
+        return start_voice_worker
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     "BusinessHoursStatus",
@@ -24,4 +36,3 @@ __all__ = [
     "parse_time_str",
     "start_voice_worker",
 ]
-

@@ -17,5 +17,26 @@ services:
       timeout: 5s
       retries: 5
 
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    profiles: ["voice"]
+    container_name: callwise-voice-agent
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Connects to existing postgres container on internal Docker network port 5432
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@callwise-postgres:5432/callwise
+      DATABASE_URL_SYNC: postgresql://postgres:postgres@callwise-postgres:5432/callwise
+      PYTHONPATH: /app/src
+    volumes:
+      - ./src:/app/src
+    command: ["-b", "11111111-1111-1111-1111-111111111111", "-m", "dev"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   pgdata:

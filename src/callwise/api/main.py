@@ -89,6 +89,15 @@ def create_app() -> FastAPI:
     from callwise.observability.logging import setup_logging
     setup_logging()
 
+    # Production security validation
+    DEFAULT_DEV_SECRET = "callwise-dev-secret-key-change-in-prod-min32bytes!"
+    if settings.environment.lower() == "production":
+        if settings.secret_key == DEFAULT_DEV_SECRET or len(settings.secret_key) < 32:
+            raise ValueError(
+                "CRITICAL SECURITY CONFIGURATION ERROR: Production environment detected with default or insecure SECRET_KEY. "
+                "Set a secure, random SECRET_KEY in your production environment variables (minimum 32 bytes)."
+            )
+
     # Health Check Endpoints
     @app.get("/health", include_in_schema=False)
     @app.get("/api/health")

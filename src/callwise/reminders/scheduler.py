@@ -65,7 +65,7 @@ async def trigger_reminder_call(
         business_id=business.id,
         type="customer_reminder_call_2h",
         recipient=appointment.customer_phone,
-        status="sent",
+        status="simulated",
         sent_at=datetime.now(timezone.utc),
     )
     session.add(notif)
