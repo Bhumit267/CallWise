@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/api';
-import { Bot, Loader2, ArrowLeft, MailCheck } from 'lucide-react';
+import { Bot, Loader2, ArrowLeft, MailCheck, Sparkles } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -23,7 +23,6 @@ export default function ForgotPasswordPage() {
       });
       setSubmitted(true);
     } catch (err: any) {
-      // Still show success or clear error to prevent user enumeration
       setError(err.message || 'Something went wrong.');
     } finally {
       setLoading(false);
@@ -31,28 +30,31 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-        <div className="flex flex-col items-center">
-          <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/20 mb-3">
-            <Bot className="w-7 h-7" />
+    <div className="min-h-screen flex items-center justify-center bg-[#fbfaf6] px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+      <div className="w-full max-w-md bg-white border-3 border-black rounded-2xl p-8 sm:p-10 shadow-brutal-xl relative z-10">
+        <div className="flex flex-col items-center text-center">
+          <div className="w-16 h-16 bg-blue-600 border-2 border-black rounded-2xl flex items-center justify-center text-white shadow-brutal mb-4 rotate-[-3deg]">
+            <Bot className="w-9 h-9" />
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Reset your password</h2>
-          <p className="text-sm text-slate-500 mt-1">We'll send you an email with reset instructions</p>
+
+          <h2 className="text-3xl font-black tracking-tight text-black">Reset Password</h2>
+          <p className="text-sm font-medium text-neutral-600 mt-1">
+            We&apos;ll send you an email with reset instructions
+          </p>
         </div>
 
         {submitted ? (
-          <div className="text-center space-y-4">
-            <div className="mx-auto w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-              <MailCheck className="w-6 h-6" />
+          <div className="mt-8 text-center space-y-5">
+            <div className="mx-auto w-16 h-16 rounded-2xl bg-[#a3e635] border-2 border-black shadow-brutal flex items-center justify-center text-black">
+              <MailCheck className="w-8 h-8" />
             </div>
-            <p className="text-sm text-slate-700">
-              If an account exists for <span className="font-medium text-slate-900">{email}</span>, you will receive a password reset link shortly.
+            <p className="text-sm font-medium text-neutral-800 bg-amber-50 p-4 rounded-xl border-2 border-black shadow-brutal-xs">
+              If an account exists for <span className="font-black text-black">{email}</span>, you will receive a reset link shortly.
             </p>
-            <div className="pt-4">
+            <div className="pt-2">
               <Link
                 href="/login"
-                className="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-500"
+                className="w-full inline-flex items-center justify-center py-3 px-4 rounded-xl font-black text-sm text-black bg-white border-2 border-black shadow-brutal hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-brutal-xs uppercase tracking-wider"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" /> Back to sign in
               </Link>
@@ -61,19 +63,21 @@ export default function ForgotPasswordPage() {
         ) : (
           <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
             {error && (
-              <div className="p-3.5 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+              <div className="p-4 rounded-xl bg-rose-100 border-2 border-black text-xs font-bold text-rose-950 shadow-brutal-xs">
                 {error}
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email address</label>
+              <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5">
+                Email Address
+              </label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm"
+                className="w-full px-4 py-3 rounded-xl border-2 border-black bg-white focus:outline-none focus:bg-amber-50/30 text-sm font-bold placeholder:text-neutral-400 placeholder:font-normal shadow-brutal-xs focus:shadow-brutal transition-all"
                 placeholder="you@company.com"
               />
             </div>
@@ -81,17 +85,17 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition"
+              className="w-full flex items-center justify-center py-3.5 px-5 rounded-xl text-sm font-black text-white bg-blue-600 hover:bg-blue-500 border-2 border-black shadow-brutal hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-brutal-sm active:translate-x-[4px] active:translate-y-[4px] active:shadow-none disabled:opacity-50 transition-all uppercase tracking-wider"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Send reset link'}
             </button>
 
-            <div className="text-center">
+            <div className="text-center pt-2">
               <Link
                 href="/login"
-                className="inline-flex items-center text-sm text-slate-600 hover:text-slate-900"
+                className="inline-flex items-center text-xs font-black text-neutral-600 hover:text-black uppercase tracking-wider"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" /> Back to sign in
+                <ArrowLeft className="w-4 h-4 mr-1.5" /> Back to sign in
               </Link>
             </div>
           </form>
@@ -100,4 +104,3 @@ export default function ForgotPasswordPage() {
     </div>
   );
 }
-

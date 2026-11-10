@@ -18,6 +18,38 @@ function getCookie(name: string): string | null {
   return match ? decodeURIComponent(match[3]) : null;
 }
 
+export function formatApiError(data: any, fallbackStatusText?: string): string {
+  if (!data) return fallbackStatusText || 'Request failed';
+
+  if (data.detail !== undefined && data.detail !== null) {
+    if (typeof data.detail === 'string') {
+      return data.detail;
+    }
+    if (Array.isArray(data.detail)) {
+      return data.detail
+        .map((err: any) => {
+          if (typeof err === 'string') return err;
+          if (err && typeof err === 'object') {
+            const loc = Array.isArray(err.loc) ? err.loc.filter((l: any) => l !== 'body').join('.') : '';
+            const msg = err.msg || 'Invalid value';
+            return loc ? `${loc}: ${msg}` : msg;
+          }
+          return JSON.stringify(err);
+        })
+        .join(', ');
+    }
+    if (typeof data.detail === 'object') {
+      return JSON.stringify(data.detail);
+    }
+  }
+
+  if (data.message && typeof data.message === 'string') {
+    return data.message;
+  }
+
+  return fallbackStatusText || 'Request failed';
+}
+
 export async function apiClient<T = any>(
   endpoint: string,
   options: RequestInit = {}
@@ -65,10 +97,9 @@ export async function apiClient<T = any>(
   }
 
   if (!response.ok) {
-    const message = data?.detail || data?.message || response.statusText || 'Request failed';
+    const message = formatApiError(data, response.statusText);
     throw new ApiError(response.status, message, data);
   }
 
   return data as T;
 }
-

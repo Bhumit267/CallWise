@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { TeamMemberResponse, InviteResponse } from '@/types/api';
+import { useAuth } from '@/contexts/auth-context';
 import { InviteMemberModal } from '@/components/team/invite-member-modal';
 import { EditRoleModal } from '@/components/team/edit-role-modal';
 import { RemoveMemberModal } from '@/components/team/remove-member-modal';
@@ -35,22 +36,31 @@ export default function TeamPage() {
   // Revoking invite state
   const [revokingInviteId, setRevokingInviteId] = useState<string | null>(null);
 
+  const { role } = useAuth();
+  const isManagerOrOwner = role === 'owner' || role === 'manager';
+
   const fetchTeamData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [membersRes, invitesRes] = await Promise.all([
-        apiClient<TeamMemberResponse[]>('/api/team/members'),
-        apiClient<InviteResponse[]>('/api/team/invites'),
-      ]);
-      setMembers(membersRes);
-      setInvites(invitesRes);
+      if (isManagerOrOwner) {
+        const [membersRes, invitesRes] = await Promise.all([
+          apiClient<TeamMemberResponse[]>('/api/team/members'),
+          apiClient<InviteResponse[]>('/api/team/invites'),
+        ]);
+        setMembers(membersRes);
+        setInvites(invitesRes);
+      } else {
+        const membersRes = await apiClient<TeamMemberResponse[]>('/api/team/members');
+        setMembers(membersRes);
+        setInvites([]);
+      }
     } catch (err: any) {
       setError(err?.message || 'Failed to load team data.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isManagerOrOwner]);
 
   useEffect(() => {
     fetchTeamData();
@@ -69,25 +79,23 @@ export default function TeamPage() {
     }
   };
 
-  const getRoleBadge = (role: string) => {
-    switch (role.toLowerCase()) {
+  const getRoleBadge = (userRole: string) => {
+    switch (userRole.toLowerCase()) {
       case 'owner':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">
-            <Shield className="w-3 h-3" />
-            Owner
+          <span className="brutal-badge bg-[#fef9c3] text-amber-950">
+            <Shield className="w-3 h-3 mr-1" /> Owner
           </span>
         );
       case 'manager':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
-            <Shield className="w-3 h-3" />
-            Manager
+          <span className="brutal-badge bg-[#f3e8ff] text-purple-950">
+            <Shield className="w-3 h-3 mr-1" /> Manager
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+          <span className="brutal-badge bg-[#dbeafe] text-blue-950">
             Staff
           </span>
         );
@@ -95,29 +103,35 @@ export default function TeamPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Team Management & Access Controls</h2>
-          <p className="text-sm text-slate-500">
+          <div className="flex items-center gap-2 mb-1">
+            <h2 className="text-2xl font-black uppercase tracking-tight text-black">
+              Team & Access Controls
+            </h2>
+            <span className="bg-[#a3e635] text-black text-[10px] font-black uppercase px-2 py-0.5 rounded brutal-border brutal-shadow-xs">
+              RBAC Guarded
+            </span>
+          </div>
+          <p className="text-xs font-semibold text-neutral-600">
             Manage your team, invite colleagues with role-based access, and review security audit logs.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {activeTab === 'members' && (
+        <div className="flex items-center gap-2.5">
+          {activeTab === 'members' && isManagerOrOwner && (
             <button
               onClick={() => setShowInviteModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors shadow-xs"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-500 text-xs font-black uppercase tracking-wider brutal-border brutal-shadow brutal-shadow-hover"
             >
-              <UserPlus className="w-4 h-4" />
-              Invite Member
+              <UserPlus className="w-4 h-4" /> Invite Member
             </button>
           )}
           <button
             onClick={() => fetchTeamData()}
             disabled={loading}
-            className="p-2 border border-slate-200 bg-white rounded-lg hover:bg-slate-50 text-slate-600 transition-colors"
+            className="p-2.5 bg-white brutal-border rounded-xl brutal-shadow-xs brutal-shadow-hover text-black"
             title="Refresh team members"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-600' : ''}`} />
@@ -126,14 +140,14 @@ export default function TeamPage() {
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center justify-between">
+        <div className="p-4 bg-rose-100 border-2 border-black rounded-xl text-rose-950 text-xs font-black uppercase flex items-center justify-between brutal-shadow-xs">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
           <button
             onClick={() => fetchTeamData()}
-            className="text-xs font-semibold underline hover:text-red-900"
+            className="text-xs font-black underline hover:text-black"
           >
             Retry
           </button>
@@ -141,101 +155,100 @@ export default function TeamPage() {
       )}
 
       {/* Tabs */}
-      <div className="border-b border-slate-200">
-        <nav className="flex space-x-8" aria-label="Tabs">
-          <button
-            onClick={() => setActiveTab('members')}
-            className={`py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors ${
-              activeTab === 'members'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-            }`}
-          >
-            <Users className="w-4 h-4" />
-            Active Team & Invites
-            <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-slate-100 text-slate-600">
-              {members.length}
-            </span>
-          </button>
+      <div className="bg-white p-2 rounded-2xl brutal-border-3 brutal-shadow inline-flex gap-2">
+        <button
+          onClick={() => setActiveTab('members')}
+          className={`py-2 px-4 rounded-xl font-black text-xs uppercase tracking-wider flex items-center gap-2 transition-all ${
+            activeTab === 'members'
+              ? 'bg-[#ffe600] text-black brutal-border brutal-shadow-xs'
+              : 'text-neutral-600 hover:text-black hover:bg-neutral-100'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          Active Team & Invites ({members.length})
+        </button>
 
-          <button
-            onClick={() => setActiveTab('audit')}
-            className={`py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors ${
-              activeTab === 'audit'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-            }`}
-          >
-            <History className="w-4 h-4" />
-            Audit Trail
-          </button>
-        </nav>
+        <button
+          onClick={() => setActiveTab('audit')}
+          className={`py-2 px-4 rounded-xl font-black text-xs uppercase tracking-wider flex items-center gap-2 transition-all ${
+            activeTab === 'audit'
+              ? 'bg-[#ffe600] text-black brutal-border brutal-shadow-xs'
+              : 'text-neutral-600 hover:text-black hover:bg-neutral-100'
+          }`}
+        >
+          <History className="w-4 h-4" />
+          Audit Trail
+        </button>
       </div>
 
       {/* Tab Content */}
       {activeTab === 'members' ? (
         <div className="space-y-6">
           {/* Active Members Table */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-            <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
+          <div className="bg-white rounded-2xl brutal-border-3 brutal-shadow-lg overflow-hidden">
+            <div className="p-4 sm:p-5 border-b-2 border-black flex items-center justify-between bg-neutral-50">
               <div>
-                <h3 className="text-base font-semibold text-slate-900">Current Members</h3>
-                <p className="text-xs text-slate-500">Users authorized to access this organization’s dashboard</p>
+                <h3 className="text-base font-black uppercase text-black">Current Members</h3>
+                <p className="text-xs font-semibold text-neutral-600">Users authorized to access this organization&apos;s dashboard</p>
               </div>
             </div>
 
             {loading ? (
-              <div className="p-8 text-center text-sm text-slate-400 animate-pulse">
+              <div className="p-8 text-center text-xs font-bold text-neutral-500 animate-pulse">
                 Loading team members...
               </div>
             ) : members.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-400">No active members found.</div>
+              <div className="p-8 text-center text-xs font-bold text-neutral-500">No active members found.</div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-slate-600">
-                  <thead className="bg-slate-50/75 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-neutral-100 border-b-2 border-black text-xs font-black uppercase tracking-wider text-black">
                     <tr>
-                      <th className="py-3 px-4">Member</th>
-                      <th className="py-3 px-4">Role</th>
-                      <th className="py-3 px-4">Joined</th>
-                      <th className="py-3 px-4 text-right">Actions</th>
+                      <th className="py-3.5 px-5">Member</th>
+                      <th className="py-3.5 px-5">Role</th>
+                      <th className="py-3.5 px-5">Joined</th>
+                      <th className="py-3.5 px-5 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y-2 divide-black/10">
                     {members.map((member) => (
-                      <tr key={member.user_id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="py-3.5 px-4">
-                          <div className="font-medium text-slate-900">{member.name}</div>
-                          <div className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                            <Mail className="w-3 h-3" />
+                      <tr key={member.user_id} className="hover:bg-amber-50/40 transition-colors">
+                        <td className="py-4 px-5">
+                          <div className="font-black text-black">{member.name}</div>
+                          <div className="text-xs font-mono text-neutral-600 flex items-center gap-1 mt-0.5">
+                            <Mail className="w-3 h-3 text-neutral-400" />
                             {member.email}
                           </div>
                         </td>
-                        <td className="py-3.5 px-4">{getRoleBadge(member.role)}</td>
-                        <td className="py-3.5 px-4 text-xs text-slate-500">
-                          {new Date(member.joined_at).toLocaleDateString(undefined, {
+                        <td className="py-4 px-5">{getRoleBadge(member.role)}</td>
+                        <td className="py-4 px-5 text-xs font-mono font-bold text-neutral-600">
+                          {new Date(member.joined_at).toLocaleDateString([], {
                             month: 'short',
                             day: 'numeric',
                             year: 'numeric',
                           })}
                         </td>
-                        <td className="py-3.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <button
-                              onClick={() => setEditingMember(member)}
-                              className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                              title="Edit Role"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => setRemovingMember(member)}
-                              className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              title="Remove Member"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
+                        <td className="py-4 px-5 text-right">
+                          {isManagerOrOwner ? (
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => setEditingMember(member)}
+                                className="p-1.5 bg-white brutal-border rounded-lg text-neutral-700 hover:text-black brutal-shadow-xs"
+                                title="Edit role"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => setRemovingMember(member)}
+                                className="p-1.5 bg-rose-50 brutal-border rounded-lg text-rose-700 hover:text-rose-900 brutal-shadow-xs"
+                                title="Remove member"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-neutral-400 text-xs font-bold uppercase">&mdash;</span>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -245,99 +258,99 @@ export default function TeamPage() {
             )}
           </div>
 
-          {/* Pending Invitations Section */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-            <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-semibold text-slate-900">Pending Invitations</h3>
-                <p className="text-xs text-slate-500">Invited users who haven't yet accepted</p>
+          {/* Pending Invitations Section (Manager / Owner only) */}
+          {isManagerOrOwner && (
+            <div className="bg-white rounded-2xl brutal-border-3 brutal-shadow-lg overflow-hidden">
+              <div className="p-4 sm:p-5 border-b-2 border-black flex items-center justify-between bg-[#fef9c3]">
+                <div>
+                  <h3 className="text-base font-black uppercase text-black">Pending Invitations</h3>
+                  <p className="text-xs font-semibold text-neutral-700">Invited teammates who have not completed signup</p>
+                </div>
               </div>
-            </div>
 
-            {loading ? (
-              <div className="p-8 text-center text-sm text-slate-400 animate-pulse">
-                Loading invites...
-              </div>
-            ) : invites.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-400">
-                No pending invitations. All invited members have registered or expired.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-slate-600">
-                  <thead className="bg-slate-50/75 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    <tr>
-                      <th className="py-3 px-4">Invited Email</th>
-                      <th className="py-3 px-4">Role</th>
-                      <th className="py-3 px-4">Expires</th>
-                      <th className="py-3 px-4 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {invites.map((invite) => (
-                      <tr key={invite.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="py-3.5 px-4 font-medium text-slate-900">{invite.email}</td>
-                        <td className="py-3.5 px-4">{getRoleBadge(invite.role)}</td>
-                        <td className="py-3.5 px-4 text-xs text-slate-500">
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-slate-400" />
-                            {new Date(invite.expires_at).toLocaleString(undefined, {
+              {invites.length === 0 ? (
+                <div className="p-8 text-center text-xs font-bold text-neutral-500">
+                  No pending invitations.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-neutral-100 border-b-2 border-black text-xs font-black uppercase tracking-wider text-black">
+                      <tr>
+                        <th className="py-3.5 px-5">Email</th>
+                        <th className="py-3.5 px-5">Role Assigned</th>
+                        <th className="py-3.5 px-5">Expires</th>
+                        <th className="py-3.5 px-5 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y-2 divide-black/10">
+                      {invites.map((invite) => (
+                        <tr key={invite.id} className="hover:bg-amber-50/40 transition-colors">
+                          <td className="py-4 px-5 font-bold font-mono text-black">{invite.email}</td>
+                          <td className="py-4 px-5">{getRoleBadge(invite.role)}</td>
+                          <td className="py-4 px-5 text-xs font-mono font-bold text-neutral-600">
+                            {new Date(invite.expires_at).toLocaleDateString([], {
                               month: 'short',
                               day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
+                              year: 'numeric',
                             })}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 text-right">
-                          <button
-                            onClick={() => handleRevokeInvite(invite.id)}
-                            disabled={revokingInviteId === invite.id}
-                            className="text-xs font-semibold text-red-600 hover:text-red-800 disabled:opacity-50"
-                          >
-                            {revokingInviteId === invite.id ? 'Revoking...' : 'Revoke'}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+                          </td>
+                          <td className="py-4 px-5 text-right">
+                            <button
+                              onClick={() => handleRevokeInvite(invite.id)}
+                              disabled={revokingInviteId === invite.id}
+                              className="px-2.5 py-1 text-xs font-black uppercase text-rose-700 bg-rose-50 brutal-border brutal-shadow-xs rounded-lg hover:bg-rose-100 disabled:opacity-50"
+                            >
+                              Revoke
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       ) : (
-        /* Audit Log Viewer Tab */
-        <AuditLogViewer />
+        /* Audit Log Trail */
+        <div className="bg-white rounded-2xl brutal-border-3 brutal-shadow-lg p-6">
+          <AuditLogViewer />
+        </div>
       )}
 
       {/* Modals */}
-      {showInviteModal && (
-        <InviteMemberModal
-          isOpen={showInviteModal}
-          onClose={() => setShowInviteModal(false)}
-          onSuccess={() => fetchTeamData()}
-        />
-      )}
+      <InviteMemberModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        onSuccess={() => fetchTeamData()}
+      />
 
       {editingMember && (
         <EditRoleModal
-          isOpen={!!editingMember}
+          isOpen={Boolean(editingMember)}
           userId={editingMember.user_id}
           userName={editingMember.name}
           currentRole={editingMember.role}
           onClose={() => setEditingMember(null)}
-          onSuccess={() => fetchTeamData()}
+          onSuccess={() => {
+            setEditingMember(null);
+            fetchTeamData();
+          }}
         />
       )}
 
       {removingMember && (
         <RemoveMemberModal
-          isOpen={!!removingMember}
+          isOpen={Boolean(removingMember)}
           userId={removingMember.user_id}
           userName={removingMember.name}
           onClose={() => setRemovingMember(null)}
-          onSuccess={() => fetchTeamData()}
+          onSuccess={() => {
+            setRemovingMember(null);
+            fetchTeamData();
+          }}
         />
       )}
     </div>

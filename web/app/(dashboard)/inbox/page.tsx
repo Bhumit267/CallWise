@@ -19,8 +19,7 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
-  Filter,
-  CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -28,7 +27,7 @@ const TABS = [
   { id: 'all', label: 'All Activity', icon: Inbox },
   { id: 'call', label: 'Calls', icon: Phone },
   { id: 'message', label: 'Messages', icon: MessageSquare },
-  { id: 'appointment', label: 'Appointments', icon: Calendar },
+  { id: 'appointment', label: 'Bookings', icon: Calendar },
   { id: 'transfer', label: 'Transfers', icon: ArrowRightLeft },
 ];
 
@@ -115,31 +114,31 @@ export default function InboxPage() {
       case 'call':
         return {
           icon: Phone,
-          color: 'bg-blue-100 text-blue-800 border-blue-200',
+          color: 'bg-[#dbeafe] text-blue-900',
           label: 'Call',
         };
       case 'message':
         return {
           icon: MessageSquare,
-          color: 'bg-amber-100 text-amber-800 border-amber-200',
+          color: 'bg-[#fef9c3] text-amber-900',
           label: 'Message',
         };
       case 'appointment':
         return {
           icon: Calendar,
-          color: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+          color: 'bg-[#dcfce7] text-emerald-900',
           label: 'Booking',
         };
       case 'transfer':
         return {
           icon: ArrowRightLeft,
-          color: 'bg-purple-100 text-purple-800 border-purple-200',
+          color: 'bg-[#f3e8ff] text-purple-900',
           label: 'Transfer',
         };
       default:
         return {
           icon: Inbox,
-          color: 'bg-slate-100 text-slate-800 border-slate-200',
+          color: 'bg-neutral-100 text-neutral-900',
           label: item.item_type,
         };
     }
@@ -150,8 +149,15 @@ export default function InboxPage() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Unified Activity Inbox</h2>
-          <p className="text-sm text-slate-500">
+          <div className="flex items-center gap-2 mb-1">
+            <h2 className="text-2xl font-black uppercase tracking-tight text-black">
+              Unified Activity Inbox
+            </h2>
+            <span className="bg-[#a3e635] text-black text-[10px] font-black uppercase px-2 py-0.5 rounded brutal-border brutal-shadow-xs">
+              Live Feed
+            </span>
+          </div>
+          <p className="text-xs font-semibold text-neutral-600">
             Real-time feed of caller conversations, booked appointments, and messages.
           </p>
         </div>
@@ -160,13 +166,13 @@ export default function InboxPage() {
           <button
             onClick={() => fetchInbox()}
             title="Refresh feed"
-            className="p-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-lg shadow-sm transition"
+            className="p-2.5 bg-white brutal-border rounded-xl brutal-shadow-xs brutal-shadow-hover text-black"
           >
             <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin text-blue-600')} />
           </button>
           <button
             onClick={() => setIsNewFollowUpOpen(true)}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition"
+            className="inline-flex items-center px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-wider rounded-xl brutal-border brutal-shadow brutal-shadow-hover"
           >
             <PlusCircle className="w-4 h-4 mr-2" /> New Task
           </button>
@@ -174,10 +180,10 @@ export default function InboxPage() {
       </div>
 
       {/* Tabs and Search Bar */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-4">
+      <div className="bg-white p-4 rounded-2xl brutal-border-3 brutal-shadow space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           {/* Tab Filter */}
-          <div className="flex items-center space-x-1 overflow-x-auto pb-1 lg:pb-0">
+          <div className="flex items-center space-x-2 overflow-x-auto pb-1 lg:pb-0">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -189,13 +195,13 @@ export default function InboxPage() {
                     setPage(1);
                   }}
                   className={cn(
-                    'flex items-center px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition',
+                    'flex items-center px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all duration-100',
                     isActive
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                      ? 'bg-[#ffe600] text-black brutal-border brutal-shadow-xs translate-x-[1px]'
+                      : 'bg-neutral-100 text-neutral-700 hover:text-black hover:bg-neutral-200 border-2 border-transparent hover:border-black'
                   )}
                 >
-                  <Icon className="w-3.5 h-3.5 mr-1.5" />
+                  <Icon className="w-3.5 h-3.5 mr-1.5 stroke-[2.5]" />
                   {tab.label}
                 </button>
               );
@@ -204,7 +210,7 @@ export default function InboxPage() {
 
           {/* Search Box */}
           <div className="relative min-w-[280px]">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+            <Search className="w-4 h-4 text-black absolute left-3.5 top-3" />
             <input
               type="text"
               value={search}
@@ -212,48 +218,48 @@ export default function InboxPage() {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              placeholder="Search phone, caller, or topic..."
-              className="w-full pl-9 pr-3.5 py-2 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              placeholder="Search caller, phone, or topic..."
+              className="brutal-input pl-10 text-xs font-bold"
             />
           </div>
         </div>
       </div>
 
       {/* Main List */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl brutal-border-3 brutal-shadow-lg overflow-hidden">
         {error && (
-          <div className="p-4 bg-red-50 text-red-700 text-sm border-b border-red-200">
+          <div className="p-4 bg-rose-100 text-rose-950 text-xs font-black uppercase border-b-2 border-black">
             {error}
           </div>
         )}
 
         {loading && items.length === 0 ? (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y-2 divide-black/10">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="p-4 flex items-center space-x-4 animate-pulse">
-                <div className="w-10 h-10 rounded-full bg-slate-200" />
+                <div className="w-11 h-11 rounded-xl bg-neutral-200 brutal-border" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-slate-200 rounded w-1/4" />
-                  <div className="h-3 bg-slate-100 rounded w-1/2" />
+                  <div className="h-4 bg-neutral-200 rounded w-1/4" />
+                  <div className="h-3 bg-neutral-100 rounded w-1/2" />
                 </div>
-                <div className="h-3 bg-slate-100 rounded w-16" />
+                <div className="h-3 bg-neutral-100 rounded w-16" />
               </div>
             ))}
           </div>
         ) : items.length === 0 ? (
           <div className="py-16 text-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
-              <Inbox className="w-6 h-6" />
+            <div className="w-14 h-14 rounded-2xl bg-neutral-100 text-black brutal-border brutal-shadow flex items-center justify-center mx-auto rotate-[-6deg]">
+              <Inbox className="w-7 h-7 stroke-[2.5]" />
             </div>
-            <h3 className="text-base font-semibold text-slate-800">No activity recorded</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            <h3 className="text-base font-black uppercase text-black">No activity recorded</h3>
+            <p className="text-xs font-semibold text-neutral-500 max-w-sm mx-auto">
               {search
-                ? `No activity matching "${search}". Try adjusting your search query.`
+                ? `No activity matching "${search}". Try adjusting your query.`
                 : 'Calls, callback messages, and bookings handled by your AI receptionist will appear here.'}
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y-2 divide-black/10">
             {items.map((item) => {
               const badge = getItemBadge(item);
               const BadgeIcon = badge.icon;
@@ -264,45 +270,45 @@ export default function InboxPage() {
                   key={item.id}
                   onClick={() => isClickable && handleRowClick(item)}
                   className={cn(
-                    'p-4 flex items-start sm:items-center justify-between gap-4 transition',
+                    'p-4 sm:p-5 flex items-start sm:items-center justify-between gap-4 transition-all duration-100',
                     isClickable
-                      ? 'cursor-pointer hover:bg-slate-50/80'
-                      : 'hover:bg-slate-50/40'
+                      ? 'cursor-pointer hover:bg-amber-50/50'
+                      : 'hover:bg-neutral-50/50'
                   )}
                 >
-                  <div className="flex items-start sm:items-center space-x-3.5 min-w-0">
+                  <div className="flex items-start sm:items-center space-x-4 min-w-0">
                     {/* Item Type Badge Icon */}
                     <div
                       className={cn(
-                        'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 border',
+                        'w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 brutal-border brutal-shadow-xs',
                         badge.color
                       )}
                     >
-                      <BadgeIcon className="w-5 h-5" />
+                      <BadgeIcon className="w-5 h-5 stroke-[2.5]" />
                     </div>
 
                     {/* Information */}
                     <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                        <span className="text-sm font-semibold text-slate-900 truncate">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <span className="text-sm font-black text-black truncate">
                           {item.title}
                         </span>
 
                         {item.contact_name && (
-                          <span className="text-[11px] font-medium bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full flex items-center">
-                            <User className="w-3 h-3 mr-1 text-slate-400" />
+                          <span className="text-[10px] font-black uppercase bg-[#fef9c3] text-black px-2 py-0.5 rounded brutal-border brutal-shadow-xs flex items-center">
+                            <User className="w-3 h-3 mr-1 text-black" />
                             {item.contact_name}
                           </span>
                         )}
 
                         {item.meta?.duration_seconds ? (
-                          <span className="text-[11px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.2 rounded">
+                          <span className="text-[10px] font-mono font-bold text-black bg-neutral-100 px-2 py-0.5 rounded brutal-border">
                             {formatDuration(item.meta.duration_seconds)}
                           </span>
                         ) : null}
                       </div>
 
-                      <p className="text-xs text-slate-500 line-clamp-1 max-w-2xl">
+                      <p className="text-xs font-semibold text-neutral-600 line-clamp-1 max-w-2xl">
                         {item.description || 'No summary recorded'}
                       </p>
                     </div>
@@ -310,11 +316,11 @@ export default function InboxPage() {
 
                   {/* Timestamp and Action */}
                   <div className="flex-shrink-0 text-right">
-                    <span className="text-xs font-medium text-slate-400 whitespace-nowrap block">
+                    <span className="text-xs font-mono font-bold text-neutral-500 whitespace-nowrap block">
                       {formatTimestamp(item.timestamp)}
                     </span>
                     {isClickable && (
-                      <span className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 hidden sm:inline-block mt-0.5">
+                      <span className="text-[10px] font-black uppercase text-blue-600 hover:text-black hidden sm:inline-block mt-1">
                         View details &rarr;
                       </span>
                     )}
@@ -327,24 +333,24 @@ export default function InboxPage() {
 
         {/* Pagination Footer */}
         {pages > 1 && (
-          <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
-            <p className="text-xs text-slate-500">
-              Showing page <span className="font-semibold text-slate-700">{page}</span> of{' '}
-              <span className="font-semibold text-slate-700">{pages}</span> ({total} items total)
+          <div className="px-6 py-4 border-t-2 border-black flex items-center justify-between bg-neutral-50">
+            <p className="text-xs font-black uppercase text-neutral-700">
+              Page <span className="text-black">{page}</span> of{' '}
+              <span className="text-black">{pages}</span> ({total} items)
             </p>
 
             <div className="flex items-center space-x-2">
               <button
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="p-1.5 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40"
+                className="p-2 bg-white brutal-border rounded-lg text-black hover:bg-neutral-100 disabled:opacity-30 brutal-shadow-xs"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 disabled={page >= pages}
                 onClick={() => setPage((p) => Math.min(pages, p + 1))}
-                className="p-1.5 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40"
+                className="p-2 bg-white brutal-border rounded-lg text-black hover:bg-neutral-100 disabled:opacity-30 brutal-shadow-xs"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>

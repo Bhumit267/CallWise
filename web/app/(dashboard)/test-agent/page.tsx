@@ -141,25 +141,25 @@ export default function TestAgentPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col space-y-4 max-w-5xl mx-auto">
+    <div className="h-[calc(100vh-8.5rem)] flex flex-col space-y-4 max-w-5xl mx-auto">
       {/* Top Banner & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl brutal-border-3 brutal-shadow">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <Bot className="w-5 h-5 text-blue-600" />
-              Interactive Test Agent Console
+          <div className="flex items-center gap-2 mb-0.5">
+            <h2 className="text-xl font-black uppercase tracking-tight text-black flex items-center gap-2">
+              <Bot className="w-6 h-6 text-black" />
+              Interactive Test Agent
             </h2>
-            <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-              Live Test Sandbox
+            <span className="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider rounded bg-[#a3e635] text-black brutal-border brutal-shadow-xs">
+              Live Sandbox
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Simulate caller inquiries in real-time. The agent uses your current knowledge base, services, and operating hours.
+          <p className="text-xs font-semibold text-neutral-600">
+            Simulate caller inquiries in real-time using current knowledge base, catalog, and operating hours.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {/* TTS Audio toggle */}
           <button
             type="button"
@@ -169,21 +169,21 @@ export default function TestAgentPage() {
               }
               setSoundEnabled(!soundEnabled);
             }}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+            className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider brutal-border transition-all ${
               soundEnabled
-                ? 'bg-blue-50 text-blue-700 border-blue-200'
-                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                ? 'bg-[#dbeafe] text-blue-950 brutal-shadow-xs'
+                : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
             }`}
             title="Read responses aloud with Web Speech API"
           >
             {soundEnabled ? (
               <>
-                <Volume2 className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
+                <Volume2 className="w-4 h-4 text-blue-700 animate-pulse" />
                 Speech Audio ON
               </>
             ) : (
               <>
-                <VolumeX className="w-3.5 h-3.5 text-slate-400" />
+                <VolumeX className="w-4 h-4 text-neutral-500" />
                 Speech Audio OFF
               </>
             )}
@@ -193,7 +193,7 @@ export default function TestAgentPage() {
           <button
             type="button"
             onClick={handleResetSession}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider brutal-border bg-white hover:bg-neutral-100 text-black brutal-shadow-xs"
             title="Clear history and start fresh call session"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -203,12 +203,12 @@ export default function TestAgentPage() {
       </div>
 
       {/* Main Conversation Window */}
-      <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-xs flex flex-col overflow-hidden">
+      <div className="flex-1 bg-white rounded-2xl brutal-border-3 brutal-shadow-lg flex flex-col overflow-hidden">
         {/* Messages Feed */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
           <div className="flex justify-center">
-            <span className="text-[11px] text-slate-400 bg-slate-100 px-3 py-1 rounded-full flex items-center gap-1.5">
-              <PhoneCall className="w-3 h-3 text-slate-400" />
+            <span className="text-[10px] font-mono font-bold text-black bg-[#fef9c3] px-3 py-1 rounded-lg brutal-border brutal-shadow-xs flex items-center gap-1.5">
+              <PhoneCall className="w-3 h-3 text-black" />
               Call session started {callId ? `(ID: ${callId.slice(0, 8)})` : ''}
             </span>
           </div>
@@ -218,38 +218,38 @@ export default function TestAgentPage() {
             return (
               <div
                 key={m.id}
-                className={`flex items-start gap-3 ${isAgent ? '' : 'flex-row-reverse'}`}
+                className={`flex items-start gap-3.5 ${isAgent ? '' : 'flex-row-reverse'}`}
               >
                 {/* Avatar */}
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 brutal-border brutal-shadow-xs ${
                     isAgent
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'bg-slate-700 text-white'
+                      ? 'bg-[#ffe600] text-black'
+                      : 'bg-blue-600 text-white'
                   }`}
                 >
-                  {isAgent ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                  {isAgent ? <Bot className="w-5 h-5 stroke-[2.5]" /> : <User className="w-5 h-5 stroke-[2.5]" />}
                 </div>
 
                 {/* Message Bubble */}
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-2xs ${
+                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed brutal-border brutal-shadow-xs ${
                     isAgent
-                      ? 'bg-slate-50 border border-slate-200/80 text-slate-800 rounded-tl-xs'
+                      ? 'bg-[#fbfaf6] text-black rounded-tl-xs'
                       : 'bg-blue-600 text-white rounded-tr-xs'
                   }`}
                 >
-                  <p className="whitespace-pre-wrap">{m.text}</p>
+                  <p className="whitespace-pre-wrap font-bold">{m.text}</p>
                   <div
-                    className={`mt-1.5 flex items-center gap-2 text-[10px] ${
-                      isAgent ? 'text-slate-400' : 'text-blue-200 justify-end'
+                    className={`mt-2 flex items-center gap-2 text-[10px] font-mono ${
+                      isAgent ? 'text-neutral-500' : 'text-blue-100 justify-end'
                     }`}
                   >
-                    <span>
+                    <span className="font-bold">
                       {m.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     {m.latency_ms !== undefined && (
-                      <span className="inline-flex items-center gap-0.5 bg-blue-50 text-blue-700 px-1.5 py-0.2 rounded border border-blue-100">
+                      <span className="inline-flex items-center gap-0.5 bg-[#dcfce7] text-emerald-950 px-1.5 py-0.5 rounded brutal-border font-bold">
                         <Clock className="w-2.5 h-2.5" />
                         {m.latency_ms} ms
                       </span>
@@ -261,12 +261,12 @@ export default function TestAgentPage() {
           })}
 
           {loading && (
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0">
-                <Bot className="w-4 h-4" />
+            <div className="flex items-start gap-3.5">
+              <div className="w-9 h-9 rounded-xl bg-[#ffe600] text-black flex items-center justify-center shrink-0 brutal-border brutal-shadow-xs">
+                <Bot className="w-5 h-5 stroke-[2.5]" />
               </div>
-              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl rounded-tl-xs px-4 py-3 text-sm text-slate-500 flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+              <div className="bg-[#fbfaf6] brutal-border rounded-2xl rounded-tl-xs px-4 py-3 text-sm font-bold text-black flex items-center gap-2 brutal-shadow-xs">
+                <Loader2 className="w-4 h-4 animate-spin text-black" />
                 <span>Receptionist is thinking...</span>
               </div>
             </div>
@@ -276,20 +276,20 @@ export default function TestAgentPage() {
         </div>
 
         {/* Input Bar */}
-        <div className="p-3 sm:p-4 border-t border-slate-100 bg-slate-50/50">
-          <form onSubmit={handleSend} className="flex items-center gap-2">
+        <div className="p-4 border-t-2 border-black bg-neutral-50">
+          <form onSubmit={handleSend} className="flex items-center gap-2.5">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type caller inquiry (e.g., 'What are your hours?' or 'Can I book an appointment?')..."
+              placeholder="Type caller inquiry (e.g. 'What are your hours?' or 'Can I schedule a cleaning?')..."
               disabled={loading}
-              className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all placeholder:text-slate-400 disabled:bg-slate-100"
+              className="brutal-input flex-1 text-sm font-bold"
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl font-medium text-sm transition-colors shadow-xs flex items-center gap-2"
+              className="px-5 py-3 bg-black hover:bg-neutral-800 disabled:opacity-40 text-white rounded-xl font-black text-xs uppercase tracking-wider brutal-border brutal-shadow-xs brutal-shadow-hover flex items-center gap-2"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -299,10 +299,10 @@ export default function TestAgentPage() {
               <span className="hidden sm:inline">Send</span>
             </button>
           </form>
-          <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 px-1">
-            <span className="flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-amber-500" />
-              Tip: Test booking flow, knowledge search, and transfer queries.
+          <div className="flex items-center justify-between text-[11px] font-mono font-bold text-neutral-500 mt-2 px-1">
+            <span className="flex items-center gap-1 text-neutral-700">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              Instant simulated streaming dialog
             </span>
             <span>Press Enter to send</span>
           </div>
@@ -311,4 +311,3 @@ export default function TestAgentPage() {
     </div>
   );
 }
-

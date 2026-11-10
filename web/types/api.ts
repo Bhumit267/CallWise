@@ -27,7 +27,7 @@ export interface Membership {
   id: string;
   user_id: string;
   business_id: string;
-  role: 'owner' | 'admin' | 'staff';
+  role: 'owner' | 'manager' | 'admin' | 'staff';
   business: Business;
 }
 
@@ -35,10 +35,10 @@ export interface AuthContextType {
   user: User | null;
   currentBusiness: Business | null;
   memberships: Membership[];
-  role: 'owner' | 'admin' | 'staff' | null;
+  role: 'owner' | 'manager' | 'admin' | 'staff' | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (fullName: string, email: string, password: string, businessName: string) => Promise<void>;
+  signup: (fullName: string, email: string, password: string, businessName: string, businessType?: string) => Promise<void>;
   logout: () => Promise<void>;
   switchBusiness: (businessId: string) => Promise<void>;
   refreshAuth: () => Promise<void>;

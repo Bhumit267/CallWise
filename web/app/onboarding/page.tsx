@@ -16,17 +16,19 @@ import {
   Trash2,
   AlertCircle,
   Sparkles,
+  Zap,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { OnboardingSetupRequest, OnboardingSetupResponse } from '@/types/api';
 import { useAuth } from '@/contexts/auth-context';
+import { cn } from '@/lib/utils';
 
 const STEPS = [
-  { id: 1, title: 'Business Profile', icon: Building2 },
-  { id: 2, title: 'Hours & Operations', icon: Clock },
-  { id: 3, title: 'Service Catalog', icon: Briefcase },
-  { id: 4, title: 'Voice Persona', icon: Bot },
-  { id: 5, title: 'Website Ingestion', icon: Globe },
+  { id: 1, title: 'Profile', icon: Building2 },
+  { id: 2, title: 'Hours', icon: Clock },
+  { id: 3, title: 'Services', icon: Briefcase },
+  { id: 4, title: 'Persona', icon: Bot },
+  { id: 5, title: 'Website', icon: Globe },
 ];
 
 const DEFAULT_DAYS = [
@@ -130,7 +132,6 @@ export default function OnboardingPage() {
     setLoading(true);
     setError(null);
 
-    // Build structured operating hours
     const hoursObj: Record<string, any> = {};
     formData.days.forEach((d) => {
       hoursObj[d.key] = d.closed
@@ -176,24 +177,24 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#fbfaf6] py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-200">
-            <Sparkles className="w-3.5 h-3.5" />
-            Quick Setup Wizard
+        {/* Header Banner */}
+        <div className="bg-white brutal-border-3 brutal-shadow-lg p-6 text-center space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#ffe600] text-black text-xs font-black uppercase tracking-wider brutal-border">
+            <Zap className="w-3.5 h-3.5 fill-black" />
+            <span>5-Minute Quick Setup</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Welcome to Callwise
+          <h1 className="text-3xl sm:text-4xl font-black text-black uppercase tracking-tight">
+            Launch Your AI Receptionist
           </h1>
-          <p className="text-sm text-slate-500 max-w-md mx-auto">
-            Configure your AI receptionist in 5 quick steps to start answering caller inquiries, booking appointments, and capturing leads.
+          <p className="text-sm font-bold text-slate-700 max-w-xl mx-auto">
+            Configure business hours, callable services, and your custom voice persona to start handling 24/7 calls and bookings.
           </p>
         </div>
 
         {/* Stepper Progress Bar */}
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
+        <div className="bg-white brutal-border-3 brutal-shadow p-4">
           <div className="flex items-center justify-between">
             {STEPS.map((step, idx) => {
               const Icon = step.icon;
@@ -203,30 +204,36 @@ export default function OnboardingPage() {
               return (
                 <div key={step.id} className="flex-1 flex items-center">
                   <div className="flex flex-col items-center flex-1">
-                    <div
-                      className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${
+                    <button
+                      type="button"
+                      onClick={() => isPassed && setCurrentStep(step.id)}
+                      disabled={!isPassed}
+                      className={cn(
+                        'w-10 h-10 flex items-center justify-center text-xs font-black brutal-border transition-all',
                         isPassed
-                          ? 'bg-blue-600 text-white'
+                          ? 'bg-black text-[#ffe600] cursor-pointer hover:bg-slate-800'
                           : isCurrent
-                          ? 'bg-blue-100 text-blue-700 border-2 border-blue-600'
-                          : 'bg-slate-100 text-slate-400'
-                      }`}
+                          ? 'bg-[#ffe600] text-black brutal-shadow-sm scale-110'
+                          : 'bg-slate-100 text-slate-400 border-slate-300'
+                      )}
                     >
-                      {isPassed ? <CheckCircle2 className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
-                    </div>
+                      {isPassed ? <CheckCircle2 className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
+                    </button>
                     <span
-                      className={`text-[11px] font-medium mt-1.5 hidden sm:block ${
-                        isCurrent ? 'text-blue-600 font-semibold' : 'text-slate-400'
-                      }`}
+                      className={cn(
+                        'text-[10px] font-black uppercase tracking-wider mt-2 hidden sm:block',
+                        isCurrent ? 'text-black' : isPassed ? 'text-black' : 'text-slate-400'
+                      )}
                     >
                       {step.title}
                     </span>
                   </div>
                   {idx < STEPS.length - 1 && (
                     <div
-                      className={`h-0.5 flex-1 transition-colors ${
-                        currentStep > step.id ? 'bg-blue-600' : 'bg-slate-200'
-                      }`}
+                      className={cn(
+                        'h-1 flex-1 transition-colors',
+                        currentStep > step.id ? 'bg-black' : 'bg-slate-200'
+                      )}
                     />
                   )}
                 </div>
@@ -236,25 +243,32 @@ export default function OnboardingPage() {
         </div>
 
         {/* Form Body Card */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6 sm:p-8 shadow-xs">
+        <div className="bg-white brutal-border-3 brutal-shadow-xl p-6 sm:p-8">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
+            <div className="mb-6 p-4 bg-[#ff5a5a] text-black brutal-border-3 brutal-shadow-sm flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 shrink-0" />
+              <span className="font-black text-sm">{error}</span>
             </div>
           )}
 
           {/* STEP 1: Business Profile */}
           {currentStep === 1 && (
-            <div className="space-y-5">
-              <div>
-                <h2 className="text-lg font-bold text-slate-900">Step 1: Business Details</h2>
-                <p className="text-xs text-slate-500">Tell us about your business profile and location timezone.</p>
+            <div className="space-y-6">
+              <div className="border-b-2 border-black pb-3">
+                <span className="bg-[#ffe600] px-2.5 py-0.5 brutal-border text-xs font-black uppercase">
+                  Step 1 of 5
+                </span>
+                <h2 className="text-xl font-black text-black uppercase tracking-tight mt-2">
+                  Business Identity & Timezone
+                </h2>
+                <p className="text-xs font-bold text-slate-600">
+                  Core identity details used by the AI agent when introducing itself.
+                </p>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-black text-black uppercase tracking-wider mb-1.5">
                     Business Name *
                   </label>
                   <input
@@ -262,32 +276,32 @@ export default function OnboardingPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="e.g. Apex Health Clinic or Summit Legal Group"
-                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-hidden"
+                    className="w-full px-4 py-3 bg-[#fbfaf6] brutal-border-3 font-bold text-sm focus:bg-white focus:outline-hidden"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                      Industry / Type
+                    <label className="block text-xs font-black text-black uppercase tracking-wider mb-1.5">
+                      Industry / Category
                     </label>
                     <input
                       type="text"
                       value={formData.business_type}
                       onChange={(e) => setFormData({ ...formData, business_type: e.target.value })}
                       placeholder="e.g. Dental, Law Firm, Salon"
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-hidden"
+                      className="w-full px-4 py-3 bg-[#fbfaf6] brutal-border-3 font-bold text-sm focus:bg-white focus:outline-hidden"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-black text-black uppercase tracking-wider mb-1.5">
                       Timezone
                     </label>
                     <select
                       value={formData.timezone}
                       onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-hidden bg-white"
+                      className="w-full px-4 py-3 bg-[#fbfaf6] brutal-border-3 font-black text-sm focus:bg-white focus:outline-hidden"
                     >
                       <option value="America/New_York">Eastern Time (US & Canada)</option>
                       <option value="America/Chicago">Central Time (US & Canada)</option>
@@ -302,20 +316,23 @@ export default function OnboardingPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                      Transfer Phone Number
+                    <label className="block text-xs font-black text-black uppercase tracking-wider mb-1.5">
+                      Live Transfer Number
                     </label>
                     <input
                       type="text"
                       value={formData.transfer_number}
                       onChange={(e) => setFormData({ ...formData, transfer_number: e.target.value })}
                       placeholder="+1 (555) 234-5678"
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-hidden"
+                      className="w-full px-4 py-3 bg-[#fbfaf6] brutal-border-3 font-bold text-sm focus:bg-white focus:outline-hidden"
                     />
+                    <p className="text-[11px] font-bold text-slate-500 mt-1">
+                      Target number if caller requests human transfer.
+                    </p>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-black text-black uppercase tracking-wider mb-1.5">
                       Notification Email
                     </label>
                     <input
@@ -323,8 +340,11 @@ export default function OnboardingPage() {
                       value={formData.notification_email}
                       onChange={(e) => setFormData({ ...formData, notification_email: e.target.value })}
                       placeholder="frontdesk@mybusiness.com"
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-hidden"
+                      className="w-full px-4 py-3 bg-[#fbfaf6] brutal-border-3 font-bold text-sm focus:bg-white focus:outline-hidden"
                     />
+                    <p className="text-[11px] font-bold text-slate-500 mt-1">
+                      Receives urgent call summaries & follow-up alerts.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -333,11 +353,16 @@ export default function OnboardingPage() {
 
           {/* STEP 2: Operating Hours */}
           {currentStep === 2 && (
-            <div className="space-y-5">
-              <div>
-                <h2 className="text-lg font-bold text-slate-900">Step 2: Business Operating Hours</h2>
-                <p className="text-xs text-slate-500">
-                  Your voice agent checks these hours to advise callers whether your office is open or closed.
+            <div className="space-y-6">
+              <div className="border-b-2 border-black pb-3">
+                <span className="bg-[#ffe600] px-2.5 py-0.5 brutal-border text-xs font-black uppercase">
+                  Step 2 of 5
+                </span>
+                <h2 className="text-xl font-black text-black uppercase tracking-tight mt-2">
+                  Operating Hours & Availability
+                </h2>
+                <p className="text-xs font-bold text-slate-600">
+                  The AI uses these windows to inform callers whether you are open or closed right now.
                 </p>
               </div>
 
@@ -345,17 +370,20 @@ export default function OnboardingPage() {
                 {formData.days.map((d, idx) => (
                   <div
                     key={d.key}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg border border-slate-200 gap-3"
+                    className={cn(
+                      'flex flex-col sm:flex-row sm:items-center justify-between p-3.5 brutal-border-3 gap-3 transition-colors',
+                      d.closed ? 'bg-slate-100 opacity-70' : 'bg-[#fbfaf6]'
+                    )}
                   >
                     <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
                         checked={!d.closed}
                         onChange={(e) => handleDayChange(idx, 'closed', !e.target.checked)}
-                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        className="w-5 h-5 brutal-border text-black rounded-none cursor-pointer"
                         id={`day-${d.key}`}
                       />
-                      <label htmlFor={`day-${d.key}`} className="text-sm font-medium text-slate-900 w-24">
+                      <label htmlFor={`day-${d.key}`} className="text-sm font-black uppercase tracking-wider text-black w-28 cursor-pointer">
                         {d.label}
                       </label>
                     </div>
@@ -366,18 +394,20 @@ export default function OnboardingPage() {
                           type="time"
                           value={d.open}
                           onChange={(e) => handleDayChange(idx, 'open', e.target.value)}
-                          className="px-2.5 py-1 text-xs border border-slate-200 rounded-md"
+                          className="px-3 py-1.5 bg-white brutal-border font-black text-xs"
                         />
-                        <span className="text-xs text-slate-400">to</span>
+                        <span className="text-xs font-black uppercase text-black">to</span>
                         <input
                           type="time"
                           value={d.close}
                           onChange={(e) => handleDayChange(idx, 'close', e.target.value)}
-                          className="px-2.5 py-1 text-xs border border-slate-200 rounded-md"
+                          className="px-3 py-1.5 bg-white brutal-border font-black text-xs"
                         />
                       </div>
                     ) : (
-                      <span className="text-xs text-slate-400 font-medium">Closed</span>
+                      <span className="bg-black text-white px-3 py-1 text-xs font-black uppercase brutal-border">
+                        Closed
+                      </span>
                     )}
                   </div>
                 ))}
@@ -387,67 +417,76 @@ export default function OnboardingPage() {
 
           {/* STEP 3: Services Catalog */}
           {currentStep === 3 && (
-            <div className="space-y-5">
-              <div className="flex items-center justify-between">
+            <div className="space-y-6">
+              <div className="border-b-2 border-black pb-3 flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900">Step 3: Service Catalog</h2>
-                  <p className="text-xs text-slate-500">
-                    Add the services or consultation offerings your callers can book over the phone.
+                  <span className="bg-[#ffe600] px-2.5 py-0.5 brutal-border text-xs font-black uppercase">
+                    Step 3 of 5
+                  </span>
+                  <h2 className="text-xl font-black text-black uppercase tracking-tight mt-2">
+                    Service Catalog Offerings
+                  </h2>
+                  <p className="text-xs font-bold text-slate-600">
+                    Appointments the AI can book directly into your calendar.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={handleAddService}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
+                  className="bg-[#2563eb] text-white font-black text-xs uppercase px-3 py-2 brutal-border brutal-shadow-hover flex items-center gap-1.5"
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  <Plus className="w-4 h-4" />
                   Add Service
                 </button>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {formData.services.map((svc, idx) => (
                   <div
                     key={idx}
-                    className="p-3.5 rounded-lg border border-slate-200 space-y-3 bg-slate-50/50"
+                    className="p-4 bg-[#fbfaf6] brutal-border-3 brutal-shadow-sm space-y-3"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <input
                         type="text"
-                        placeholder="Service name (e.g., Dental Cleaning)"
+                        placeholder="Service name (e.g. Dental Cleaning, Consultation)"
                         value={svc.name}
                         onChange={(e) => handleServiceChange(idx, 'name', e.target.value)}
-                        className="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-md text-sm font-medium"
+                        className="flex-1 px-3 py-2 bg-white brutal-border font-black text-sm"
                       />
                       {formData.services.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveService(idx)}
-                          className="text-slate-400 hover:text-red-600 p-1 rounded"
+                          className="bg-[#ff5a5a] text-black p-2 brutal-border hover:bg-red-400"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       )}
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-[11px] text-slate-500 block mb-0.5">Duration (mins)</label>
+                        <label className="text-[11px] font-black uppercase text-black block mb-1">
+                          Duration (Mins)
+                        </label>
                         <input
                           type="number"
                           min={5}
                           value={svc.duration_minutes}
                           onChange={(e) => handleServiceChange(idx, 'duration_minutes', e.target.value)}
-                          className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md text-xs"
+                          className="w-full px-3 py-1.5 bg-white brutal-border font-black text-xs"
                         />
                       </div>
                       <div>
-                        <label className="text-[11px] text-slate-500 block mb-0.5">Price ($)</label>
+                        <label className="text-[11px] font-black uppercase text-black block mb-1">
+                          Price ($ USD)
+                        </label>
                         <input
                           type="number"
                           min={0}
                           value={svc.price}
                           onChange={(e) => handleServiceChange(idx, 'price', e.target.value)}
-                          className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md text-xs"
+                          className="w-full px-3 py-1.5 bg-white brutal-border font-black text-xs"
                         />
                       </div>
                     </div>
@@ -459,17 +498,22 @@ export default function OnboardingPage() {
 
           {/* STEP 4: Voice Persona & Greeting */}
           {currentStep === 4 && (
-            <div className="space-y-5">
-              <div>
-                <h2 className="text-lg font-bold text-slate-900">Step 4: Voice Persona & Greeting</h2>
-                <p className="text-xs text-slate-500">
-                  Customize the first words your caller hears and the AI receptionist's tone of voice.
+            <div className="space-y-6">
+              <div className="border-b-2 border-black pb-3">
+                <span className="bg-[#ffe600] px-2.5 py-0.5 brutal-border text-xs font-black uppercase">
+                  Step 4 of 5
+                </span>
+                <h2 className="text-xl font-black text-black uppercase tracking-tight mt-2">
+                  Voice Greeting & Persona
+                </h2>
+                <p className="text-xs font-bold text-slate-600">
+                  Customize the first sentence spoken when callers pick up and the conversational tone.
                 </p>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-black text-black uppercase tracking-wider mb-1.5">
                     Greeting Message *
                   </label>
                   <textarea
@@ -477,35 +521,36 @@ export default function OnboardingPage() {
                     value={formData.greeting}
                     onChange={(e) => setFormData({ ...formData, greeting: e.target.value })}
                     placeholder="Hello! Thanks for calling Acme Dental. How can I help you today?"
-                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-hidden"
+                    className="w-full px-4 py-3 bg-[#fbfaf6] brutal-border-3 font-bold text-sm focus:bg-white focus:outline-hidden"
                   />
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    Spoken automatically when an inbound phone call connects.
+                  <p className="text-[11px] font-bold text-slate-500 mt-1">
+                    Spoken automatically within 1.2s of connection.
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-black text-black uppercase tracking-wider mb-2">
                     Personality Tone
                   </label>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {[
-                      { id: 'friendly', label: 'Friendly & Warm', desc: 'Approachable, cheerful, and welcoming' },
+                      { id: 'friendly', label: 'Friendly & Warm', desc: 'Cheerfully helpful and conversational' },
                       { id: 'professional', label: 'Professional & Direct', desc: 'Clear, concise, and businesslike' },
-                      { id: 'empathetic', label: 'Empathetic & Gentle', desc: 'Calm, patient, ideal for healthcare' },
+                      { id: 'empathetic', label: 'Empathetic & Gentle', desc: 'Patient, calm, ideal for healthcare' },
                     ].map((t) => (
                       <button
                         key={t.id}
                         type="button"
                         onClick={() => setFormData({ ...formData, tone: t.id })}
-                        className={`p-3 rounded-lg border text-left transition-all ${
+                        className={cn(
+                          'p-4 brutal-border-3 text-left transition-all',
                           formData.tone === t.id
-                            ? 'border-blue-600 bg-blue-50/50 ring-1 ring-blue-600'
-                            : 'border-slate-200 hover:border-slate-300 bg-white'
-                        }`}
+                            ? 'bg-[#ffe600] text-black brutal-shadow'
+                            : 'bg-white hover:bg-slate-50'
+                        )}
                       >
-                        <div className="font-semibold text-xs text-slate-900">{t.label}</div>
-                        <div className="text-[11px] text-slate-500 mt-1">{t.desc}</div>
+                        <div className="font-black text-xs uppercase tracking-wider text-black">{t.label}</div>
+                        <div className="text-[11px] font-bold text-slate-700 mt-1.5">{t.desc}</div>
                       </button>
                     ))}
                   </div>
@@ -516,55 +561,60 @@ export default function OnboardingPage() {
 
           {/* STEP 5: Website Knowledge Ingestion */}
           {currentStep === 5 && (
-            <div className="space-y-5">
-              <div>
-                <h2 className="text-lg font-bold text-slate-900">Step 5: Website Knowledge Ingestion</h2>
-                <p className="text-xs text-slate-500">
-                  Optional: Provide your public business website. Our crawler will automatically extract your FAQs, services, and policies for the receptionist.
+            <div className="space-y-6">
+              <div className="border-b-2 border-black pb-3">
+                <span className="bg-[#ffe600] px-2.5 py-0.5 brutal-border text-xs font-black uppercase">
+                  Step 5 of 5
+                </span>
+                <h2 className="text-xl font-black text-black uppercase tracking-tight mt-2">
+                  Knowledge Ingestion & Finalize
+                </h2>
+                <p className="text-xs font-bold text-slate-600">
+                  Optional: Provide your website URL to automatically crawl FAQs and clinic background.
                 </p>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-black text-black uppercase tracking-wider mb-1.5">
                     Website URL (Optional)
                   </label>
                   <div className="relative">
-                    <Globe className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                    <Globe className="w-5 h-5 text-black absolute left-3.5 top-3.5" />
                     <input
                       type="url"
                       value={formData.website_url}
                       onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
                       placeholder="https://www.example.com"
-                      className="w-full pl-10 pr-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-hidden"
+                      className="w-full pl-11 pr-4 py-3 bg-[#fbfaf6] brutal-border-3 font-bold text-sm focus:bg-white focus:outline-hidden"
                     />
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    You can also upload PDFs and text snippets later from the Knowledge Base page.
+                  <p className="text-[11px] font-bold text-slate-500 mt-1">
+                    You can also upload PDFs and text snippets anytime from the Knowledge Base.
                   </p>
                 </div>
 
-                <div className="p-4 bg-blue-50/60 rounded-xl border border-blue-200 text-xs text-blue-900 space-y-1">
-                  <div className="font-semibold flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-blue-600" />
-                    Ready to Launch
+                <div className="p-4 bg-[#fef9c3] brutal-border-3 brutal-shadow-sm text-xs text-black space-y-1">
+                  <div className="font-black uppercase tracking-wide flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-black fill-black" />
+                    Ready for Live Testing
                   </div>
-                  <p>
-                    Clicking "Finish & Launch Test Agent" will initialize your business configuration and redirect you to the live interactive testing console.
+                  <p className="font-bold">
+                    Finishing will save your business profile and launch the interactive Test Agent console so you can converse with your new receptionist immediately.
                   </p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Actions Bar */}
-          <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between">
+          {/* Navigation Action Buttons */}
+          <div className="mt-8 pt-6 border-t-2 border-black flex items-center justify-between">
             {currentStep > 1 ? (
               <button
                 type="button"
                 onClick={handleBack}
                 disabled={loading}
-                className="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                className="bg-white text-black font-black text-xs uppercase px-5 py-2.5 brutal-border-3 brutal-shadow-hover flex items-center gap-2"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back
@@ -577,7 +627,7 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={handleNext}
-                className="inline-flex items-center gap-1.5 px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-xs"
+                className="bg-[#ffe600] text-black font-black text-xs uppercase px-6 py-2.5 brutal-border-3 brutal-shadow-hover flex items-center gap-2"
               >
                 Next Step
                 <ArrowRight className="w-4 h-4" />
@@ -587,12 +637,12 @@ export default function OnboardingPage() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={loading}
-                className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shadow-xs disabled:opacity-50"
+                className="bg-[#2563eb] text-white font-black text-xs uppercase px-6 py-3 brutal-border-3 brutal-shadow-hover flex items-center gap-2 disabled:opacity-50"
               >
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Configuring Business...
+                    Initializing Receptionist...
                   </>
                 ) : (
                   <>
@@ -608,4 +658,3 @@ export default function OnboardingPage() {
     </div>
   );
 }
-

@@ -101,44 +101,49 @@ export default function MissedQuestionsPage() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-            Missed Questions & Knowledge Gaps
-          </h2>
-          <p className="text-sm text-slate-500">
+          <div className="flex items-center gap-2 mb-1">
+            <h2 className="text-2xl font-black uppercase tracking-tight text-black">
+              Missed Questions & Gaps
+            </h2>
+            <span className="bg-[#ffe600] text-black text-[10px] font-black uppercase px-2 py-0.5 rounded brutal-border brutal-shadow-xs">
+              Continuous Learning
+            </span>
+          </div>
+          <p className="text-xs font-semibold text-neutral-600">
             Questions callers asked that could not be answered from existing knowledge sources.
           </p>
         </div>
 
         <div className="flex items-center space-x-3">
-          <div className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5 shadow-sm">
+          <div className="flex items-center bg-white brutal-border rounded-xl p-1 brutal-shadow-xs">
             <button
               onClick={() => setViewMode('grouped')}
               className={cn(
-                'flex items-center px-3 py-1.5 rounded-md text-xs font-semibold transition',
+                'flex items-center px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition',
                 viewMode === 'grouped'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-black text-white'
+                  : 'text-neutral-700 hover:text-black'
               )}
             >
-              <TrendingUp className="w-3.5 h-3.5 mr-1.5" /> Frequent Gaps
+              <TrendingUp className="w-3.5 h-3.5 mr-1.5 stroke-[2.5]" /> Frequent Gaps
             </button>
             <button
               onClick={() => setViewMode('list')}
               className={cn(
-                'flex items-center px-3 py-1.5 rounded-md text-xs font-semibold transition',
+                'flex items-center px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition',
                 viewMode === 'list'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-black text-white'
+                  : 'text-neutral-700 hover:text-black'
               )}
             >
-              <MessageCircleQuestion className="w-3.5 h-3.5 mr-1.5" /> Individual Log
+              <MessageCircleQuestion className="w-3.5 h-3.5 mr-1.5 stroke-[2.5]" /> Log
             </button>
           </div>
 
           <button
             onClick={() => fetchMisses()}
             title="Refresh"
-            className="p-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-lg shadow-sm"
+            className="p-2.5 bg-white brutal-border rounded-xl brutal-shadow-xs brutal-shadow-hover text-black"
           >
             <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin text-blue-600')} />
           </button>
@@ -146,18 +151,18 @@ export default function MissedQuestionsPage() {
       </div>
 
       {/* Tabs and Filters */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center space-x-1.5">
+      <div className="bg-white p-4 rounded-2xl brutal-border-3 brutal-shadow flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center space-x-2">
           <button
             onClick={() => {
               setStatusFilter('unresolved');
               setPage(1);
             }}
             className={cn(
-              'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition',
+              'px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-100',
               statusFilter === 'unresolved'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-600 hover:bg-slate-100'
+                ? 'bg-[#ffe600] text-black brutal-border brutal-shadow-xs'
+                : 'bg-neutral-100 text-neutral-700 hover:text-black hover:bg-neutral-200'
             )}
           >
             Unresolved Gaps
@@ -168,10 +173,10 @@ export default function MissedQuestionsPage() {
               setPage(1);
             }}
             className={cn(
-              'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition',
+              'px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-100',
               statusFilter === 'resolved'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-600 hover:bg-slate-100'
+                ? 'bg-[#ffe600] text-black brutal-border brutal-shadow-xs'
+                : 'bg-neutral-100 text-neutral-700 hover:text-black hover:bg-neutral-200'
             )}
           >
             Resolved
@@ -182,10 +187,10 @@ export default function MissedQuestionsPage() {
               setPage(1);
             }}
             className={cn(
-              'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition',
+              'px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-100',
               statusFilter === 'ignored'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-600 hover:bg-slate-100'
+                ? 'bg-[#ffe600] text-black brutal-border brutal-shadow-xs'
+                : 'bg-neutral-100 text-neutral-700 hover:text-black hover:bg-neutral-200'
             )}
           >
             Ignored
@@ -194,7 +199,7 @@ export default function MissedQuestionsPage() {
 
         {viewMode === 'list' && (
           <div className="relative min-w-[260px]">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+            <Search className="w-4 h-4 text-black absolute left-3.5 top-3" />
             <input
               type="text"
               value={search}
@@ -203,66 +208,66 @@ export default function MissedQuestionsPage() {
                 setPage(1);
               }}
               placeholder="Search question text..."
-              className="w-full pl-9 pr-3.5 py-2 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className="brutal-input pl-10 text-xs font-bold"
             />
           </div>
         )}
       </div>
 
       {/* Content View */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl brutal-border-3 brutal-shadow-lg overflow-hidden">
         {error && (
-          <div className="p-4 bg-red-50 text-red-700 text-sm border-b border-red-200">
+          <div className="p-4 bg-rose-100 text-rose-950 text-xs font-black uppercase border-b-2 border-black">
             {error}
           </div>
         )}
 
         {loading && (groupedItems.length === 0 && listItems.length === 0) ? (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y-2 divide-black/10">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="p-4 flex items-center justify-between animate-pulse">
                 <div className="space-y-2">
-                  <div className="h-4 bg-slate-200 rounded w-64" />
-                  <div className="h-3 bg-slate-100 rounded w-32" />
+                  <div className="h-4 bg-neutral-200 rounded w-64" />
+                  <div className="h-3 bg-neutral-100 rounded w-32" />
                 </div>
-                <div className="h-4 bg-slate-200 rounded w-20" />
+                <div className="h-4 bg-neutral-200 rounded w-20" />
               </div>
             ))}
           </div>
         ) : (viewMode === 'grouped' ? groupedItems.length === 0 : listItems.length === 0) ? (
           <div className="py-16 text-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-6 h-6" />
+            <div className="w-14 h-14 rounded-2xl bg-[#dcfce7] text-emerald-950 brutal-border brutal-shadow flex items-center justify-center mx-auto rotate-[-6deg]">
+              <CheckCircle2 className="w-8 h-8 stroke-[2.5]" />
             </div>
-            <h3 className="text-base font-semibold text-slate-800">
+            <h3 className="text-base font-black uppercase text-black">
               {statusFilter === 'unresolved'
                 ? 'All caught up! Zero unanswered questions.'
                 : `No ${statusFilter} questions found.`}
             </h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            <p className="text-xs font-semibold text-neutral-500 max-w-sm mx-auto">
               When callers ask questions that cannot be confidently answered by your knowledge base, they are logged here automatically.
             </p>
           </div>
         ) : viewMode === 'grouped' ? (
           /* Grouped Frequency View */
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y-2 divide-black/10">
             {groupedItems.map((item, idx) => {
               const missId = item.sample_miss_id_str || item.sample_miss_id || '';
               return (
                 <div
                   key={idx}
-                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/60 transition"
+                  className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-amber-50/50 transition-all duration-100"
                 >
-                  <div className="flex items-start space-x-3.5 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                  <div className="flex items-start space-x-4 min-w-0">
+                    <div className="w-11 h-11 rounded-xl bg-[#fef9c3] text-black brutal-border brutal-shadow-xs flex items-center justify-center font-black text-sm flex-shrink-0">
                       {item.count}x
                     </div>
 
                     <div className="min-w-0 space-y-1">
-                      <p className="text-sm font-bold text-slate-900">
-                        "{item.query}"
+                      <p className="text-sm font-black text-black">
+                        &quot;{item.query}&quot;
                       </p>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs font-mono font-bold text-neutral-500">
                         Last asked {formatDate(item.last_asked_at)} &middot; Frequency: {item.count} caller{item.count !== 1 ? 's' : ''}
                       </p>
                     </div>
@@ -274,7 +279,7 @@ export default function MissedQuestionsPage() {
                       <>
                         <button
                           onClick={() => handleIgnore(missId)}
-                          className="px-2.5 py-1.5 text-xs text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg flex items-center transition"
+                          className="px-2.5 py-1.5 text-xs font-black uppercase text-neutral-700 hover:text-black bg-white brutal-border brutal-shadow-xs rounded-lg flex items-center transition"
                         >
                           <Ban className="w-3.5 h-3.5 mr-1" /> Dismiss
                         </button>
@@ -287,7 +292,7 @@ export default function MissedQuestionsPage() {
                               count: item.count,
                             })
                           }
-                          className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center transition"
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-wider rounded-xl brutal-border brutal-shadow brutal-shadow-hover flex items-center transition"
                         >
                           <Sparkles className="w-3.5 h-3.5 mr-1.5" /> Answer & Train
                         </button>
@@ -300,20 +305,20 @@ export default function MissedQuestionsPage() {
           </div>
         ) : (
           /* Individual List View */
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y-2 divide-black/10">
             {listItems.map((item) => (
               <div
                 key={item.id}
-                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/60 transition"
+                className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-amber-50/50 transition-all duration-100"
               >
-                <div className="min-w-0 space-y-1">
-                  <p className="text-sm font-semibold text-slate-900">"{item.query}"</p>
+                <div className="min-w-0 space-y-1.5">
+                  <p className="text-sm font-black text-black">&quot;{item.query}&quot;</p>
                   {item.resolved_answer && (
-                    <p className="text-xs text-emerald-700 bg-emerald-50 p-2 rounded-lg border border-emerald-200">
+                    <p className="text-xs font-semibold text-emerald-950 bg-[#dcfce7] p-2.5 rounded-xl brutal-border">
                       Resolved Answer: {item.resolved_answer}
                     </p>
                   )}
-                  <p className="text-xs text-slate-400">Logged {formatDate(item.created_at)}</p>
+                  <p className="text-xs font-mono text-neutral-500">Logged {formatDate(item.created_at)}</p>
                 </div>
 
                 {statusFilter === 'unresolved' && (
@@ -325,7 +330,7 @@ export default function MissedQuestionsPage() {
                         count: 1,
                       })
                     }
-                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center transition self-end sm:self-center"
+                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-wider rounded-xl brutal-border brutal-shadow brutal-shadow-hover flex items-center transition self-end sm:self-center"
                   >
                     <Sparkles className="w-3.5 h-3.5 mr-1.5" /> Answer
                   </button>
@@ -337,24 +342,24 @@ export default function MissedQuestionsPage() {
 
         {/* Pagination for list view */}
         {viewMode === 'list' && pages > 1 && (
-          <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
-            <p className="text-xs text-slate-500">
-              Page <span className="font-semibold text-slate-700">{page}</span> of{' '}
-              <span className="font-semibold text-slate-700">{pages}</span>
+          <div className="px-6 py-4 border-t-2 border-black flex items-center justify-between bg-neutral-50">
+            <p className="text-xs font-black uppercase text-neutral-700">
+              Page <span className="text-black">{page}</span> of{' '}
+              <span className="text-black">{pages}</span>
             </p>
 
             <div className="flex items-center space-x-2">
               <button
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="p-1.5 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40"
+                className="p-2 bg-white brutal-border rounded-lg text-black hover:bg-neutral-100 disabled:opacity-30 brutal-shadow-xs"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 disabled={page >= pages}
                 onClick={() => setPage((p) => Math.min(pages, p + 1))}
-                className="p-1.5 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40"
+                className="p-2 bg-white brutal-border rounded-lg text-black hover:bg-neutral-100 disabled:opacity-30 brutal-shadow-xs"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>

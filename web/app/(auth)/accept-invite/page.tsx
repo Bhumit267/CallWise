@@ -44,8 +44,10 @@ function AcceptInviteForm() {
   if (!token) {
     return (
       <div className="text-center space-y-4">
-        <p className="text-sm text-red-600">Missing invitation token.</p>
-        <Link href="/login" className="text-sm font-semibold text-blue-600 hover:text-blue-500">
+        <p className="text-sm font-bold text-rose-600 bg-rose-50 p-3 rounded-xl border-2 border-black">
+          Missing invitation token.
+        </p>
+        <Link href="/login" className="inline-block text-xs font-black uppercase text-black hover:underline">
           Back to sign in
         </Link>
       </div>
@@ -53,54 +55,53 @@ function AcceptInviteForm() {
   }
 
   return (
-    <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+    <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
       {error && (
-        <div className="p-3.5 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+        <div className="p-4 rounded-xl bg-rose-100 border-2 border-black text-xs font-bold text-rose-950 shadow-brutal-xs">
           {error}
         </div>
       )}
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Your Full Name</label>
+        <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5">
+          Your Full Name
+        </label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm"
+          className="w-full px-4 py-3 rounded-xl border-2 border-black bg-white focus:outline-none focus:bg-amber-50/30 text-sm font-bold shadow-brutal-xs focus:shadow-brutal transition-all"
           placeholder="Jane Doe (if creating a new account)"
         />
-        <p className="text-xs text-slate-400 mt-1">Required if you don't already have an account.</p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Set Password</label>
+        <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5">
+          Create Password (if new user)
+        </label>
         <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm"
-          placeholder="At least 8 characters"
+          className="w-full px-4 py-3 rounded-xl border-2 border-black bg-white focus:outline-none focus:bg-amber-50/30 text-sm font-bold shadow-brutal-xs focus:shadow-brutal transition-all"
+          placeholder="Leave blank if you already have an account"
         />
-        <p className="text-xs text-slate-400 mt-1">Leave empty if you already have a Callwise password.</p>
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full flex items-center justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition"
+        className="w-full mt-2 flex items-center justify-center py-3.5 px-5 rounded-xl text-sm font-black text-white bg-blue-600 hover:bg-blue-500 border-2 border-black shadow-brutal hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-brutal-sm active:translate-x-[4px] active:translate-y-[4px] active:shadow-none disabled:opacity-50 transition-all uppercase tracking-wider"
       >
-        {loading ? (
-          <Loader2 className="w-5 h-5 animate-spin" />
-        ) : (
-          <>
-            Accept & Join Team <ArrowRight className="w-4 h-4 ml-2" />
-          </>
-        )}
+        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Accept & Join Workspace'}
       </button>
 
-      <div className="text-center">
-        <Link href="/login" className="text-xs text-slate-500 hover:text-slate-800">
-          Already have an account? Sign in first, then click the invite link again.
+      <div className="text-center pt-2">
+        <Link
+          href="/login"
+          className="inline-flex items-center text-xs font-black text-neutral-600 hover:text-black uppercase tracking-wider"
+        >
+          Back to sign in
         </Link>
       </div>
     </form>
@@ -109,21 +110,22 @@ function AcceptInviteForm() {
 
 export default function AcceptInvitePage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-        <div className="flex flex-col items-center">
-          <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/20 mb-3">
-            <Bot className="w-7 h-7" />
+    <div className="min-h-screen flex items-center justify-center bg-[#fbfaf6] px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+      <div className="w-full max-w-md bg-white border-3 border-black rounded-2xl p-8 sm:p-10 shadow-brutal-xl relative z-10">
+        <div className="flex flex-col items-center text-center">
+          <div className="w-16 h-16 bg-blue-600 border-2 border-black rounded-2xl flex items-center justify-center text-white shadow-brutal mb-4 rotate-[-2deg]">
+            <Bot className="w-9 h-9" />
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Join your team</h2>
-          <p className="text-sm text-slate-500 mt-1">You've been invited to collaborate on Callwise</p>
+          <h2 className="text-3xl font-black tracking-tight text-black">Team Invitation</h2>
+          <p className="text-sm font-medium text-neutral-600 mt-1">
+            Join your company on Callwise
+          </p>
         </div>
 
-        <Suspense fallback={<div className="flex justify-center p-4"><Loader2 className="w-6 h-6 animate-spin text-blue-600" /></div>}>
+        <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-black" /></div>}>
           <AcceptInviteForm />
         </Suspense>
       </div>
     </div>
   );
 }
-

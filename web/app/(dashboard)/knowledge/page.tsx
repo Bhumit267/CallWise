@@ -73,13 +73,13 @@ export default function KnowledgePage() {
   const getSourceIcon = (type: string) => {
     switch (type) {
       case 'file':
-        return { icon: FileText, color: 'text-purple-600 bg-purple-50 border-purple-200', label: 'Document File' };
+        return { icon: FileText, color: 'text-purple-950 bg-[#f3e8ff]', label: 'Document File' };
       case 'url':
-        return { icon: Globe, color: 'text-blue-600 bg-blue-50 border-blue-200', label: 'Website Crawl' };
+        return { icon: Globe, color: 'text-blue-950 bg-[#dbeafe]', label: 'Website Crawl' };
       case 'qa_snippet':
-        return { icon: MessageSquareQuote, color: 'text-amber-600 bg-amber-50 border-amber-200', label: 'Q&A Snippet' };
+        return { icon: MessageSquareQuote, color: 'text-amber-950 bg-[#fef9c3]', label: 'Q&A Snippet' };
       default:
-        return { icon: BookOpen, color: 'text-slate-600 bg-slate-50 border-slate-200', label: type };
+        return { icon: BookOpen, color: 'text-black bg-neutral-100', label: type };
     }
   };
 
@@ -95,40 +95,45 @@ export default function KnowledgePage() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-            Knowledge Base & RAG Index
-          </h2>
-          <p className="text-sm text-slate-500">
+          <div className="flex items-center gap-2 mb-1">
+            <h2 className="text-2xl font-black uppercase tracking-tight text-black">
+              Knowledge Base & RAG Index
+            </h2>
+            <span className="bg-[#a3e635] text-black text-[10px] font-black uppercase px-2 py-0.5 rounded brutal-border brutal-shadow-xs">
+              Semantic Search
+            </span>
+          </div>
+          <p className="text-xs font-semibold text-neutral-600">
             Train your AI voice receptionist with website content, company files, and FAQs.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={() => fetchSources()}
             title="Refresh sources"
-            className="p-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-lg shadow-sm"
+            className="p-2.5 bg-white brutal-border rounded-xl brutal-shadow-xs brutal-shadow-hover text-black"
           >
             <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin text-blue-600')} />
           </button>
 
           <button
             onClick={() => setIsAddSnippetOpen(true)}
-            className="inline-flex items-center px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg shadow-sm transition"
+            className="inline-flex items-center px-3.5 py-2.5 bg-white hover:bg-neutral-100 text-black text-xs font-black uppercase tracking-wider rounded-xl brutal-border brutal-shadow-xs brutal-shadow-hover"
           >
-            <MessageSquareQuote className="w-3.5 h-3.5 mr-1.5 text-blue-600" /> Add Q&A Snippet
+            <MessageSquareQuote className="w-3.5 h-3.5 mr-1.5 text-black" /> Add Q&amp;A Snippet
           </button>
 
           <button
             onClick={() => setIsUploadOpen(true)}
-            className="inline-flex items-center px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg shadow-sm transition"
+            className="inline-flex items-center px-3.5 py-2.5 bg-[#fef9c3] hover:bg-[#fef08a] text-black text-xs font-black uppercase tracking-wider rounded-xl brutal-border brutal-shadow-xs brutal-shadow-hover"
           >
-            <UploadCloud className="w-3.5 h-3.5 mr-1.5 text-purple-600" /> Upload File
+            <UploadCloud className="w-3.5 h-3.5 mr-1.5 text-black" /> Upload File
           </button>
 
           <button
             onClick={() => setIsCrawlOpen(true)}
-            className="inline-flex items-center px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm transition"
+            className="inline-flex items-center px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-wider rounded-xl brutal-border brutal-shadow brutal-shadow-hover"
           >
             <Globe className="w-3.5 h-3.5 mr-1.5" /> Crawl Website
           </button>
@@ -137,88 +142,88 @@ export default function KnowledgePage() {
 
       {/* Stats Summary Card */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-            <BookOpen className="w-5 h-5" />
+        <div className="bg-white rounded-2xl brutal-border-3 p-5 brutal-shadow flex items-center space-x-3.5">
+          <div className="w-11 h-11 rounded-xl bg-[#dbeafe] text-blue-950 brutal-border brutal-shadow-xs flex items-center justify-center">
+            <BookOpen className="w-5 h-5 stroke-[2.5]" />
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500">Knowledge Sources</p>
-            <p className="text-lg font-bold text-slate-900">{sources.length}</p>
+            <p className="text-[10px] font-black uppercase text-neutral-500 tracking-wider">Knowledge Sources</p>
+            <p className="text-2xl font-black text-black">{sources.length}</p>
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <Layers className="w-5 h-5" />
+        <div className="bg-white rounded-2xl brutal-border-3 p-5 brutal-shadow flex items-center space-x-3.5">
+          <div className="w-11 h-11 rounded-xl bg-[#dcfce7] text-emerald-950 brutal-border brutal-shadow-xs flex items-center justify-center">
+            <Layers className="w-5 h-5 stroke-[2.5]" />
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500">Indexed Vector Chunks</p>
-            <p className="text-lg font-bold text-slate-900">{totalChunks}</p>
+            <p className="text-[10px] font-black uppercase text-neutral-500 tracking-wider">Indexed Vector Chunks</p>
+            <p className="text-2xl font-black text-black">{totalChunks}</p>
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-            <Sparkles className="w-5 h-5" />
+        <div className="bg-white rounded-2xl brutal-border-3 p-5 brutal-shadow flex items-center space-x-3.5">
+          <div className="w-11 h-11 rounded-xl bg-[#f3e8ff] text-purple-950 brutal-border brutal-shadow-xs flex items-center justify-center">
+            <Sparkles className="w-5 h-5 stroke-[2.5]" />
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500">Semantic Search Model</p>
-            <p className="text-sm font-bold text-slate-900 truncate">text-embedding-3-small</p>
+            <p className="text-[10px] font-black uppercase text-neutral-500 tracking-wider">Semantic Search Model</p>
+            <p className="text-sm font-black text-black font-mono truncate">all-MiniLM-L6-v2</p>
           </div>
         </div>
       </div>
 
       {/* Filter and Search */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between gap-4">
+      <div className="bg-white p-4 rounded-2xl brutal-border-3 brutal-shadow flex items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 text-black absolute left-3.5 top-3" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Filter knowledge sources..."
-            className="w-full pl-9 pr-3.5 py-2 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
+            className="brutal-input pl-10 text-xs font-bold"
           />
         </div>
-        <p className="text-xs text-slate-500">
-          Showing <span className="font-semibold text-slate-800">{filteredSources.length}</span> sources
-        </p>
+        <div className="text-xs font-black uppercase text-neutral-700 bg-neutral-100 px-3 py-1.5 rounded-lg brutal-border">
+          Showing <span className="text-black">{filteredSources.length}</span> sources
+        </div>
       </div>
 
       {/* Sources Grid / List */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl brutal-border-3 brutal-shadow-lg overflow-hidden">
         {error && (
-          <div className="p-4 bg-red-50 text-red-700 text-sm border-b border-red-200">
+          <div className="p-4 bg-rose-100 text-rose-950 text-xs font-black uppercase border-b-2 border-black">
             {error}
           </div>
         )}
 
         {loading && sources.length === 0 ? (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y-2 divide-black/10">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="p-4 flex items-center justify-between animate-pulse">
                 <div className="space-y-2">
-                  <div className="h-4 bg-slate-200 rounded w-48" />
-                  <div className="h-3 bg-slate-100 rounded w-32" />
+                  <div className="h-4 bg-neutral-200 rounded w-48" />
+                  <div className="h-3 bg-neutral-100 rounded w-32" />
                 </div>
-                <div className="h-4 bg-slate-200 rounded w-16" />
+                <div className="h-4 bg-neutral-200 rounded w-16" />
               </div>
             ))}
           </div>
         ) : filteredSources.length === 0 ? (
           <div className="py-16 text-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
-              <BookOpen className="w-6 h-6" />
+            <div className="w-14 h-14 rounded-2xl bg-neutral-100 text-black brutal-border brutal-shadow flex items-center justify-center mx-auto rotate-[-6deg]">
+              <BookOpen className="w-7 h-7 stroke-[2.5]" />
             </div>
-            <h3 className="text-base font-semibold text-slate-800">No knowledge sources yet</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            <h3 className="text-base font-black uppercase text-black">No knowledge sources yet</h3>
+            <p className="text-xs font-semibold text-neutral-500 max-w-sm mx-auto">
               {search
                 ? `No sources matching "${search}".`
                 : 'Add FAQs, upload company documents, or crawl your website to train your AI receptionist.'}
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y-2 divide-black/10">
             {filteredSources.map((source) => {
               const badge = getSourceIcon(source.source_type);
               const BadgeIcon = badge.icon;
@@ -226,38 +231,37 @@ export default function KnowledgePage() {
               return (
                 <div
                   key={source.id}
-                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/60 transition"
+                  className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-amber-50/50 transition-all duration-100"
                 >
-                  <div className="flex items-start space-x-3.5 min-w-0">
+                  <div className="flex items-start space-x-4 min-w-0">
                     <div
                       className={cn(
-                        'w-10 h-10 rounded-xl border flex items-center justify-center flex-shrink-0',
+                        'w-11 h-11 rounded-xl brutal-border brutal-shadow-xs flex items-center justify-center flex-shrink-0',
                         badge.color
                       )}
                     >
-                      <BadgeIcon className="w-5 h-5" />
+                      <BadgeIcon className="w-5 h-5 stroke-[2.5]" />
                     </div>
 
-                    <div className="min-w-0 space-y-0.5">
+                    <div className="min-w-0 space-y-1">
                       <div className="flex items-center space-x-2">
-                        <h4 className="text-sm font-bold text-slate-900 truncate">
+                        <h4 className="text-sm font-black text-black truncate">
                           {source.title}
                         </h4>
-                        <span className="text-[10px] font-semibold uppercase px-2 py-0.2 rounded bg-slate-100 text-slate-600">
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-white text-black brutal-border">
                           {badge.label}
                         </span>
                       </div>
 
-                      <p className="text-xs text-slate-400 truncate max-w-xl font-mono">
+                      <p className="text-xs font-mono font-bold text-neutral-600 truncate max-w-xl">
                         {source.source_uri}
                       </p>
 
-                      <div className="flex items-center space-x-3 text-xs text-slate-500 pt-0.5">
-                        <span className="font-semibold text-slate-700">
+                      <div className="flex items-center space-x-2 text-xs pt-0.5">
+                        <span className="font-black bg-[#dcfce7] text-emerald-950 px-2 py-0.5 rounded brutal-border text-[10px]">
                           {source.chunk_count} vector chunk{source.chunk_count !== 1 ? 's' : ''}
                         </span>
-                        <span>&middot;</span>
-                        <span>Added {formatDate(source.created_at)}</span>
+                        <span className="font-mono text-neutral-500 text-[11px] font-bold">&middot; Added {formatDate(source.created_at)}</span>
                       </div>
                     </div>
                   </div>
@@ -268,7 +272,7 @@ export default function KnowledgePage() {
                       <button
                         onClick={() => handleReingest(source.id)}
                         title="Re-crawl / Re-ingest"
-                        className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg text-xs flex items-center"
+                        className="px-2.5 py-1 text-xs font-black uppercase text-black bg-white hover:bg-neutral-100 brutal-border brutal-shadow-xs rounded-lg flex items-center"
                       >
                         <RotateCw className="w-3.5 h-3.5 mr-1" /> Re-index
                       </button>
@@ -277,7 +281,7 @@ export default function KnowledgePage() {
                     <button
                       onClick={() => setDeleteTarget(source)}
                       title="Delete source"
-                      className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg text-xs flex items-center"
+                      className="px-2.5 py-1 text-xs font-black uppercase text-rose-700 bg-rose-50 hover:bg-rose-100 brutal-border brutal-shadow-xs rounded-lg flex items-center"
                     >
                       <Trash2 className="w-3.5 h-3.5 mr-1" /> Remove
                     </button>

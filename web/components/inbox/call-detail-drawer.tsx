@@ -20,6 +20,7 @@ import {
   Loader2,
   CheckCircle2,
   Globe,
+  Radio,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -87,40 +88,40 @@ export function CallDetailDrawer({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-black/50"
         onClick={onClose}
       />
 
       {/* Drawer Container */}
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out">
+      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-white border-l-3 border-black brutal-shadow-xl flex flex-col transform transition-transform duration-300 ease-in-out">
         {/* Header */}
-        <div className="h-16 px-6 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div className="h-18 px-6 border-b-3 border-black flex items-center justify-between bg-[#ffe600]">
           <div className="flex items-center space-x-3 truncate">
-            <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-black text-[#ffe600] brutal-border flex items-center justify-center shrink-0">
               <Phone className="w-5 h-5" />
             </div>
             <div className="truncate">
-              <h2 className="text-base font-bold text-slate-900 truncate">
+              <h2 className="text-base font-black text-black uppercase tracking-tight truncate">
                 {call?.caller_number || (loading ? 'Loading...' : 'Call Details')}
               </h2>
               <div className="flex items-center space-x-2 mt-0.5">
                 <span className={cn(
-                  "inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold border",
+                  "inline-flex items-center px-2 py-0.5 text-[10px] font-black uppercase brutal-border",
                   (call as any)?.source === 'chat'
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    ? "bg-[#bbf7d0] text-black"
                     : (call as any)?.source === 'web'
-                    ? "bg-purple-50 text-purple-700 border-purple-200"
-                    : "bg-blue-50 text-blue-700 border-blue-200"
+                    ? "bg-[#f3e8ff] text-black"
+                    : "bg-[#dbeafe] text-black"
                 )}>
                   {(call as any)?.source === 'chat' ? (
                     <><MessageSquare className="w-3 h-3 mr-1" /> Chat Widget</>
                   ) : (call as any)?.source === 'web' ? (
                     <><Globe className="w-3 h-3 mr-1" /> Web Audio</>
                   ) : (
-                    <><Phone className="w-3 h-3 mr-1" /> Phone Call</>
+                    <><Phone className="w-3 h-3 mr-1" /> Inbound Call</>
                   )}
                 </span>
-                <p className="text-xs text-slate-500 truncate">
+                <p className="text-xs font-bold text-slate-800 truncate">
                   {call?.contact_name ? `Contact: ${call.contact_name}` : 'Unregistered Caller'}
                 </p>
               </div>
@@ -129,13 +130,13 @@ export function CallDetailDrawer({
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setIsFollowUpModalOpen(true)}
-              className="inline-flex items-center text-xs font-semibold px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg transition"
+              className="bg-black text-[#ffe600] font-black text-xs uppercase px-3 py-1.5 brutal-border brutal-shadow-hover flex items-center"
             >
               <PlusCircle className="w-3.5 h-3.5 mr-1.5" /> Follow-up
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200/60"
+              className="w-8 h-8 bg-black text-white brutal-border flex items-center justify-center hover:bg-slate-800"
             >
               <X className="w-5 h-5" />
             </button>
@@ -143,61 +144,65 @@ export function CallDetailDrawer({
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#fbfaf6]">
           {loading ? (
-            <div className="py-24 flex flex-col items-center justify-center text-slate-400 space-y-3">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-              <p className="text-sm">Loading complete call transcript and details...</p>
+            <div className="py-24 flex flex-col items-center justify-center space-y-3">
+              <div className="w-12 h-12 bg-[#ffe600] brutal-border-3 brutal-shadow flex items-center justify-center animate-spin">
+                <Radio className="w-6 h-6 text-black" />
+              </div>
+              <p className="font-black text-xs uppercase tracking-wider text-black">
+                Retrieving Call Log Telemetry & Transcript...
+              </p>
             </div>
           ) : error ? (
-            <div className="p-4 bg-red-50 text-red-700 rounded-xl text-sm border border-red-200">
+            <div className="p-4 bg-[#ff5a5a] text-black font-black brutal-border-3 brutal-shadow-sm">
               {error}
             </div>
           ) : call ? (
             <>
               {/* Metadata Badges */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
-                  <span className="text-[11px] text-slate-400 uppercase font-semibold flex items-center">
-                    <Clock className="w-3 h-3 mr-1" /> Duration
+                <div className="bg-white brutal-border-3 p-3">
+                  <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider flex items-center">
+                    <Clock className="w-3 h-3 mr-1 text-black" /> Duration
                   </span>
-                  <p className="text-sm font-bold text-slate-800 mt-0.5">
+                  <p className="text-sm font-black text-black mt-1 font-mono">
                     {formatDuration(call.duration_seconds)}
                   </p>
                 </div>
 
-                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
-                  <span className="text-[11px] text-slate-400 uppercase font-semibold flex items-center">
-                    <Calendar className="w-3 h-3 mr-1" /> Started At
+                <div className="bg-white brutal-border-3 p-3">
+                  <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider flex items-center">
+                    <Calendar className="w-3 h-3 mr-1 text-black" /> Started
                   </span>
-                  <p className="text-xs font-medium text-slate-800 mt-1 truncate">
+                  <p className="text-xs font-black text-black mt-1 truncate">
                     {formatDate(call.started_at)}
                   </p>
                 </div>
 
-                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
-                  <span className="text-[11px] text-slate-400 uppercase font-semibold flex items-center">
-                    <User className="w-3 h-3 mr-1" /> Turns
+                <div className="bg-white brutal-border-3 p-3">
+                  <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider flex items-center">
+                    <User className="w-3 h-3 mr-1 text-black" /> Turns
                   </span>
-                  <p className="text-sm font-bold text-slate-800 mt-0.5">
-                    {call.turns.length} messages
+                  <p className="text-sm font-black text-black mt-1">
+                    {call.turns.length} Dialogues
                   </p>
                 </div>
 
-                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
-                  <span className="text-[11px] text-slate-400 uppercase font-semibold flex items-center">
-                    <Zap className="w-3 h-3 mr-1" /> AI Engine
+                <div className="bg-white brutal-border-3 p-3">
+                  <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider flex items-center">
+                    <Zap className="w-3 h-3 mr-1 text-black" /> Engine
                   </span>
-                  <p className="text-xs font-medium text-slate-800 mt-1 truncate">
-                    {call.llm_model || 'gpt-4o-mini'}
+                  <p className="text-xs font-black text-black mt-1 truncate">
+                    {call.llm_model || 'llama-3.1-8b'}
                   </p>
                 </div>
               </div>
 
               {/* Audio Playback */}
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                  Call Recording
+              <div className="bg-white brutal-border-3 p-4">
+                <h3 className="text-xs font-black uppercase tracking-wider text-black mb-2 flex items-center">
+                  <Radio className="w-4 h-4 mr-1.5" /> Call Recording
                 </h3>
                 <AudioPlayer
                   audioUrl={call.audio_url}
@@ -207,22 +212,22 @@ export function CallDetailDrawer({
 
               {/* AI Call Summary */}
               {call.summary && (
-                <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-4">
-                  <div className="flex items-center space-x-2 text-blue-700 mb-1.5">
-                    <Sparkles className="w-4 h-4" />
-                    <h3 className="text-xs font-bold uppercase tracking-wider">AI Executive Summary</h3>
+                <div className="bg-[#fef9c3] brutal-border-3 brutal-shadow-sm p-4 space-y-1.5">
+                  <div className="flex items-center space-x-2 text-black">
+                    <Sparkles className="w-4 h-4 fill-black" />
+                    <h3 className="text-xs font-black uppercase tracking-wider">AI Executive Brief</h3>
                   </div>
-                  <p className="text-sm text-slate-800 leading-relaxed">{call.summary}</p>
+                  <p className="text-sm font-bold text-slate-800 leading-relaxed">{call.summary}</p>
                 </div>
               )}
 
-              {/* Linked Records: Appointments, Messages, Transfers, Knowledge Misses */}
+              {/* Linked Records */}
               {(call.appointments.length > 0 ||
                 call.messages.length > 0 ||
                 call.transfers.length > 0 ||
                 call.knowledge_misses.length > 0) && (
                 <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-black">
                     Outcomes & Actions Taken
                   </h3>
 
@@ -230,16 +235,16 @@ export function CallDetailDrawer({
                     {call.appointments.map((apt) => (
                       <div
                         key={apt.id}
-                        className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-900"
+                        className="flex items-center justify-between p-3 bg-[#bbf7d0] brutal-border text-black"
                       >
                         <div className="flex items-center space-x-2.5">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                          <CheckCircle2 className="w-5 h-5 text-black shrink-0" />
                           <div>
-                            <p className="text-xs font-bold">Appointment Booked: {apt.customer_name}</p>
-                            <p className="text-[11px] text-emerald-700">{formatDate(apt.start_at)}</p>
+                            <p className="text-xs font-black uppercase">Appointment Booked: {apt.customer_name}</p>
+                            <p className="text-[11px] font-bold text-slate-700">{formatDate(apt.start_at)}</p>
                           </div>
                         </div>
-                        <span className="text-xs font-semibold px-2 py-0.5 bg-emerald-200/60 rounded uppercase">
+                        <span className="text-[10px] font-black px-2 py-0.5 bg-black text-[#86efac] brutal-border uppercase">
                           {apt.status}
                         </span>
                       </div>
@@ -248,32 +253,32 @@ export function CallDetailDrawer({
                     {call.messages.map((msg) => (
                       <div
                         key={msg.id}
-                        className="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-900"
+                        className="flex items-center justify-between p-3 bg-[#fef08a] brutal-border text-black"
                       >
                         <div className="flex items-center space-x-2.5">
-                          <MessageSquare className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                          <MessageSquare className="w-5 h-5 text-black shrink-0" />
                           <div>
-                            <p className="text-xs font-bold">Message Taken: {msg.caller_name}</p>
-                            <p className="text-[11px] text-amber-700">{msg.reason}</p>
+                            <p className="text-xs font-black uppercase">Message Captured: {msg.caller_name}</p>
+                            <p className="text-[11px] font-bold text-slate-700">{msg.reason}</p>
                           </div>
                         </div>
-                        <span className="text-xs font-mono text-amber-800">{msg.callback_number}</span>
+                        <span className="text-xs font-mono font-black text-black">{msg.callback_number}</span>
                       </div>
                     ))}
 
                     {call.transfers.map((tr) => (
                       <div
                         key={tr.id}
-                        className="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded-lg text-purple-900"
+                        className="flex items-center justify-between p-3 bg-[#f3e8ff] brutal-border text-black"
                       >
                         <div className="flex items-center space-x-2.5">
-                          <ArrowRightLeft className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                          <ArrowRightLeft className="w-5 h-5 text-black shrink-0" />
                           <div>
-                            <p className="text-xs font-bold">Call Transfer Initiated</p>
-                            <p className="text-[11px] text-purple-700">{tr.reason}</p>
+                            <p className="text-xs font-black uppercase">Call Transfer Initiated</p>
+                            <p className="text-[11px] font-bold text-slate-700">{tr.reason}</p>
                           </div>
                         </div>
-                        <span className="text-xs uppercase px-2 py-0.5 bg-purple-200/60 rounded">
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-black text-[#c084fc] brutal-border">
                           {tr.status}
                         </span>
                       </div>
@@ -282,16 +287,16 @@ export function CallDetailDrawer({
                     {call.knowledge_misses.map((km) => (
                       <div
                         key={km.id}
-                        className="flex items-center justify-between p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-900"
+                        className="flex items-center justify-between p-3 bg-[#ff5a5a]/20 brutal-border text-black"
                       >
                         <div className="flex items-center space-x-2.5">
-                          <HelpCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                          <HelpCircle className="w-5 h-5 text-black shrink-0" />
                           <div>
-                            <p className="text-xs font-bold">Unanswered Question Flagged</p>
-                            <p className="text-[11px] text-rose-700">"{km.query}"</p>
+                            <p className="text-xs font-black uppercase">Unanswered Inquiry Flagged</p>
+                            <p className="text-[11px] font-bold text-slate-800">"{km.query}"</p>
                           </div>
                         </div>
-                        <span className="text-xs uppercase px-2 py-0.5 bg-rose-200/60 rounded">
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-black text-[#ff5a5a] brutal-border">
                           {km.status}
                         </span>
                       </div>
@@ -303,15 +308,15 @@ export function CallDetailDrawer({
               {/* Turn-by-turn Transcript */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-black">
                     Dialogue Transcript ({call.turns.length} turns)
                   </h3>
                 </div>
 
                 <div className="space-y-4 pt-1">
                   {call.turns.length === 0 ? (
-                    <div className="p-8 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                      No turns recorded for this call.
+                    <div className="p-8 text-center bg-white brutal-border-3 text-xs font-black uppercase text-slate-400">
+                      No turns recorded for this session.
                     </div>
                   ) : (
                     call.turns.map((turn, idx) => {
@@ -325,21 +330,21 @@ export function CallDetailDrawer({
                           )}
                         >
                           <div className="flex items-center space-x-2 mb-1 px-1">
-                            <span className="text-[11px] font-semibold text-slate-500 capitalize">
+                            <span className="text-[10px] font-black text-black uppercase tracking-wider">
                               {isAgent ? 'AI Receptionist' : 'Caller'}
                             </span>
                             {turn.latency_ms !== null && turn.latency_ms !== undefined && (
-                              <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded font-mono">
+                              <span className="text-[10px] bg-black text-[#ffe600] px-1.5 py-0.5 brutal-border font-mono font-black">
                                 ⚡ {Math.round(turn.latency_ms)}ms
                               </span>
                             )}
                           </div>
                           <div
                             className={cn(
-                              'max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm',
+                              'max-w-[85%] px-4 py-3 text-xs font-bold leading-relaxed brutal-border-3 brutal-shadow-sm',
                               isAgent
-                                ? 'bg-blue-600 text-white rounded-br-none'
-                                : 'bg-slate-100 text-slate-900 border border-slate-200 rounded-bl-none'
+                                ? 'bg-[#fef08a] text-black'
+                                : 'bg-[#dbeafe] text-black'
                             )}
                           >
                             {turn.text}
@@ -372,4 +377,3 @@ export function CallDetailDrawer({
     </>
   );
 }
-

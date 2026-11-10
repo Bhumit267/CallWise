@@ -68,8 +68,15 @@ export default function ContactsPage() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Customer Directory</h2>
-          <p className="text-sm text-slate-500">
+          <div className="flex items-center gap-2 mb-1">
+            <h2 className="text-2xl font-black uppercase tracking-tight text-black">
+              Customer Directory
+            </h2>
+            <span className="bg-[#ffe600] text-black text-[10px] font-black uppercase px-2 py-0.5 rounded brutal-border brutal-shadow-xs">
+              Auto Synced
+            </span>
+          </div>
+          <p className="text-xs font-semibold text-neutral-600">
             Contacts automatically created and updated from caller phone interactions.
           </p>
         </div>
@@ -78,7 +85,7 @@ export default function ContactsPage() {
           <button
             onClick={() => fetchContacts()}
             title="Refresh"
-            className="p-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-lg shadow-sm"
+            className="p-2.5 bg-white brutal-border rounded-xl brutal-shadow-xs brutal-shadow-hover text-black"
           >
             <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin text-blue-600')} />
           </button>
@@ -86,9 +93,9 @@ export default function ContactsPage() {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white p-4 rounded-2xl brutal-border-3 brutal-shadow flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 text-black absolute left-3.5 top-3" />
           <input
             type="text"
             value={search}
@@ -97,84 +104,84 @@ export default function ContactsPage() {
               setPage(1);
             }}
             placeholder="Search by name, phone, or email..."
-            className="w-full pl-9 pr-3.5 py-2 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
+            className="brutal-input pl-10 text-xs font-bold"
           />
         </div>
 
-        <p className="text-xs text-slate-500">
-          Showing <span className="font-semibold text-slate-800">{items.length}</span> of{' '}
-          <span className="font-semibold text-slate-800">{total}</span> contacts
-        </p>
+        <div className="text-xs font-black uppercase text-neutral-700 bg-neutral-100 px-3 py-1.5 rounded-lg brutal-border">
+          Showing <span className="text-black">{items.length}</span> of{' '}
+          <span className="text-black">{total}</span> contacts
+        </div>
       </div>
 
       {/* Contacts Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl brutal-border-3 brutal-shadow-lg overflow-hidden">
         {error && (
-          <div className="p-4 bg-red-50 text-red-700 text-sm border-b border-red-200">
+          <div className="p-4 bg-rose-100 text-rose-950 text-xs font-black uppercase border-b-2 border-black">
             {error}
           </div>
         )}
 
         {loading && items.length === 0 ? (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y-2 divide-black/10">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="p-4 flex items-center justify-between animate-pulse">
-                <div className="flex items-center space-x-3">
-                  <div className="w-9 h-9 rounded-full bg-slate-200" />
+                <div className="flex items-center space-x-4">
+                  <div className="w-11 h-11 rounded-xl bg-neutral-200 brutal-border" />
                   <div className="space-y-1.5">
-                    <div className="h-4 bg-slate-200 rounded w-36" />
-                    <div className="h-3 bg-slate-100 rounded w-24" />
+                    <div className="h-4 bg-neutral-200 rounded w-36" />
+                    <div className="h-3 bg-neutral-100 rounded w-24" />
                   </div>
                 </div>
-                <div className="h-3 bg-slate-100 rounded w-16" />
+                <div className="h-3 bg-neutral-100 rounded w-16" />
               </div>
             ))}
           </div>
         ) : items.length === 0 ? (
           <div className="py-16 text-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
-              <Users className="w-6 h-6" />
+            <div className="w-14 h-14 rounded-2xl bg-neutral-100 text-black brutal-border brutal-shadow flex items-center justify-center mx-auto rotate-[-6deg]">
+              <Users className="w-7 h-7 stroke-[2.5]" />
             </div>
-            <h3 className="text-base font-semibold text-slate-800">No contacts found</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            <h3 className="text-base font-black uppercase text-black">No contacts found</h3>
+            <p className="text-xs font-semibold text-neutral-500 max-w-sm mx-auto">
               {search
                 ? `No contacts matching "${search}".`
                 : 'Customer profiles will automatically be created when callers interact with your AI receptionist.'}
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y-2 divide-black/10">
             {items.map((c) => (
               <div
                 key={c.id}
                 onClick={() => setSelectedContactId(c.id)}
-                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/80 cursor-pointer transition"
+                className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-amber-50/50 cursor-pointer transition-all duration-100"
               >
-                <div className="flex items-center space-x-3.5 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-700 border border-blue-200 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                <div className="flex items-center space-x-4 min-w-0">
+                  <div className="w-11 h-11 rounded-xl bg-[#ffe600] text-black brutal-border brutal-shadow-xs flex items-center justify-center font-black text-sm flex-shrink-0">
                     {c.name ? c.name[0].toUpperCase() : 'C'}
                   </div>
 
                   <div className="min-w-0">
-                    <div className="flex items-center space-x-2 mb-0.5">
-                      <span className="text-sm font-bold text-slate-900 truncate">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span className="text-sm font-black text-black truncate">
                         {c.name || 'Unregistered Caller'}
                       </span>
                       {c.do_not_contact && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.2 bg-red-100 text-red-700 border border-red-200 rounded flex items-center">
-                          <Ban className="w-2.5 h-2.5 mr-0.5" /> DNC
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-rose-100 text-rose-950 brutal-border brutal-shadow-xs rounded flex items-center">
+                          <Ban className="w-3 h-3 mr-1" /> DNC
                         </span>
                       )}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
-                      <span className="flex items-center">
-                        <Phone className="w-3 h-3 mr-1 text-slate-400" />
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                      <span className="flex items-center font-mono font-bold text-black">
+                        <Phone className="w-3.5 h-3.5 mr-1 text-black" />
                         {c.phone}
                       </span>
                       {c.email && (
-                        <span className="flex items-center">
-                          <Mail className="w-3 h-3 mr-1 text-slate-400" />
+                        <span className="flex items-center font-mono text-neutral-600">
+                          <Mail className="w-3.5 h-3.5 mr-1 text-neutral-400" />
                           {c.email}
                         </span>
                       )}
@@ -183,13 +190,17 @@ export default function ContactsPage() {
                 </div>
 
                 {/* Metrics and Date */}
-                <div className="flex items-center space-x-6 text-xs text-slate-500 self-end sm:self-center">
-                  <div className="text-right hidden md:block">
-                    <span className="font-semibold text-slate-800">{c.call_count}</span> calls &middot;{' '}
-                    <span className="font-semibold text-slate-800">{c.appointment_count}</span> bookings
+                <div className="flex items-center space-x-4 text-xs self-end sm:self-center">
+                  <div className="flex items-center gap-2 hidden md:flex">
+                    <span className="font-black bg-neutral-100 px-2 py-0.5 rounded brutal-border text-[11px] text-black">
+                      {c.call_count} calls
+                    </span>
+                    <span className="font-black bg-[#dcfce7] px-2 py-0.5 rounded brutal-border text-[11px] text-emerald-950">
+                      {c.appointment_count} bookings
+                    </span>
                   </div>
-                  <span className="text-slate-400 text-[11px]">{formatDate(c.created_at)}</span>
-                  <span className="text-blue-600 font-semibold text-xs">&rarr;</span>
+                  <span className="font-mono text-neutral-500 text-[11px] font-bold">{formatDate(c.created_at)}</span>
+                  <span className="text-black font-black text-xs">&rarr;</span>
                 </div>
               </div>
             ))}
@@ -198,24 +209,24 @@ export default function ContactsPage() {
 
         {/* Pagination */}
         {pages > 1 && (
-          <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
-            <p className="text-xs text-slate-500">
-              Page <span className="font-semibold text-slate-700">{page}</span> of{' '}
-              <span className="font-semibold text-slate-700">{pages}</span>
+          <div className="px-6 py-4 border-t-2 border-black flex items-center justify-between bg-neutral-50">
+            <p className="text-xs font-black uppercase text-neutral-700">
+              Page <span className="text-black">{page}</span> of{' '}
+              <span className="text-black">{pages}</span> ({total} contacts)
             </p>
 
             <div className="flex items-center space-x-2">
               <button
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="p-1.5 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40"
+                className="p-2 bg-white brutal-border rounded-lg text-black hover:bg-neutral-100 disabled:opacity-30 brutal-shadow-xs"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 disabled={page >= pages}
                 onClick={() => setPage((p) => Math.min(pages, p + 1))}
-                className="p-1.5 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40"
+                className="p-2 bg-white brutal-border rounded-lg text-black hover:bg-neutral-100 disabled:opacity-30 brutal-shadow-xs"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -229,7 +240,9 @@ export default function ContactsPage() {
         contactId={selectedContactId}
         isOpen={Boolean(selectedContactId)}
         onClose={() => setSelectedContactId(null)}
-        onRefresh={() => fetchContacts()}
+        onRefresh={() => {
+          fetchContacts();
+        }}
       />
     </div>
   );

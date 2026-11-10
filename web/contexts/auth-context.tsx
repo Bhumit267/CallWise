@@ -11,7 +11,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
   const [memberships, setMemberships] = useState<Membership[]>([]);
-  const [role, setRole] = useState<'owner' | 'admin' | 'staff' | null>(null);
+  const [role, setRole] = useState<'owner' | 'manager' | 'admin' | 'staff' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -59,15 +59,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fullName: string,
     email: string,
     password: string,
-    businessName: string
+    businessName: string,
+    businessType: string = 'Dental Clinic'
   ) => {
     const res = await apiClient<any>('/api/auth/signup', {
       method: 'POST',
       body: JSON.stringify({
-        full_name: fullName,
-        email,
+        owner_name: fullName.trim(),
+        email: email.trim(),
         password,
-        business_name: businessName,
+        business_name: businessName.trim(),
+        business_type: businessType.trim() || 'Dental Clinic',
       }),
     });
     if (res?.session_token && typeof window !== 'undefined') {
@@ -77,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (res?.current_business) setCurrentBusiness(res.current_business);
     if (res?.memberships) setMemberships(res.memberships);
     if (res?.current_business?.role) setRole(res.current_business.role);
-    window.location.href = '/inbox';
+    window.location.href = '/onboarding';
   };
 
   const logout = async () => {

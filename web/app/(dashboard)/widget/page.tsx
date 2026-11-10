@@ -23,11 +23,11 @@ import { cn } from '@/lib/utils';
 
 const COLOR_PRESETS = [
   { name: 'Classic Blue', hex: '#2563EB' },
-  { name: 'Emerald', hex: '#10B981' },
-  { name: 'Royal Purple', hex: '#9333EA' },
-  { name: 'Indigo', hex: '#4F46E5' },
-  { name: 'Amber', hex: '#D97706' },
-  { name: 'Slate', hex: '#334155' },
+  { name: 'Cyber Yellow', hex: '#FFE600' },
+  { name: 'Neo Mint', hex: '#10B981' },
+  { name: 'Royal Purple', hex: '#A855F7' },
+  { name: 'Coral Red', hex: '#FF5A5A' },
+  { name: 'Pitch Black', hex: '#0A0A0A' },
 ];
 
 export default function WidgetPage() {
@@ -156,40 +156,45 @@ export default function WidgetPage() {
 
   if (loading) {
     return (
-      <div className="p-16 flex flex-col items-center justify-center text-slate-400 space-y-3">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-        <p className="text-sm">Loading widget settings...</p>
+      <div className="p-16 flex flex-col items-center justify-center text-black space-y-3">
+        <Loader2 className="w-8 h-8 animate-spin text-black" />
+        <p className="text-xs font-bold uppercase">Loading widget settings...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 flex items-center">
-          <MessageSquareCode className="w-6 h-6 mr-2.5 text-blue-600" /> Website Chat Widget
-        </h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <div className="flex items-center gap-2 mb-1">
+          <h1 className="text-2xl font-black uppercase tracking-tight text-black flex items-center">
+            <MessageSquareCode className="w-6 h-6 mr-2 text-black" /> Website Chat Widget
+          </h1>
+          <span className="bg-[#ffe600] text-black text-[10px] font-black uppercase px-2 py-0.5 rounded brutal-border brutal-shadow-xs">
+            Web SDK
+          </span>
+        </div>
+        <p className="text-xs font-semibold text-neutral-600">
           Embed an AI voice/text chat receptionist onto any website with a single script snippet.
         </p>
       </div>
 
       {/* Embed Snippet Card */}
-      <div className="bg-slate-900 text-slate-100 rounded-xl p-6 shadow-md border border-slate-800">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="bg-black text-white rounded-2xl p-6 sm:p-7 brutal-border-3 brutal-shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b-2 border-neutral-800">
           <div>
-            <h2 className="text-sm font-bold text-white flex items-center">
-              <Sparkles className="w-4 h-4 mr-2 text-blue-400" /> Embed Script
+            <h2 className="text-sm font-black uppercase tracking-wider text-white flex items-center">
+              <Sparkles className="w-4 h-4 mr-2 text-[#ffe600]" /> Embed Script Snippet
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Paste this snippet right before the closing <code className="text-blue-300">&lt;/body&gt;</code> tag on your website.
+            <p className="text-xs font-semibold text-neutral-400 mt-0.5">
+              Paste this snippet right before the closing <code className="text-[#ffe600] font-mono">&lt;/body&gt;</code> tag on your website.
             </p>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2.5">
             <button
               onClick={copySnippet}
-              className="inline-flex items-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shadow-sm transition"
+              className="inline-flex items-center px-4 py-2 bg-[#ffe600] hover:bg-[#ffea2e] text-black rounded-xl text-xs font-black uppercase tracking-wider brutal-border brutal-shadow-xs brutal-shadow-hover transition"
             >
               {copied ? (
                 <>
@@ -204,7 +209,7 @@ export default function WidgetPage() {
             <button
               onClick={handleRegenerateKey}
               disabled={regenerating}
-              className="inline-flex items-center px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium border border-slate-700 transition"
+              className="inline-flex items-center px-3.5 py-2 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 rounded-xl text-xs font-bold border-2 border-neutral-700 transition"
               title="Regenerate Public Key"
             >
               <RefreshCw className={cn('w-3.5 h-3.5 mr-1.5', regenerating && 'animate-spin')} />
@@ -213,7 +218,7 @@ export default function WidgetPage() {
           </div>
         </div>
 
-        <pre className="mt-4 p-4 bg-slate-950 rounded-lg text-xs font-mono text-blue-300 overflow-x-auto border border-slate-800/80">
+        <pre className="mt-4 p-4 bg-neutral-950 rounded-xl text-xs font-mono text-[#a3e635] overflow-x-auto border-2 border-neutral-800">
           {snippetCode}
         </pre>
       </div>
@@ -223,24 +228,24 @@ export default function WidgetPage() {
         {/* Form Settings (7 cols) */}
         <form onSubmit={handleUpdate} className="lg:col-span-7 space-y-6">
           {saveSuccess && (
-            <div className="p-4 bg-emerald-50 text-emerald-800 rounded-xl text-sm font-medium border border-emerald-200 flex items-center">
-              <Check className="w-4 h-4 mr-2 text-emerald-600" /> Widget settings saved successfully!
+            <div className="p-4 bg-[#dcfce7] text-emerald-950 rounded-xl text-xs font-black uppercase border-2 border-black brutal-shadow-xs flex items-center">
+              <Check className="w-4 h-4 mr-2 text-emerald-800" /> Widget settings saved successfully!
             </div>
           )}
           {error && (
-            <div className="p-4 bg-red-50 text-red-700 rounded-xl text-sm border border-red-200">
+            <div className="p-4 bg-rose-100 text-rose-950 rounded-xl text-xs font-black uppercase border-2 border-black brutal-shadow-xs">
               {error}
             </div>
           )}
 
           {/* General Appearance */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center">
+          <div className="bg-white rounded-2xl brutal-border-3 p-6 sm:p-7 brutal-shadow-lg space-y-4">
+            <h3 className="text-sm font-black uppercase tracking-tight text-black flex items-center">
               <Palette className="w-4 h-4 mr-2 text-blue-600" /> Branding & Appearance
             </h3>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase mb-2">
+              <label className="block text-xs font-black uppercase tracking-wider text-black mb-2">
                 Primary Brand Color
               </label>
               <div className="flex items-center space-x-3">
@@ -250,7 +255,7 @@ export default function WidgetPage() {
                   onChange={(e) =>
                     setSettings((prev) => (prev ? { ...prev, primary_color: e.target.value } : null))
                   }
-                  className="w-10 h-10 rounded-lg cursor-pointer border border-slate-200 p-0.5"
+                  className="w-11 h-11 rounded-xl cursor-pointer brutal-border p-0.5 brutal-shadow-xs"
                 />
                 <div className="flex flex-wrap gap-2">
                   {COLOR_PRESETS.map((c) => (
@@ -261,10 +266,10 @@ export default function WidgetPage() {
                         setSettings((prev) => (prev ? { ...prev, primary_color: c.hex } : null))
                       }
                       className={cn(
-                        'w-7 h-7 rounded-full border-2 transition',
+                        'w-8 h-8 rounded-lg brutal-border transition-transform',
                         settings?.primary_color.toLowerCase() === c.hex.toLowerCase()
-                          ? 'border-slate-900 scale-110 shadow-sm'
-                          : 'border-transparent hover:scale-105'
+                          ? 'scale-110 brutal-shadow-xs ring-2 ring-black'
+                          : 'hover:scale-105'
                       )}
                       style={{ backgroundColor: c.hex }}
                       title={c.name}
@@ -275,7 +280,7 @@ export default function WidgetPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+              <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5">
                 Greeting Message
               </label>
               <textarea
@@ -284,15 +289,15 @@ export default function WidgetPage() {
                 onChange={(e) =>
                   setSettings((prev) => (prev ? { ...prev, greeting_message: e.target.value } : null))
                 }
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="brutal-input resize-none"
                 placeholder="Hi! How can our wellness team help you today?"
               />
             </div>
           </div>
 
           {/* Lead Capture Controls */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center">
+          <div className="bg-white rounded-2xl brutal-border-3 p-6 sm:p-7 brutal-shadow-lg space-y-4">
+            <h3 className="text-sm font-black uppercase tracking-tight text-black flex items-center">
               <Sliders className="w-4 h-4 mr-2 text-blue-600" /> Lead Capture & Booking
             </h3>
 
@@ -306,13 +311,13 @@ export default function WidgetPage() {
                       prev ? { ...prev, ask_lead_capture: e.target.checked } : null
                     )
                   }
-                  className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                  className="w-4 h-4 rounded brutal-border accent-black"
                 />
                 <div>
-                  <span className="text-sm font-medium text-slate-800">
+                  <span className="text-xs font-black uppercase tracking-wider text-black">
                     Enable Lead Capture Prompt
                   </span>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs font-semibold text-neutral-500">
                     Prompt visitors for their email/phone so staff can follow up.
                   </p>
                 </div>
@@ -327,13 +332,13 @@ export default function WidgetPage() {
                       prev ? { ...prev, allow_booking: e.target.checked } : null
                     )
                   }
-                  className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                  className="w-4 h-4 rounded brutal-border accent-black"
                 />
                 <div>
-                  <span className="text-sm font-medium text-slate-800">
+                  <span className="text-xs font-black uppercase tracking-wider text-black">
                     Enable Appointment Booking in Chat
                   </span>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs font-semibold text-neutral-500">
                     Permit the agent to check calendar slots and confirm appointments directly.
                   </p>
                 </div>
@@ -342,13 +347,13 @@ export default function WidgetPage() {
           </div>
 
           {/* Security & Allowed Origins */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center">
+          <div className="bg-white rounded-2xl brutal-border-3 p-6 sm:p-7 brutal-shadow-lg space-y-4">
+            <h3 className="text-sm font-black uppercase tracking-tight text-black flex items-center">
               <Shield className="w-4 h-4 mr-2 text-blue-600" /> Security & Origin Restrictions
             </h3>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+              <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5">
                 Allowed Origins
               </label>
               <input
@@ -357,17 +362,17 @@ export default function WidgetPage() {
                 onChange={(e) =>
                   setSettings((prev) => (prev ? { ...prev, allowed_origins: e.target.value } : null))
                 }
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="brutal-input font-mono"
                 placeholder="https://example.com,https://app.example.com"
               />
-              <p className="text-[11px] text-slate-400 mt-1">
-                Comma-separated list of allowed domains, or <code className="text-slate-600">*</code> to permit embedding anywhere.
+              <p className="text-[11px] font-mono text-neutral-500 mt-1">
+                Comma-separated list of allowed domains, or <code className="text-black font-bold">*</code> to permit embedding anywhere.
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+                <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5">
                   Rate Limit (Queries / Min)
                 </label>
                 <input
@@ -380,12 +385,12 @@ export default function WidgetPage() {
                       prev ? { ...prev, rate_limit_rpm: parseInt(e.target.value) || 30 } : null
                     )
                   }
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="brutal-input font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+                <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5">
                   Max Turns / Session
                 </label>
                 <input
@@ -400,7 +405,7 @@ export default function WidgetPage() {
                         : null
                     )
                   }
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="brutal-input font-mono"
                 />
               </div>
             </div>
@@ -410,7 +415,7 @@ export default function WidgetPage() {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition"
+              className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-wider rounded-xl brutal-border brutal-shadow brutal-shadow-hover transition"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               Save Changes
@@ -421,38 +426,38 @@ export default function WidgetPage() {
         {/* Live Widget Preview (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center">
-              <Globe className="w-4 h-4 mr-2 text-slate-500" /> Interactive Preview
+            <h3 className="text-sm font-black uppercase text-black flex items-center">
+              <Globe className="w-4 h-4 mr-2 text-black" /> Interactive Preview
             </h3>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase">
+            <span className="text-[10px] font-black uppercase bg-[#a3e635] text-black px-2 py-0.5 rounded brutal-border brutal-shadow-xs">
               Live Mockup
             </span>
           </div>
 
           {/* Mocked Widget Frame */}
-          <div className="bg-slate-100 rounded-2xl p-4 border border-slate-300 shadow-inner flex flex-col h-[560px]">
+          <div className="bg-white rounded-2xl brutal-border-3 brutal-shadow-xl flex flex-col h-[560px] overflow-hidden">
             {/* Widget Header */}
             <div
-              className="p-4 rounded-t-xl text-white flex items-center justify-between shadow-sm transition-colors duration-300"
+              className="p-4 text-white flex items-center justify-between border-b-2 border-black"
               style={{ backgroundColor: settings?.primary_color || '#2563EB' }}
             >
               <div className="flex items-center space-x-2.5">
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                  <Bot className="w-5 h-5" />
+                <div className="w-9 h-9 rounded-xl bg-white text-black brutal-border brutal-shadow-xs flex items-center justify-center">
+                  <Bot className="w-5 h-5 stroke-[2.5]" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold leading-tight">Reception Assistant</h4>
-                  <p className="text-[10px] text-white/80">Online • Typically replies instantly</p>
+                  <h4 className="text-sm font-black leading-tight">Reception Assistant</h4>
+                  <p className="text-[10px] font-bold text-white/90 uppercase tracking-wider">Online &middot; Instant Reply</p>
                 </div>
               </div>
             </div>
 
             {/* Widget Messages Body */}
-            <div className="flex-1 bg-white p-4 overflow-y-auto space-y-3 text-xs">
+            <div className="flex-1 bg-[#fbfaf6] p-4 overflow-y-auto space-y-3 text-xs">
               {settings?.ask_lead_capture && (
-                <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 text-[11px] space-y-1">
-                  <p className="font-semibold text-slate-700">👋 Welcome! Want a quick callback?</p>
-                  <p className="text-slate-500">Leave your email or phone below anytime.</p>
+                <div className="p-3 bg-[#fef9c3] brutal-border rounded-xl text-black text-[11px] font-bold space-y-0.5 brutal-shadow-xs">
+                  <p className="font-black uppercase">👋 Welcome! Want a quick callback?</p>
+                  <p className="text-neutral-700">Leave your email or phone below anytime.</p>
                 </div>
               )}
 
@@ -460,10 +465,10 @@ export default function WidgetPage() {
                 <div
                   key={idx}
                   className={cn(
-                    'flex flex-col max-w-[85%] rounded-xl px-3.5 py-2 leading-relaxed',
+                    'flex flex-col max-w-[85%] rounded-xl px-4 py-2.5 leading-relaxed font-bold brutal-border brutal-shadow-xs',
                     m.speaker === 'visitor'
                       ? 'ml-auto text-white'
-                      : 'mr-auto bg-slate-100 text-slate-800'
+                      : 'mr-auto bg-white text-black'
                   )}
                   style={
                     m.speaker === 'visitor'
@@ -479,21 +484,21 @@ export default function WidgetPage() {
             {/* Widget Input Box */}
             <form
               onSubmit={sendPreviewMessage}
-              className="p-2 bg-white rounded-b-xl border-t border-slate-100 flex items-center space-x-2"
+              className="p-3 bg-white border-t-2 border-black flex items-center space-x-2"
             >
               <input
                 type="text"
                 placeholder="Ask about hours, services, booking..."
                 value={visitorInput}
                 onChange={(e) => setVisitorInput(e.target.value)}
-                className="flex-1 px-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="brutal-input flex-1 text-xs"
               />
               <button
                 type="submit"
-                className="p-1.5 rounded-lg text-white transition hover:opacity-90"
+                className="p-2.5 rounded-xl text-white brutal-border brutal-shadow-xs transition hover:opacity-90 flex-shrink-0"
                 style={{ backgroundColor: settings?.primary_color || '#2563EB' }}
               >
-                <Send className="w-3.5 h-3.5" />
+                <Send className="w-4 h-4" />
               </button>
             </form>
           </div>
@@ -502,4 +507,3 @@ export default function WidgetPage() {
     </div>
   );
 }
-
