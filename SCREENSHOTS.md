@@ -30,7 +30,7 @@ This document details all 12 frontend views in the Callwise web application ([`w
 ### 1. Sign In (`/login`)
 - **Elements**: Callwise robot branding, Email and Password inputs, "Remember me" option, "Forgot password?" link.
 - **Convenience Features**: 
-  - "Autofill bhumit@gmail.com" button for instantaneous local testing.
+  - "Autofill dental.owner@test.com" button for instantaneous local testing.
   - Show/Hide password toggle icon.
   - Rate limiting notice when maximum failed attempts is reached.
 

@@ -157,7 +157,7 @@ npm run dev
 ```
 
 Log in at [http://localhost:3000/login](http://localhost:3000/login) with:
-- **Email:** `bhumit@gmail.com`
+- **Email:** `dental.owner@test.com`
 - **Password:** `Password123!`
 
 ---

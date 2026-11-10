@@ -11,9 +11,9 @@ Callwise comes pre-seeded with full demonstration businesses (Apex Dental Clinic
 - **Web Dashboard URL:** [http://localhost:3000](http://localhost:3000)
 - **Login URL:** [http://localhost:3000/login](http://localhost:3000/login)
 - **Demo Credentials:**
-  - **Email:** `bhumit@gmail.com`
+  - **Email:** `dental.owner@test.com`
   - **Password:** `Password123!`
-  - *(Tip: Click the "Autofill bhumit@gmail.com" button on the login screen to fill credentials instantly).*
+  - *(Tip: Click the "Autofill dental.owner@test.com" button on the login screen to fill credentials instantly).*
 
 ---
 
@@ -155,7 +155,7 @@ curl -i -X POST http://localhost:8000/api/widget/chat \
 curl -i -X POST http://localhost:8000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "bhumit@gmail.com",
+    "email": "dental.owner@test.com",
     "password": "Password123!"
   }'
 ```

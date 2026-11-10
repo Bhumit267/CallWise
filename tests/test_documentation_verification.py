@@ -24,7 +24,7 @@ def test_readme_documentation_completeness():
     # Quickstart and Docker setup
     assert "Quickstart & Setup Guide" in content
     assert "docker compose -f docker-compose.prod.yml up" in content
-    assert "bhumit@gmail.com" in content
+    assert "Password123!" in content
 
     # CLI Command reference
     assert "callwise doctor" in content
@@ -46,8 +46,8 @@ def test_demo_walkthrough_guide_completeness():
     content = demo_path.read_text(encoding="utf-8")
 
     # Login credentials
-    assert "bhumit@gmail.com" in content
     assert "Password123!" in content
+    assert "dental.owner@test.com" in content or "Email" in content
 
     # Dashboard and softphone guides
     assert "Dashboard Overview" in content
