@@ -103,21 +103,6 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Quick Fill Demo Credentials */}
-          <div className="p-3.5 bg-[#fef9c3] brutal-border rounded-xl text-xs flex items-center justify-between brutal-shadow-xs">
-            <span className="text-black font-bold">Demo login:</span>
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('dental.owner@test.com');
-                setPassword('Password123!');
-              }}
-              className="bg-black hover:bg-neutral-800 text-white font-black uppercase text-[10px] tracking-wider px-2.5 py-1.5 rounded-lg brutal-border brutal-shadow-xs brutal-shadow-hover"
-            >
-              Autofill BrightSmile
-            </button>
-          </div>
-
           <button
             type="submit"
             disabled={loading}
