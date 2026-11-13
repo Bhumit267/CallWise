@@ -211,4 +211,27 @@ class Settings(BaseSettings):
     )
 
 
+    # Messaging & WhatsApp/SMS Settings (Option 3)
+    messaging_provider: Literal["mock", "twilio"] = Field(
+        default="mock",
+        description="Messaging provider: 'mock' for local development/evals or 'twilio' for real SMS/WhatsApp",
+    )
+    twilio_account_sid: Optional[str] = Field(
+        default=None,
+        description="Twilio Account SID for SMS/WhatsApp dispatch",
+    )
+    twilio_auth_token: Optional[str] = Field(
+        default=None,
+        description="Twilio Auth Token for SMS/WhatsApp dispatch",
+    )
+    twilio_sms_from: Optional[str] = Field(
+        default=None,
+        description="Twilio SMS Sender Phone Number (e.g. '+15551234567')",
+    )
+    twilio_whatsapp_from: Optional[str] = Field(
+        default="whatsapp:+14155238886",
+        description="Twilio WhatsApp Sender Number (e.g. 'whatsapp:+14155238886')",
+    )
+
+
 settings = Settings()

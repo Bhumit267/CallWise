@@ -19,8 +19,18 @@ from callwise.db.models import (
     Transfer,
 )
 from callwise.providers.email import EmailMessage, EmailProvider, get_email_provider
+from callwise.providers.messaging import MessagingProvider, get_messaging_provider
 
 logger = logging.getLogger(__name__)
+
+
+def format_currency(amount: float, tz_name: str) -> str:
+    """Format price using Indian Rupee (₹) for IST or US Dollar ($) for default."""
+    if tz_name and "kolkata" in tz_name.lower():
+        if float(amount).is_integer():
+            return f"₹{int(amount):,}"
+        return f"₹{amount:,.2f}"
+    return f"${amount:,.2f}"
 
 
 def format_local_time(dt_utc: datetime, tz_name: str) -> str:
@@ -34,6 +44,51 @@ def format_local_time(dt_utc: datetime, tz_name: str) -> str:
         dt_utc = dt_utc.replace(tzinfo=timezone.utc)
     local_dt = dt_utc.astimezone(biz_tz)
     return local_dt.strftime("%A, %B %d, %Y at %I:%M %p %Z")
+
+
+async def dispatch_messaging(
+    session: AsyncSession,
+    business_id: uuid.UUID,
+    notification_type: str,
+    recipient: str,
+    body: str,
+    channel: str = "whatsapp",
+    messaging_provider: Optional[MessagingProvider] = None,
+) -> Notification:
+    """
+    Persist notification record and deliver via MessagingProvider (WhatsApp or SMS).
+    """
+    provider = messaging_provider or get_messaging_provider()
+    notif = Notification(
+        business_id=business_id,
+        type=notification_type,
+        recipient=recipient,
+        status="pending",
+    )
+    session.add(notif)
+    await session.flush()
+
+    try:
+        if channel == "whatsapp":
+            res = await provider.send_whatsapp(to_phone=recipient, body=body)
+        else:
+            res = await provider.send_sms(to_phone=recipient, body=body)
+
+        if res.success:
+            notif.status = "sent"
+            notif.sent_at = datetime.now(timezone.utc)
+            logger.info(f"Notification {notif.id} ({notification_type}) sent to {recipient} via {channel}")
+        else:
+            notif.status = "failed"
+            notif.error = res.error or f"{channel.upper()} delivery failed"
+            logger.warning(f"Notification {notif.id} ({notification_type}) delivery failed: {res.error}")
+    except Exception as exc:
+        notif.status = "failed"
+        notif.error = str(exc)
+        logger.error(f"Notification {notif.id} error delivering {channel} to {recipient}: {exc}")
+
+    await session.flush()
+    return notif
 
 
 async def dispatch_email(
@@ -91,19 +146,21 @@ async def notify_booking(
     service: Service,
     booking_code: str,
     email_provider: Optional[EmailProvider] = None,
+    messaging_provider: Optional[MessagingProvider] = None,
 ) -> None:
-    """Send confirmation email to customer and notification alert to business owner."""
+    """Send confirmation email to customer, instant WhatsApp/SMS, and alert to owner."""
     local_time = format_local_time(appointment.start_at, business.timezone)
 
     # 1. Customer confirmation email (if email was provided)
     if appointment.customer_email:
+        currency_price = format_currency(service.price, business.timezone)
         subj = f"Appointment Confirmed: {service.name} at {business.name}"
         body = (
             f"Hello {appointment.customer_name},\n\n"
             f"Your appointment for {service.name} has been successfully booked.\n\n"
             f"Date & Time:  {local_time}\n"
             f"Duration:     {service.duration_minutes} minutes\n"
-            f"Price:        ${service.price:.2f}\n\n"
+            f"Price:        {currency_price}\n\n"
             f"Your Booking Code: {booking_code}\n"
             f"(Please keep this code handy if you ever need to reschedule or cancel your visit).\n\n"
             f"Location: {business.name}\n"
@@ -120,7 +177,49 @@ async def notify_booking(
             email_provider=email_provider,
         )
 
-    # 2. Business owner alert email
+    # 2. Instant WhatsApp & SMS to customer's mobile phone
+    if appointment.customer_phone:
+        currency_price = format_currency(service.price, business.timezone)
+        contact_num = business.transfer_number or "our office"
+        manage_link = f"{settings.app_url}/widget-frame/{business.id}?code={booking_code}"
+
+        wa_body = (
+            f"✅ *Appointment Confirmed!*\n"
+            f"Hello *{appointment.customer_name}*, your visit at *{business.name}* is booked.\n\n"
+            f"🗓 *Date & Time:* {local_time}\n"
+            f"🩺 *Service:* {service.name} ({service.duration_minutes} mins)\n"
+            f"💵 *Fee:* {currency_price}\n"
+            f"🔖 *Booking Code:* `{booking_code}`\n\n"
+            f"📍 *Location:* {business.name}\n"
+            f"📞 *Clinic Contact:* {contact_num}\n\n"
+            f"Need to reschedule or cancel? Manage your visit here:\n"
+            f"{manage_link}"
+        )
+        await dispatch_messaging(
+            session=session,
+            business_id=business.id,
+            notification_type="customer_booking_whatsapp",
+            recipient=appointment.customer_phone,
+            body=wa_body,
+            channel="whatsapp",
+            messaging_provider=messaging_provider,
+        )
+
+        sms_body = (
+            f"{business.name}: Confirmed for {service.name} on {local_time}. "
+            f"Code: {booking_code}. Fee: {currency_price}. Manage or cancel at {manage_link}"
+        )
+        await dispatch_messaging(
+            session=session,
+            business_id=business.id,
+            notification_type="customer_booking_sms",
+            recipient=appointment.customer_phone,
+            body=sms_body,
+            channel="sms",
+            messaging_provider=messaging_provider,
+        )
+
+    # 3. Business owner alert email
     if business.notification_email:
         masked_phone = mask_phone_number(appointment.customer_phone)
         subj = f"New Booking: {appointment.customer_name} - {service.name}"
@@ -150,11 +249,12 @@ async def notify_cancellation(
     appointment: Appointment,
     service: Service,
     email_provider: Optional[EmailProvider] = None,
+    messaging_provider: Optional[MessagingProvider] = None,
 ) -> None:
-    """Send cancellation notice to customer and owner."""
+    """Send cancellation notice to customer via Email, WhatsApp/SMS and alert owner."""
     local_time = format_local_time(appointment.start_at, business.timezone)
 
-    # Customer notification
+    # Customer email
     if appointment.customer_email:
         subj = f"Appointment Cancelled: {service.name} at {business.name}"
         body = (
@@ -172,6 +272,39 @@ async def notify_cancellation(
             subject=subj,
             body_text=body,
             email_provider=email_provider,
+        )
+
+    # Instant WhatsApp & SMS Cancellation
+    if appointment.customer_phone:
+        contact_num = business.transfer_number or "our office"
+        wa_body = (
+            f"⚠️ *Appointment Cancelled*\n"
+            f"Hello *{appointment.customer_name}*, your appointment for *{service.name}* on {local_time} has been cancelled.\n\n"
+            f"If you did not request this cancellation or wish to rebook, please call {contact_num}.\n\n"
+            f"*{business.name}*"
+        )
+        await dispatch_messaging(
+            session=session,
+            business_id=business.id,
+            notification_type="customer_cancellation_whatsapp",
+            recipient=appointment.customer_phone,
+            body=wa_body,
+            channel="whatsapp",
+            messaging_provider=messaging_provider,
+        )
+
+        sms_body = (
+            f"{business.name}: Your appointment for {service.name} on {local_time} has been cancelled. "
+            f"Call {contact_num} to rebook."
+        )
+        await dispatch_messaging(
+            session=session,
+            business_id=business.id,
+            notification_type="customer_cancellation_sms",
+            recipient=appointment.customer_phone,
+            body=sms_body,
+            channel="sms",
+            messaging_provider=messaging_provider,
         )
 
     # Owner notification
@@ -203,12 +336,13 @@ async def notify_reschedule(
     old_start_utc: datetime,
     new_start_utc: datetime,
     email_provider: Optional[EmailProvider] = None,
+    messaging_provider: Optional[MessagingProvider] = None,
 ) -> None:
-    """Send reschedule confirmation to customer and owner."""
+    """Send reschedule confirmation to customer via Email, WhatsApp/SMS and alert owner."""
     old_time = format_local_time(old_start_utc, business.timezone)
     new_time = format_local_time(new_start_utc, business.timezone)
 
-    # Customer notification
+    # Customer email
     if appointment.customer_email:
         subj = f"Appointment Rescheduled: {service.name} at {business.name}"
         body = (
@@ -229,6 +363,41 @@ async def notify_reschedule(
             subject=subj,
             body_text=body,
             email_provider=email_provider,
+        )
+
+    # Instant WhatsApp & SMS Reschedule
+    if appointment.customer_phone:
+        contact_num = business.transfer_number or "our office"
+        wa_body = (
+            f"🗓 *Appointment Rescheduled!*\n"
+            f"Hello *{appointment.customer_name}*, your appointment for *{service.name}* at *{business.name}* has been updated.\n\n"
+            f"Previous Time: {old_time}\n"
+            f"New Slot: *{new_time}*\n"
+            f"Duration: {service.duration_minutes} mins\n"
+            f"Contact: {contact_num}"
+        )
+        await dispatch_messaging(
+            session=session,
+            business_id=business.id,
+            notification_type="customer_reschedule_whatsapp",
+            recipient=appointment.customer_phone,
+            body=wa_body,
+            channel="whatsapp",
+            messaging_provider=messaging_provider,
+        )
+
+        sms_body = (
+            f"{business.name}: Your appointment for {service.name} has been rescheduled to {new_time}. "
+            f"Call {contact_num} with any questions."
+        )
+        await dispatch_messaging(
+            session=session,
+            business_id=business.id,
+            notification_type="customer_reschedule_sms",
+            recipient=appointment.customer_phone,
+            body=sms_body,
+            channel="sms",
+            messaging_provider=messaging_provider,
         )
 
     # Owner notification

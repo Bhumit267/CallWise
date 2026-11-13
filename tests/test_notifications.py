@@ -156,7 +156,10 @@ async def test_notify_booking_dispatches_customer_and_owner_notifications():
     async with AsyncSessionLocal() as session:
         stmt = select(Notification).where(Notification.business_id == biz_id)
         notifs = (await session.execute(stmt)).scalars().all()
-        assert len(notifs) == 2
+        assert len(notifs) >= 2
+        types = {n.type for n in notifs}
+        assert "customer_booking_confirmation" in types
+        assert "owner_new_booking" in types
         assert all(n.status == "sent" for n in notifs)
 
 

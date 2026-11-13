@@ -11,7 +11,7 @@ from tabulate import tabulate
 from callwise import __version__
 from callwise.config import settings
 from callwise.db.models import Business
-from callwise.db.seed import run_seed
+from callwise.db.seed import run_seed, run_seed_india
 from callwise.db.session import get_sync_session
 
 app = typer.Typer(
@@ -121,6 +121,17 @@ def seed():
         rows.append([str(b.id), b.name, b.business_type, b.timezone, b.tone])
 
     typer.echo(tabulate(rows, headers=["ID", "Name", "Type", "Timezone", "Tone"], tablefmt="grid"))
+
+
+@app.command("seed-india")
+def seed_india():
+    """Seed authentic Indian demo clinic ('Aarav Health & Dental Clinic', Bengaluru) with INR pricing, Indian timings, and FAQ knowledge."""
+    typer.echo("Seeding Aarav Health & Dental Clinic (Bengaluru, India) into database...")
+    biz = run_seed_india()
+    typer.secho(f"[OK] Seeded Indian Clinic: {biz.name}", fg=typer.colors.GREEN, bold=True)
+
+    rows = [[str(biz.id), biz.name, biz.business_type, biz.timezone, biz.transfer_number]]
+    typer.echo(tabulate(rows, headers=["ID", "Name", "Type", "Timezone", "Phone"], tablefmt="grid"))
 
 
 @app.command("list-businesses")
