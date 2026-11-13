@@ -110,6 +110,12 @@ async def setup_business(
         await db.flush()
         created_new = True
     else:
+        # Authorization check: only owner or manager can modify existing business profile
+        if role not in ("owner", "manager"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only business owners or managers can modify onboarding settings.",
+            )
         # Update existing business profile
         business = existing_business
         business.name = payload.name

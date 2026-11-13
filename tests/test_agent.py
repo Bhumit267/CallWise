@@ -1,6 +1,6 @@
 """Tests for System prompt builder, CallwiseToolset (all 9 tools), and Agent configuration."""
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import uuid
 import pytest
 import pytest_asyncio
@@ -214,10 +214,18 @@ async def test_text_agent_simulated_turn_and_tool_execution(sample_business):
     assert "Teeth Cleaning" in services_out
     assert "$120" in services_out
 
+    now_dt = datetime.now(timezone.utc)
+    # Next Monday or Tuesday to guarantee open business hours (Monday-Thursday 8am-5pm)
+    days_to_add = (7 - now_dt.weekday()) if now_dt.weekday() != 0 else 7
+    target_dt = now_dt + timedelta(days=days_to_add)
+    date_str = target_dt.strftime("%Y-%m-%d")
+    start_str = f"{date_str} 10:00"
+    resched_str = f"{date_str} 11:00"
+
     # 3. check_availability
     avail_out = await agent._execute_tool(
         "check_availability",
-        {"service_name": "Teeth Cleaning", "date": "2026-11-11"},
+        {"service_name": "Teeth Cleaning", "date": date_str},
     )
     assert "Teeth Cleaning" in avail_out
 
@@ -226,7 +234,7 @@ async def test_text_agent_simulated_turn_and_tool_execution(sample_business):
         "book_appointment",
         {
             "service_name": "Teeth Cleaning",
-            "start_time": "2026-11-11 10:00",
+            "start_time": start_str,
             "customer_name": "Jane Doe",
             "customer_phone": "555-4321",
             "customer_email": "jane@example.com",
@@ -246,7 +254,7 @@ async def test_text_agent_simulated_turn_and_tool_execution(sample_business):
         "reschedule_appointment",
         {
             "booking_code": bcode,
-            "new_time": "2026-11-11 11:00",
+            "new_time": resched_str,
             "caller_name": "Jane Doe",
             "caller_phone": "555-4321",
         },
