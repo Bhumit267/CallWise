@@ -81,6 +81,11 @@ export interface CallDetail {
   ended_at?: string | null;
   duration_seconds: number;
   summary?: string | null;
+  intent?: string | null;
+  urgency?: 'high' | 'normal' | string | null;
+  sentiment?: 'positive' | 'neutral' | 'frustrated' | string | null;
+  tags?: string[] | null;
+  structured_notes?: Record<string, any> | null;
   llm_provider?: string | null;
   llm_model?: string | null;
   tts_provider?: string | null;

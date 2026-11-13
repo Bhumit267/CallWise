@@ -207,6 +207,11 @@ class Call(Base):
     ended_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     duration_seconds: Mapped[float] = mapped_column(Float, default=0.0)
     summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    intent: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # appointment_request, pricing_inquiry, complaint, general_faq
+    urgency: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, default="normal")  # normal, high
+    sentiment: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, default="neutral")  # positive, neutral, frustrated
+    tags: Mapped[Optional[List[str]]] = mapped_column(JSON, nullable=True, default=list)
+    structured_notes: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     llm_provider: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     llm_model: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     tts_provider: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)

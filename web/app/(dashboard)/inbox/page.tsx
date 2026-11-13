@@ -306,6 +306,24 @@ export default function InboxPage() {
                             {formatDuration(item.meta.duration_seconds)}
                           </span>
                         ) : null}
+
+                        {item.meta?.urgency === 'high' && (
+                          <span className="text-[10px] font-black uppercase bg-[#ff5a5a] text-black px-2 py-0.5 rounded brutal-border animate-pulse">
+                            Urgent
+                          </span>
+                        )}
+
+                        {item.meta?.sentiment === 'frustrated' && (
+                          <span className="text-[10px] font-black uppercase bg-[#fed7aa] text-amber-950 px-2 py-0.5 rounded brutal-border">
+                            Frustrated
+                          </span>
+                        )}
+
+                        {item.meta?.intent && item.meta.intent !== 'other' && (
+                          <span className="text-[10px] font-black uppercase bg-neutral-100 text-neutral-800 px-2 py-0.5 rounded brutal-border">
+                            {item.meta.intent.replace('_', ' ')}
+                          </span>
+                        )}
                       </div>
 
                       <p className="text-xs font-semibold text-neutral-600 line-clamp-1 max-w-2xl">

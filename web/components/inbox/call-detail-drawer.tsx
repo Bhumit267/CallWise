@@ -210,16 +210,74 @@ export function CallDetailDrawer({
                 />
               </div>
 
-              {/* AI Call Summary */}
-              {call.summary && (
-                <div className="bg-[#fef9c3] brutal-border-3 brutal-shadow-sm p-4 space-y-1.5">
+              {/* AI Call Summary & Intelligence */}
+              <div className="bg-[#fef9c3] brutal-border-3 brutal-shadow-sm p-4 space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center space-x-2 text-black">
                     <Sparkles className="w-4 h-4 fill-black" />
-                    <h3 className="text-xs font-black uppercase tracking-wider">AI Executive Brief</h3>
+                    <h3 className="text-xs font-black uppercase tracking-wider">AI Executive Brief & Intelligence</h3>
                   </div>
-                  <p className="text-sm font-bold text-slate-800 leading-relaxed">{call.summary}</p>
+                  <div className="flex items-center space-x-1.5 flex-wrap">
+                    {call.urgency === 'high' && (
+                      <span className="px-2 py-0.5 text-[10px] font-black uppercase bg-[#ff5a5a] text-black brutal-border">
+                        High Urgency
+                      </span>
+                    )}
+                    {call.sentiment && (
+                      <span className={cn(
+                        "px-2 py-0.5 text-[10px] font-black uppercase brutal-border",
+                        call.sentiment === 'frustrated'
+                          ? "bg-[#fed7aa] text-amber-950"
+                          : call.sentiment === 'positive'
+                          ? "bg-[#bbf7d0] text-emerald-950"
+                          : "bg-white text-black"
+                      )}>
+                        {call.sentiment}
+                      </span>
+                    )}
+                    {call.intent && (
+                      <span className="px-2 py-0.5 text-[10px] font-black uppercase bg-white text-black brutal-border">
+                        {call.intent.replace('_', ' ')}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              )}
+
+                {call.summary ? (
+                  <p className="text-sm font-bold text-slate-800 leading-relaxed">{call.summary}</p>
+                ) : (
+                  <p className="text-xs font-semibold text-slate-600 italic">No summary generated for this call.</p>
+                )}
+
+                {/* Structured Notes */}
+                {call.structured_notes && (
+                  <div className="pt-2 border-t border-black/10 text-xs space-y-1">
+                    {call.structured_notes.key_details && (
+                      <p className="text-slate-800">
+                        <strong className="text-black uppercase text-[10px] tracking-wider">Key Details: </strong>
+                        {call.structured_notes.key_details}
+                      </p>
+                    )}
+                    {call.structured_notes.action_items && call.structured_notes.action_items !== 'None' && (
+                      <p className="text-slate-800">
+                        <strong className="text-black uppercase text-[10px] tracking-wider">Follow-up: </strong>
+                        {call.structured_notes.action_items}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Tags */}
+                {call.tags && call.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {call.tags.map((tag: string, idx: number) => (
+                      <span key={idx} className="text-[10px] font-bold text-slate-700 bg-black/5 px-2 py-0.5 rounded">
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* Linked Records */}
               {(call.appointments.length > 0 ||

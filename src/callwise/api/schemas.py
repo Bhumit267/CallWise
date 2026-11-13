@@ -70,6 +70,10 @@ class CallListItem(BaseModel):
     summary: Optional[str] = None
     turn_count: int = 0
     source: str = "phone"  # "phone", "chat", "web"
+    intent: Optional[str] = None
+    urgency: Optional[str] = "normal"
+    sentiment: Optional[str] = "neutral"
+    tags: Optional[List[str]] = Field(default_factory=list)
     has_appointment: bool = False
     has_message: bool = False
     has_transfer: bool = False
@@ -96,6 +100,11 @@ class CallDetail(BaseModel):
     ended_at: Optional[datetime] = None
     duration_seconds: float
     summary: Optional[str] = None
+    intent: Optional[str] = None
+    urgency: Optional[str] = "normal"
+    sentiment: Optional[str] = "neutral"
+    tags: Optional[List[str]] = Field(default_factory=list)
+    structured_notes: Optional[Dict[str, Any]] = None
     source: str = "phone"  # "phone", "chat", "web"
     llm_provider: Optional[str] = None
     llm_model: Optional[str] = None

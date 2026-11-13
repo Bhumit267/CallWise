@@ -59,12 +59,33 @@ def create_tts_plugin():
         raise ValueError(f"Unsupported voice TTS provider: {provider}")
 
 
+def build_turn_handling_options() -> Any:
+    """Build ultra-responsive voice turn handling & barge-in interruption resilience options."""
+    from livekit.agents import TurnHandlingOptions
+    from livekit.agents.voice.turn import EndpointingOptions, InterruptionOptions
+
+    return TurnHandlingOptions(
+        turn_detection="vad",
+        endpointing=EndpointingOptions(
+            mode="dynamic",
+            min_delay=0.04,
+            max_delay=0.20,
+        ),
+        interruption=InterruptionOptions(
+            enabled=True,
+            mode="vad",
+            min_duration=0.15,
+            discard_audio_if_uninterruptible=True,
+        ),
+    )
+
+
 def create_voice_agent(
     business: Business,
     call_id: Optional[uuid.UUID] = None,
 ) -> tuple[Any, Any]:
     """Assemble Agent and AgentSession with business-specific prompt, tools, and sub-300ms latency options."""
-    from livekit.agents import Agent, AgentSession, TurnHandlingOptions
+    from livekit.agents import Agent, AgentSession
     from livekit.plugins import deepgram, silero
 
     toolset = CallwiseToolset(business, call_id=call_id)
@@ -75,11 +96,7 @@ def create_voice_agent(
         tools=toolset.get_livekit_tools(),
     )
 
-    # Ultra-low latency voice turn handling (<300ms response time)
-    turn_opts = TurnHandlingOptions(
-        min_endpointing_delay=0.05,
-        max_endpointing_delay=0.25,
-    )
+    turn_opts = build_turn_handling_options()
 
     session = AgentSession(
         stt=deepgram.STT(
@@ -88,8 +105,8 @@ def create_voice_agent(
             interim_results=True,
         ),
         vad=silero.VAD.load(
-            min_speech_duration=0.05,
-            min_silence_duration=0.25,
+            min_speech_duration=0.04,
+            min_silence_duration=0.20,
             prefix_padding_duration=0.15,
         ),
         llm=create_llm_plugin(),

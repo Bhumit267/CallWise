@@ -82,6 +82,10 @@ async def get_unified_inbox(
                     meta={
                         "call_id": str(c.id),
                         "duration_seconds": c.duration_seconds,
+                        "intent": c.intent,
+                        "urgency": c.urgency or "normal",
+                        "sentiment": c.sentiment or "neutral",
+                        "tags": c.tags or [],
                     },
                 )
             )
