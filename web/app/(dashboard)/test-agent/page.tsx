@@ -18,6 +18,7 @@ import {
 import { apiClient } from '@/lib/api';
 import { TestAgentResponse } from '@/types/api';
 import { useAuth } from '@/contexts/auth-context';
+import { LiveWebRTCCall } from '@/components/voice/live-webrtc-call';
 
 interface ChatMessage {
   id: string;
@@ -34,6 +35,7 @@ export default function TestAgentPage() {
   const [loading, setLoading] = useState(false);
   const [callId, setCallId] = useState<string | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const [activeTab, setActiveTab] = useState<'voice' | 'text'>('voice');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Initialize with agent greeting
@@ -202,112 +204,150 @@ export default function TestAgentPage() {
         </div>
       </div>
 
-      {/* Main Conversation Window */}
-      <div className="flex-1 bg-white rounded-2xl brutal-border-3 brutal-shadow-lg flex flex-col overflow-hidden">
-        {/* Messages Feed */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-          <div className="flex justify-center">
-            <span className="text-[10px] font-mono font-bold text-black bg-[#fef9c3] px-3 py-1 rounded-lg brutal-border brutal-shadow-xs flex items-center gap-1.5">
-              <PhoneCall className="w-3 h-3 text-black" />
-              Call session started {callId ? `(ID: ${callId.slice(0, 8)})` : ''}
-            </span>
-          </div>
+      {/* Mode Switcher Tabs */}
+      <div className="flex items-center gap-2 mb-2">
+        <button
+          type="button"
+          onClick={() => setActiveTab('voice')}
+          className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-black uppercase text-xs tracking-wider brutal-border transition-all ${
+            activeTab === 'voice'
+              ? 'bg-[#ffe600] text-black brutal-shadow-xs'
+              : 'bg-white hover:bg-neutral-100 text-neutral-600'
+          }`}
+        >
+          <PhoneCall className="w-4 h-4" />
+          Live Voice Call (WebRTC)
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('text')}
+          className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-black uppercase text-xs tracking-wider brutal-border transition-all ${
+            activeTab === 'text'
+              ? 'bg-[#38bdf8] text-black brutal-shadow-xs'
+              : 'bg-white hover:bg-neutral-100 text-neutral-600'
+          }`}
+        >
+          <Bot className="w-4 h-4" />
+          Text Chat Simulator
+        </button>
+      </div>
 
-          {messages.map((m) => {
-            const isAgent = m.sender === 'agent';
-            return (
-              <div
-                key={m.id}
-                className={`flex items-start gap-3.5 ${isAgent ? '' : 'flex-row-reverse'}`}
-              >
-                {/* Avatar */}
-                <div
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 brutal-border brutal-shadow-xs ${
-                    isAgent
-                      ? 'bg-[#ffe600] text-black'
-                      : 'bg-blue-600 text-white'
-                  }`}
-                >
-                  {isAgent ? <Bot className="w-5 h-5 stroke-[2.5]" /> : <User className="w-5 h-5 stroke-[2.5]" />}
-                </div>
+      {activeTab === 'voice' ? (
+        <LiveWebRTCCall
+          businessName={currentBusiness?.name || 'Receptionist'}
+          greeting={currentBusiness?.greeting}
+          onCallEnded={(endedId) => {
+            if (endedId) setCallId(endedId);
+          }}
+        />
+      ) : (
+        /* Main Conversation Window */
+        <div className="flex-1 bg-white rounded-2xl brutal-border-3 brutal-shadow-lg flex flex-col overflow-hidden">
+          {/* Messages Feed */}
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+            <div className="flex justify-center">
+              <span className="text-[10px] font-mono font-bold text-black bg-[#fef9c3] px-3 py-1 rounded-lg brutal-border brutal-shadow-xs flex items-center gap-1.5">
+                <PhoneCall className="w-3 h-3 text-black" />
+                Call session started {callId ? `(ID: ${callId.slice(0, 8)})` : ''}
+              </span>
+            </div>
 
-                {/* Message Bubble */}
+            {messages.map((m) => {
+              const isAgent = m.sender === 'agent';
+              return (
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed brutal-border brutal-shadow-xs ${
-                    isAgent
-                      ? 'bg-[#fbfaf6] text-black rounded-tl-xs'
-                      : 'bg-blue-600 text-white rounded-tr-xs'
-                  }`}
+                  key={m.id}
+                  className={`flex items-start gap-3.5 ${isAgent ? '' : 'flex-row-reverse'}`}
                 >
-                  <p className="whitespace-pre-wrap font-bold">{m.text}</p>
+                  {/* Avatar */}
                   <div
-                    className={`mt-2 flex items-center gap-2 text-[10px] font-mono ${
-                      isAgent ? 'text-neutral-500' : 'text-blue-100 justify-end'
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 brutal-border brutal-shadow-xs ${
+                      isAgent
+                        ? 'bg-[#ffe600] text-black'
+                        : 'bg-blue-600 text-white'
                     }`}
                   >
-                    <span className="font-bold">
-                      {m.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                    {m.latency_ms !== undefined && (
-                      <span className="inline-flex items-center gap-0.5 bg-[#dcfce7] text-emerald-950 px-1.5 py-0.5 rounded brutal-border font-bold">
-                        <Clock className="w-2.5 h-2.5" />
-                        {m.latency_ms} ms
+                    {isAgent ? <Bot className="w-5 h-5 stroke-[2.5]" /> : <User className="w-5 h-5 stroke-[2.5]" />}
+                  </div>
+
+                  {/* Message Bubble */}
+                  <div
+                    className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed brutal-border brutal-shadow-xs ${
+                      isAgent
+                        ? 'bg-[#fbfaf6] text-black rounded-tl-xs'
+                        : 'bg-blue-600 text-white rounded-tr-xs'
+                    }`}
+                  >
+                    <p className="whitespace-pre-wrap font-bold">{m.text}</p>
+                    <div
+                      className={`mt-2 flex items-center gap-2 text-[10px] font-mono ${
+                        isAgent ? 'text-neutral-500' : 'text-blue-100 justify-end'
+                      }`}
+                    >
+                      <span className="font-bold">
+                        {m.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
-                    )}
+                      {m.latency_ms !== undefined && (
+                        <span className="inline-flex items-center gap-0.5 bg-[#dcfce7] text-emerald-950 px-1.5 py-0.5 rounded brutal-border font-bold">
+                          <Clock className="w-2.5 h-2.5" />
+                          {m.latency_ms} ms
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
 
-          {loading && (
-            <div className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-xl bg-[#ffe600] text-black flex items-center justify-center shrink-0 brutal-border brutal-shadow-xs">
-                <Bot className="w-5 h-5 stroke-[2.5]" />
+            {loading && (
+              <div className="flex items-start gap-3.5">
+                <div className="w-9 h-9 rounded-xl bg-[#ffe600] text-black flex items-center justify-center shrink-0 brutal-border brutal-shadow-xs">
+                  <Bot className="w-5 h-5 stroke-[2.5]" />
+                </div>
+                <div className="bg-[#fbfaf6] brutal-border rounded-2xl rounded-tl-xs px-4 py-3 text-sm font-bold text-black flex items-center gap-2 brutal-shadow-xs">
+                  <Loader2 className="w-4 h-4 animate-spin text-black" />
+                  <span>Receptionist is thinking...</span>
+                </div>
               </div>
-              <div className="bg-[#fbfaf6] brutal-border rounded-2xl rounded-tl-xs px-4 py-3 text-sm font-bold text-black flex items-center gap-2 brutal-shadow-xs">
-                <Loader2 className="w-4 h-4 animate-spin text-black" />
-                <span>Receptionist is thinking...</span>
-              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input Bar */}
+          <div className="p-4 border-t-2 border-black bg-neutral-50">
+            <form onSubmit={handleSend} className="flex items-center gap-2.5">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Type caller inquiry (e.g. 'What are your hours?' or 'Can I schedule a cleaning?')..."
+                disabled={loading}
+                className="brutal-input flex-1 text-sm font-bold"
+              />
+              <button
+                type="submit"
+                disabled={loading || !input.trim()}
+                className="px-5 py-3 bg-black hover:bg-neutral-800 disabled:opacity-40 text-white rounded-xl font-black text-xs uppercase tracking-wider brutal-border brutal-shadow-xs brutal-shadow-hover flex items-center gap-2"
+              >
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+                <span className="hidden sm:inline">Send</span>
+              </button>
+            </form>
+            <div className="flex items-center justify-between text-[11px] font-mono font-bold text-neutral-500 mt-2 px-1">
+              <span className="flex items-center gap-1 text-neutral-700">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                Instant simulated streaming dialog
+              </span>
+              <span>Press Enter to send</span>
             </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input Bar */}
-        <div className="p-4 border-t-2 border-black bg-neutral-50">
-          <form onSubmit={handleSend} className="flex items-center gap-2.5">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type caller inquiry (e.g. 'What are your hours?' or 'Can I schedule a cleaning?')..."
-              disabled={loading}
-              className="brutal-input flex-1 text-sm font-bold"
-            />
-            <button
-              type="submit"
-              disabled={loading || !input.trim()}
-              className="px-5 py-3 bg-black hover:bg-neutral-800 disabled:opacity-40 text-white rounded-xl font-black text-xs uppercase tracking-wider brutal-border brutal-shadow-xs brutal-shadow-hover flex items-center gap-2"
-            >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
-              <span className="hidden sm:inline">Send</span>
-            </button>
-          </form>
-          <div className="flex items-center justify-between text-[11px] font-mono font-bold text-neutral-500 mt-2 px-1">
-            <span className="flex items-center gap-1 text-neutral-700">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              Instant simulated streaming dialog
-            </span>
-            <span>Press Enter to send</span>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

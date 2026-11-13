@@ -60,6 +60,14 @@ class TestAgentResponse(BaseModel):
     latency_ms: float
 
 
+class LiveKitTokenResponse(BaseModel):
+    server_url: str
+    room_name: str
+    token: str
+    participant_identity: str
+    call_id: uuid.UUID
+
+
 # ============================================================================
 # Endpoints
 # ============================================================================
@@ -244,4 +252,70 @@ async def test_receptionist_agent(
         call_id=call_id,
         reply=reply,
         latency_ms=round(latency_ms, 2),
+    )
+
+
+@router.post("/test-agent/webrtc-token", response_model=LiveKitTokenResponse)
+async def get_test_agent_webrtc_token(
+    request: Request,
+    auth_ctx: tuple[User, Business, str, UserSession] = Depends(require_staff),
+    db: AsyncSession = Depends(get_tenant_db),
+) -> LiveKitTokenResponse:
+    """Generate a short-lived LiveKit WebRTC access token for in-browser live voice testing."""
+    user, business, _, user_session = auth_ctx
+    from callwise.config import settings
+
+    if not settings.livekit_api_key or not settings.livekit_api_secret:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="LiveKit credentials not configured. Please set LIVEKIT_API_KEY and LIVEKIT_API_SECRET.",
+        )
+
+    call_id = uuid.uuid4()
+    room_name = f"call-{business.id}-{uuid.uuid4().hex[:8]}"
+    participant_identity = f"web-caller-{uuid.uuid4().hex[:6]}"
+
+    # Ensure an initial active Call record exists
+    new_call = Call(
+        id=call_id,
+        business_id=business.id,
+        caller_number="web_browser",
+        summary=f"In-browser WebRTC live voice call for {business.name}",
+    )
+    db.add(new_call)
+    await db.flush()
+
+    try:
+        from livekit.api import AccessToken, VideoGrants
+
+        token = (
+            AccessToken(
+                api_key=settings.livekit_api_key,
+                api_secret=settings.livekit_api_secret,
+            )
+            .with_identity(participant_identity)
+            .with_name(user.name if user else "Web Caller")
+            .with_grants(
+                VideoGrants(
+                    room_join=True,
+                    room=room_name,
+                    can_publish=True,
+                    can_subscribe=True,
+                    can_publish_data=True,
+                )
+            )
+            .to_jwt()
+        )
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate LiveKit WebRTC access token: {err}",
+        )
+
+    return LiveKitTokenResponse(
+        server_url=settings.livekit_url,
+        room_name=room_name,
+        token=token,
+        participant_identity=participant_identity,
+        call_id=call_id,
     )
