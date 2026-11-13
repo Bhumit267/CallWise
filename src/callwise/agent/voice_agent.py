@@ -63,8 +63,8 @@ def create_voice_agent(
     business: Business,
     call_id: Optional[uuid.UUID] = None,
 ) -> tuple[Any, Any]:
-    """Assemble Agent and AgentSession with business-specific prompt and tools."""
-    from livekit.agents import Agent, AgentSession
+    """Assemble Agent and AgentSession with business-specific prompt, tools, and sub-300ms latency options."""
+    from livekit.agents import Agent, AgentSession, TurnHandlingOptions
     from livekit.plugins import deepgram, silero
 
     toolset = CallwiseToolset(business, call_id=call_id)
@@ -75,11 +75,26 @@ def create_voice_agent(
         tools=toolset.get_livekit_tools(),
     )
 
+    # Ultra-low latency voice turn handling (<300ms response time)
+    turn_opts = TurnHandlingOptions(
+        min_endpointing_delay=0.05,
+        max_endpointing_delay=0.25,
+    )
+
     session = AgentSession(
-        stt=deepgram.STT(api_key=settings.deepgram_api_key),
-        vad=silero.VAD.load(),
+        stt=deepgram.STT(
+            api_key=settings.deepgram_api_key,
+            endpointing_ms=25,
+            interim_results=True,
+        ),
+        vad=silero.VAD.load(
+            min_speech_duration=0.05,
+            min_silence_duration=0.22,
+            prefix_padding_duration=0.15,
+        ),
         llm=create_llm_plugin(),
         tts=create_tts_plugin(),
+        turn_handling=turn_opts,
     )
 
     return agent, session

@@ -241,8 +241,8 @@ export function LiveWebRTCCall({ businessName, greeting, onCallEnded }: LiveWebR
               <h3 className="text-lg font-black text-black uppercase tracking-tight">
                 Live WebRTC Voice Agent
               </h3>
-              <span className="bg-black text-white text-[10px] font-black uppercase px-2 py-0.5 rounded brutal-border">
-                Sub-500ms
+              <span className="bg-[#a3e635] text-black text-[10px] font-black uppercase px-2 py-0.5 rounded brutal-border shadow-xs">
+                Sub-300ms Ultra-Fast
               </span>
             </div>
             <p className="text-xs font-semibold text-neutral-600">
@@ -251,7 +251,7 @@ export function LiveWebRTCCall({ businessName, greeting, onCallEnded }: LiveWebR
           </div>
         </div>
 
-        {/* Live Status Badge */}
+        {/* Live Status Badge / Direct Action */}
         <div className="flex items-center gap-3">
           {status === 'connected' && (
             <div className="inline-flex items-center gap-2 bg-[#a3e635] brutal-border px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider brutal-shadow-xs">
@@ -266,9 +266,14 @@ export function LiveWebRTCCall({ businessName, greeting, onCallEnded }: LiveWebR
             </div>
           )}
           {status === 'idle' && (
-            <div className="inline-flex items-center gap-2 bg-neutral-100 brutal-border px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider text-neutral-600">
-              Ready to Call
-            </div>
+            <button
+              type="button"
+              onClick={startCall}
+              className="inline-flex items-center gap-2 bg-[#a3e635] hover:bg-[#86efac] brutal-border px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider text-black brutal-shadow-xs brutal-shadow-hover transition-all cursor-pointer"
+            >
+              <PhoneCall className="w-3.5 h-3.5 text-black" />
+              Start Call
+            </button>
           )}
         </div>
       </div>
@@ -333,6 +338,14 @@ export function LiveWebRTCCall({ businessName, greeting, onCallEnded }: LiveWebR
             <p className="text-xs font-semibold text-neutral-600 max-w-sm mt-1 mx-auto">
               Test natural speech, interruption, appointment booking, and knowledge retrieval live over WebRTC.
             </p>
+            <button
+              type="button"
+              onClick={startCall}
+              className="mt-6 inline-flex items-center justify-center gap-2.5 bg-[#a3e635] hover:bg-[#86efac] text-black font-black uppercase text-sm tracking-wider px-8 py-4 rounded-2xl brutal-border brutal-shadow brutal-shadow-hover transition-all transform hover:-translate-y-0.5 cursor-pointer"
+            >
+              <PhoneCall className="w-5 h-5 text-black" />
+              Start Live Voice Call
+            </button>
           </div>
         )}
       </div>
