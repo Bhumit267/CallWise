@@ -131,6 +131,48 @@ async def entrypoint(ctx):
     call_id = uuid.uuid4()
     agent, session = create_voice_agent(business, call_id=call_id)
 
+    # Real-time Terminal Logging with millisecond precision
+    import time
+    from datetime import datetime
+    turn_metrics = {}
+
+    @session.on("user_input_transcribed")
+    def _on_user_input(ev):
+        if getattr(ev, "is_final", False):
+            transcript = getattr(ev, "transcript", "").strip()
+            if transcript:
+                turn_metrics["start"] = time.perf_counter()
+                time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+                print(f"\n" + "═" * 70, flush=True)
+                print(f"🕒 [{time_str}] 👤 CALLER QUESTION:", flush=True)
+                print(f"   \"{transcript}\"", flush=True)
+                print("─" * 70, flush=True)
+
+    @session.on("conversation_item_added")
+    def _on_item_added(ev):
+        item = getattr(ev, "item", None)
+        role = getattr(item, "role", None)
+        if role == "assistant":
+            raw_content = getattr(item, "content", None)
+            text = ""
+            if isinstance(raw_content, list):
+                text = " ".join(str(c) for c in raw_content if isinstance(c, str))
+            elif isinstance(raw_content, str):
+                text = raw_content
+            elif hasattr(item, "text") and item.text:
+                text = item.text
+
+            text = text.strip()
+            # Exclude the greeting from response latency tracking
+            if text and not text.startswith("Hello! Thanks for calling"):
+                latency_ms = 0
+                if "start" in turn_metrics:
+                    latency_ms = int((time.perf_counter() - turn_metrics["start"]) * 1000)
+                time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+                print(f"🕒 [{time_str}] 🤖 AGENT ANSWER (⏱️ Latency: {latency_ms}ms):", flush=True)
+                print(f"   \"{text}\"", flush=True)
+                print("═" * 70 + "\n", flush=True)
+
     # Start agent session inside the connected WebRTC room
     await session.start(agent=agent, room=ctx.room)
 
