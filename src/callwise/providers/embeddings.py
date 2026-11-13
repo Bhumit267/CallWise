@@ -41,7 +41,10 @@ class LocalEmbeddingProvider(EmbeddingProvider):
         if self._model is None:
             try:
                 from sentence_transformers import SentenceTransformer
-                self._model = SentenceTransformer(self.model_name, local_files_only=True)
+                try:
+                    self._model = SentenceTransformer(self.model_name, local_files_only=True)
+                except Exception:
+                    self._model = SentenceTransformer(self.model_name, local_files_only=False)
             except Exception as e:
                 logger.warning(
                     "SentenceTransformer unavailable (%s). Falling back to deterministic embeddings.",

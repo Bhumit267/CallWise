@@ -68,6 +68,14 @@ jobs:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/callwise
           DATABASE_URL_SYNC: postgresql://postgres:postgres@localhost:5432/callwise
           SECRET_KEY: test-ci-secret-key-min-32-chars-long!
+          LIVEKIT_URL: wss://callwise-ci.livekit.cloud
+          LIVEKIT_API_KEY: devkey_ci_test
+          LIVEKIT_API_SECRET: secret_ci_test_key_32_chars_long!
+          DEEPGRAM_API_KEY: mock_deepgram_ci_token
+          LLM_PROVIDER: groq
+          GROQ_API_KEY: gsk_mock_ci_token
+          NO_COLOR: "1"
+          TERM: "dumb"
         run: |
           uv run python -m pytest tests/ -v
 

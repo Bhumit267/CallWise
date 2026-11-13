@@ -194,9 +194,17 @@ def start_voice_worker(business_id: uuid.UUID, mode: str = "dev"):
     """
     import os
     import sys
+    from dotenv import load_dotenv
+    load_dotenv()
     from livekit.agents import WorkerOptions, cli
 
-    os.environ["CALLWISE_BUSINESS_ID"] = str(business_id)
+    os.environ["CALLWISE_BUSINESS_ID"] = str(business_id).strip()
+    if settings.livekit_url:
+        os.environ["LIVEKIT_URL"] = settings.livekit_url
+    if settings.livekit_api_key:
+        os.environ["LIVEKIT_API_KEY"] = settings.livekit_api_key
+    if settings.livekit_api_secret:
+        os.environ["LIVEKIT_API_SECRET"] = settings.livekit_api_secret
 
     with get_sync_session() as db_session:
         business = db_session.get(Business, business_id)

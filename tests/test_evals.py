@@ -202,9 +202,11 @@ def test_eval_report_formatting_and_saving(tmp_path):
 
 def test_cli_run_evals_help():
     """Verify CLI command callwise run-evals --help operates cleanly."""
+    import re
     res = runner.invoke(app, ["run-evals", "--help"])
     assert res.exit_code == 0
-    assert "Run evaluation benchmarks" in res.output
-    assert "--provider" in res.output
-    assert "--business-id" in res.output
+    clean_out = re.sub(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])", "", res.output)
+    assert "Run evaluation benchmarks" in clean_out
+    assert "--provider" in clean_out
+    assert "--business-id" in clean_out
 
