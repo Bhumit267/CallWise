@@ -157,13 +157,21 @@ export function LiveWebRTCCall({ businessName, greeting, onCallEnded }: LiveWebR
       room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
         if (track.kind === 'audio') {
           const remoteAudio = track as RemoteAudioTrack;
-          if (!audioElementRef.current) {
-            audioElementRef.current = new Audio();
-            audioElementRef.current.autoplay = true;
+          if (audioElementRef.current) {
+            remoteAudio.attach(audioElementRef.current);
+            audioElementRef.current.play().catch((err) => {
+              console.warn('Autoplay prevented or failed:', err);
+            });
+          } else {
+            const el = remoteAudio.attach();
+            document.body.appendChild(el);
           }
-          remoteAudio.attach(audioElementRef.current);
           setIsAgentSpeaking(true);
         }
+      });
+
+      room.on(RoomEvent.TrackUnsubscribed, (track) => {
+        track.detach();
       });
 
       room.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
@@ -290,11 +298,11 @@ export function LiveWebRTCCall({ businessName, greeting, onCallEnded }: LiveWebR
       )}
 
       {/* Active Equalizer & Waveform Display */}
-      <div className="mt-8 mb-8 p-6 sm:p-8 bg-[#fbfaf6] brutal-border rounded-2xl flex flex-col items-center justify-center min-h-[220px] relative">
+      <div className="mt-4 mb-4 p-4 sm:p-5 bg-[#fbfaf6] brutal-border rounded-2xl flex flex-col items-center justify-center min-h-[150px] relative">
         {status === 'connected' ? (
           <div className="w-full flex flex-col items-center">
             {/* Equalizer Frequency Bars */}
-            <div className="flex items-end justify-center gap-1.5 sm:gap-2.5 h-28 w-full max-w-md px-4">
+            <div className="flex items-end justify-center gap-1.5 sm:gap-2 h-20 sm:h-24 w-full max-w-md px-4">
               {volumeLevel.map((height, i) => (
                 <div
                   key={i}
@@ -311,7 +319,7 @@ export function LiveWebRTCCall({ businessName, greeting, onCallEnded }: LiveWebR
             </div>
 
             {/* Speaking State Indicator */}
-            <div className="mt-6 flex items-center gap-2 text-xs font-black uppercase tracking-wider">
+            <div className="mt-4 flex items-center gap-2 text-xs font-black uppercase tracking-wider">
               {isAgentSpeaking ? (
                 <span className="inline-flex items-center gap-1.5 text-blue-700 bg-blue-100 px-3 py-1 rounded-full brutal-border brutal-shadow-xs">
                   <Volume2 className="w-4 h-4 animate-bounce" /> Receptionist Speaking...
@@ -328,9 +336,9 @@ export function LiveWebRTCCall({ businessName, greeting, onCallEnded }: LiveWebR
             </div>
           </div>
         ) : (
-          <div className="text-center py-6 px-4">
-            <div className="w-16 h-16 bg-[#ffe600] brutal-border rounded-2xl flex items-center justify-center text-black brutal-shadow mx-auto mb-4 rotate-[-3deg]">
-              <PhoneCall className="w-8 h-8" />
+          <div className="text-center py-4 px-4">
+            <div className="w-14 h-14 bg-[#ffe600] brutal-border rounded-2xl flex items-center justify-center text-black brutal-shadow mx-auto mb-3 rotate-[-3deg]">
+              <PhoneCall className="w-7 h-7" />
             </div>
             <h4 className="text-base font-black text-black uppercase tracking-wider">
               Talk directly to your AI receptionist
@@ -341,7 +349,7 @@ export function LiveWebRTCCall({ businessName, greeting, onCallEnded }: LiveWebR
             <button
               type="button"
               onClick={startCall}
-              className="mt-6 inline-flex items-center justify-center gap-2.5 bg-[#a3e635] hover:bg-[#86efac] text-black font-black uppercase text-sm tracking-wider px-8 py-4 rounded-2xl brutal-border brutal-shadow brutal-shadow-hover transition-all transform hover:-translate-y-0.5 cursor-pointer"
+              className="mt-4 inline-flex items-center justify-center gap-2.5 bg-[#a3e635] hover:bg-[#86efac] text-black font-black uppercase text-sm tracking-wider px-8 py-3.5 rounded-2xl brutal-border brutal-shadow brutal-shadow-hover transition-all transform hover:-translate-y-0.5 cursor-pointer"
             >
               <PhoneCall className="w-5 h-5 text-black" />
               Start Live Voice Call
@@ -398,12 +406,15 @@ export function LiveWebRTCCall({ businessName, greeting, onCallEnded }: LiveWebR
       </div>
 
       {/* Info Footnote */}
-      <div className="mt-6 pt-4 border-t-2 border-black/10 flex items-center justify-between text-[11px] font-bold text-neutral-500">
+      <div className="mt-4 pt-3 border-t-2 border-black/10 flex items-center justify-between text-[11px] font-bold text-neutral-500">
         <span className="flex items-center gap-1.5">
           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Web Audio Opus Codec 48kHz
         </span>
         <span>Silero VAD Interruption Enabled</span>
       </div>
+
+      {/* Hidden Audio element for WebRTC playback */}
+      <audio ref={audioElementRef} autoPlay playsInline className="hidden" />
     </div>
   );
 }

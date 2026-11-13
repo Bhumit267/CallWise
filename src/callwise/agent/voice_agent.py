@@ -89,7 +89,7 @@ def create_voice_agent(
         ),
         vad=silero.VAD.load(
             min_speech_duration=0.05,
-            min_silence_duration=0.22,
+            min_silence_duration=0.25,
             prefix_padding_duration=0.15,
         ),
         llm=create_llm_plugin(),

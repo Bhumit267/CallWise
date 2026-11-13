@@ -108,7 +108,7 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="min-h-screen flex bg-[#fbfaf6] text-black">
+    <div className="h-screen max-h-screen flex bg-[#fbfaf6] text-black overflow-hidden">
       {/* Mobile Backdrop */}
       {mobileMenuOpen && (
         <div
@@ -245,9 +245,9 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Top Navbar */}
-        <header className="h-16 bg-white border-b-3 border-black flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-xs">
+        <header className="h-16 shrink-0 bg-white border-b-3 border-black flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-xs">
           <div className="flex items-center space-x-3">
             <button
               onClick={() => setMobileMenuOpen(true)}
@@ -285,7 +285,7 @@ export default function DashboardLayout({
         </header>
 
         {/* Viewport Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto min-h-0 pb-24">{children}</main>
       </div>
     </div>
   );
