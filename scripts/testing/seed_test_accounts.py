@@ -1,6 +1,6 @@
 """Helper script to deterministically create testing accounts across tenants.
 
-Creates owner, manager, and staff test users for BrightSmile Family Dental
+Creates owner, manager, and staff test users for Aarav Health & Dental Clinic
 and Luxe Glow Salon & Spa with known Argon2id hashed passwords.
 Safe and idempotent: updates passwords and memberships if accounts already exist.
 """
@@ -16,36 +16,38 @@ from callwise.db.models import Business, Membership, User
 from callwise.db.session import AsyncSessionLocal
 
 # Seeded Demo Businesses
-DENTAL_BIZ_ID = uuid.UUID("11111111-1111-1111-1111-111111111111")
+INDIAN_CLINIC_ID = uuid.UUID("33333333-3333-3333-3333-333333333333")
 SALON_BIZ_ID = uuid.UUID("22222222-2222-2222-2222-222222222222")
+# Backward-compatibility alias
+DENTAL_BIZ_ID = INDIAN_CLINIC_ID
 
 TEST_USERS = [
-    # --- Tenant 1: BrightSmile Family Dental ---
+    # --- Tenant 1: Aarav Health & Dental Clinic (Bengaluru, India) ---
     {
         "id": uuid.UUID("aaaaaaaa-1111-0000-0000-000000000001"),
-        "email": "dental.owner@test.com",
-        "name": "Dr. Sarah Dental",
+        "email": "aarav.owner@test.com",
+        "name": "Dr. Aarav Sharma",
         "password": "Password123!",
-        "business_id": DENTAL_BIZ_ID,
+        "business_id": INDIAN_CLINIC_ID,
         "role": "owner",
     },
     {
         "id": uuid.UUID("aaaaaaaa-1111-0000-0000-000000000002"),
-        "email": "dental.manager@test.com",
-        "name": "Mark Manager",
+        "email": "aarav.manager@test.com",
+        "name": "Dr. Priya Nair",
         "password": "Password123!",
-        "business_id": DENTAL_BIZ_ID,
+        "business_id": INDIAN_CLINIC_ID,
         "role": "manager",
     },
     {
         "id": uuid.UUID("aaaaaaaa-1111-0000-0000-000000000003"),
-        "email": "dental.staff@test.com",
-        "name": "Stacy Staff",
+        "email": "aarav.staff@test.com",
+        "name": "Neha Frontdesk",
         "password": "Password123!",
-        "business_id": DENTAL_BIZ_ID,
+        "business_id": INDIAN_CLINIC_ID,
         "role": "staff",
     },
-    # --- Tenant 2: Luxe Glow Salon & Spa ---
+    # --- Tenant 2: Luxe Glow Salon & Spa (Los Angeles, USA) ---
     {
         "id": uuid.UUID("bbbbbbbb-2222-0000-0000-000000000001"),
         "email": "salon.owner@test.com",
@@ -77,10 +79,10 @@ async def seed_test_accounts():
     print("=== Seeding Manual Testing Accounts ===")
     async with AsyncSessionLocal() as session:
         # Verify businesses exist
-        dental = await session.get(Business, DENTAL_BIZ_ID)
+        clinic = await session.get(Business, INDIAN_CLINIC_ID)
         salon = await session.get(Business, SALON_BIZ_ID)
 
-        if not dental or not salon:
+        if not clinic or not salon:
             print("ERROR: Seeded demo businesses not found. Please run 'uv run python -m callwise.cli seed' first.")
             return
 
@@ -136,4 +138,3 @@ async def seed_test_accounts():
 
 if __name__ == "__main__":
     asyncio.run(seed_test_accounts())
-

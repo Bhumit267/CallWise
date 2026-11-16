@@ -17,11 +17,11 @@ def test_seed_creates_demo_businesses():
     with get_sync_session() as session:
         dental = session.get(Business, DENTAL_CLINIC_ID)
         assert dental is not None
-        assert dental.name == "BrightSmile Family Dental"
+        assert dental.name == "Aarav Health & Dental Clinic"
         assert dental.business_type == "Dental Clinic"
-        assert dental.timezone == "America/New_York"
-        assert dental.hours["monday"]["open"] == "08:00"
-        assert dental.hours["sunday"]["closed"] is True
+        assert dental.timezone == "Asia/Kolkata"
+        assert dental.hours["monday"]["open"] == "10:00"
+        assert dental.hours["sunday"]["closed"] is False
 
         salon = session.get(Business, SALON_SPA_ID)
         assert salon is not None
@@ -53,5 +53,5 @@ def test_cli_seed_and_list():
 
     list_result = runner.invoke(app, ["list-businesses"])
     assert list_result.exit_code == 0
-    assert "BrightSmile Family Dental" in list_result.output
+    assert "Aarav Health & Dental Clinic" in list_result.output
     assert "Luxe Glow Salon & Spa" in list_result.output

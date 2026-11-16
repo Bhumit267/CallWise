@@ -26,10 +26,10 @@ def setup_seed_and_docs(tmp_path_factory):
     # Ingest Dental Clinic knowledge
     dental_doc = tmp_dir / "dental_services.txt"
     dental_doc.write_text(
-        "BrightSmile Dental Services and Insurance:\n"
-        "We offer in-office Zoom teeth whitening for $350. The procedure takes 60 minutes.\n"
-        "Root canal treatments are performed under local anesthesia and start at $800.\n"
-        "We accept Delta Dental, MetLife, Cigna, and Aetna PPO dental insurance plans.\n"
+        "Aarav Dental Services and Insurance:\n"
+        "We offer in-office Zoom laser teeth whitening for 3500 rupees. The procedure takes 60 minutes.\n"
+        "Root canal treatments are performed under local anesthesia and start at 4500 rupees.\n"
+        "We accept cashless claims with major corporate health insurance plans.\n"
         "Emergency toothache appointments are accommodated on the same day if called before noon.",
         encoding="utf-8",
     )

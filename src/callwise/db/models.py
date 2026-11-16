@@ -1019,3 +1019,36 @@ class BlocklistEntry(Base):
         Index("ix_blocklist_business_identifier", "business_id", "identifier_type", "identifier_value"),
     )
 
+
+class VoiceSession(Base):
+    """Short-lived, single-use voice session linking WebRTC token to a business."""
+
+    __tablename__ = "voice_sessions"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    business_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    caller_identity: Mapped[str] = mapped_column(String(100), nullable=False)
+    room_name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    call_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    is_used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    used_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+    business: Mapped["Business"] = relationship("Business")
+
+

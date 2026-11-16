@@ -19,7 +19,7 @@ from callwise.api.schemas import (
     PaginatedResponse,
     parse_query_datetime,
 )
-from callwise.db.models import Business, Contact, FollowUp, Session as UserSession, User
+from callwise.db.models import Business, Contact, FollowUp, Membership, Session as UserSession, User
 
 router = APIRouter(prefix="/follow-ups", tags=["Follow-ups"])
 
@@ -163,6 +163,28 @@ async def create_follow_up(
     """Create a manual staff follow-up task."""
     user, business, _, _ = auth_ctx
 
+    if payload.contact_id is not None:
+        c_stmt = select(Contact.id).where(
+            Contact.id == payload.contact_id,
+            Contact.business_id == business.id,
+        )
+        if not (await db.execute(c_stmt)).scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Contact '{payload.contact_id}' not found.",
+            )
+
+    if payload.assigned_to_user_id is not None:
+        m_stmt = select(Membership.id).where(
+            Membership.user_id == payload.assigned_to_user_id,
+            Membership.business_id == business.id,
+        )
+        if not (await db.execute(m_stmt)).scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User '{payload.assigned_to_user_id}' not found in business.",
+            )
+
     due_dt = parse_query_datetime(payload.due_at)
 
     fu = FollowUp(
@@ -239,6 +261,15 @@ async def update_follow_up(
         fu.due_at = due_dt
 
     if payload.assigned_to_user_id is not None and payload.assigned_to_user_id != fu.assigned_to_user_id:
+        m_stmt = select(Membership.id).where(
+            Membership.user_id == payload.assigned_to_user_id,
+            Membership.business_id == business.id,
+        )
+        if not (await db.execute(m_stmt)).scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User '{payload.assigned_to_user_id}' not found in business.",
+            )
         changes["assigned_to_user_id"] = {"old": str(fu.assigned_to_user_id), "new": str(payload.assigned_to_user_id)}
         fu.assigned_to_user_id = payload.assigned_to_user_id
 

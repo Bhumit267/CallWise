@@ -8,6 +8,7 @@ from callwise.db.models import (
     Document,
     KnowledgeMiss,
     Message,
+    VoiceSession,
 )
 from callwise.db.session import (
     Base,
@@ -26,6 +27,7 @@ __all__ = [
     "CallTurn",
     "Message",
     "KnowledgeMiss",
+    "VoiceSession",
     "get_async_session",
     "get_sync_session",
     "sync_engine",

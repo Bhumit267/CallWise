@@ -243,12 +243,18 @@ async def public_widget_chat(
         )
     widget_rate_limiter.record_attempt(ip_key)
 
-    call_id = payload.call_id or uuid.uuid4()
-
     # 5. Get or create Call record
-    call_stmt = select(Call).where(Call.id == call_id, Call.business_id == business.id)
-    call_record = (await db.execute(call_stmt)).scalar_one_or_none()
-    if not call_record:
+    if payload.call_id:
+        call_stmt = select(Call).where(Call.id == payload.call_id, Call.business_id == business.id)
+        call_record = (await db.execute(call_stmt)).scalar_one_or_none()
+        if not call_record:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Call session not found.",
+            )
+        call_id = call_record.id
+    else:
+        call_id = uuid.uuid4()
         call_record = Call(
             id=call_id,
             business_id=business.id,
@@ -322,6 +328,15 @@ async def public_widget_lead_capture(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found.")
 
     business = widget.business
+
+    if payload.call_id:
+        call_stmt = select(Call).where(Call.id == payload.call_id, Call.business_id == business.id)
+        if not (await db.execute(call_stmt)).scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Call session not found.",
+            )
+
     contact = None
 
     if payload.email or payload.phone:

@@ -23,7 +23,7 @@ def test_load_eval_questions_dataset():
     questions = load_eval_questions()
     assert len(questions) >= 20, f"Expected at least 20 benchmark questions, found {len(questions)}"
 
-    dental_id = uuid.UUID("11111111-1111-1111-1111-111111111111")
+    dental_id = uuid.UUID("33333333-3333-3333-3333-333333333333")
     salon_id = uuid.UUID("22222222-2222-2222-2222-222222222222")
 
     dental_qs = [q for q in questions if q.business_id == dental_id]
@@ -47,14 +47,14 @@ def test_grade_answerable_pass():
     q = EvalQuestion(
         id="test-ans-1",
         business_id=uuid.uuid4(),
-        business_name="BrightSmile Family Dental",
+        business_name="Aarav Health & Dental Clinic",
         category="answerable",
         question="How much does teeth whitening cost?",
-        expected_keywords=["350", "whitening"],
+        expected_keywords=["3500", "whitening"],
         prohibited_keywords=[],
         description="Whitening price",
     )
-    res = grade_response(q, "In-office Zoom teeth whitening is $350.", latency_ms=420.0)
+    res = grade_response(q, "In-office Zoom laser teeth whitening is 3500 rupees.", latency_ms=420.0)
     assert res.passed is True
     assert res.is_hallucination is False
     assert res.failure_reason is None

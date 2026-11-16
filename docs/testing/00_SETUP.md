@@ -150,19 +150,20 @@ If this count is greater than 2, see [Section 10](#10-how-to-reset-database-data
 
 The `seed` routine populates the database with two isolated tenant businesses and pre-configured service catalogs:
 
-### Business Tenant 1: BrightSmile Family Dental
-- **UUID:** `11111111-1111-1111-1111-111111111111`
+### Business Tenant 1: Aarav Health & Dental Clinic
+- **UUID:** `33333333-3333-3333-3333-333333333333`
 - **Business Type:** Dental Clinic
-- **Timezone:** `America/New_York` (EST/EDT)
-- **Transfer Number:** `+1-617-555-0100`
-- **Notification Email:** `frontdesk@brightsmilefamilydental.com`
+- **Timezone:** `Asia/Kolkata` (IST)
+- **Transfer Number:** `+91-80-25251122`
+- **Notification Email:** `contact@aaravdental.test`
 - **Operating Hours:**
-  - Monday–Thursday: 08:00 – 17:00
-  - Friday: 08:00 – 13:00
-  - Saturday & Sunday: Closed
+  - Monday–Saturday: 10:00 – 20:00
+  - Sunday: 10:00 – 14:00
 - **Services Catalog:**
-  1. *Routine Cleaning & Exam* (60 min, $120.00)
-  2. *Zoom In-Office Teeth Whitening* (60 min, $350.00)
+  1. *Root Canal Treatment (Single Sitting)* (60 min, ₹4500.00)
+  2. *Zoom Laser Teeth Whitening* (60 min, ₹3500.00)
+  3. *Routine Scaling & Ultrasonic Polishing* (45 min, ₹1500.00)
+  4. *Dental Implant Consultation & 3D CBCT Scan* (45 min, ₹800.00)
   3. *Porcelain Dental Crown* (90 min, $950.00)
   4. *Emergency Dental Exam* (30 min, $85.00)
 
@@ -273,7 +274,7 @@ uv run python -m callwise.cli run-scheduler --interval 60
 > - Real-time WebRTC audio sessions
 > - Live telephone voice calls via SIP / Twilio forwarding
 
-To run the voice agent container in `dev` mode for BrightSmile Family Dental (`11111111-1111-1111-1111-111111111111`):
+To run the voice agent container in `dev` mode for Aarav Health & Dental Clinic (`33333333-3333-3333-3333-333333333333`):
 
 #### Method A: Docker Compose (Recommended)
 ```powershell
@@ -291,13 +292,13 @@ docker run --rm -it `
   --env-file .env `
   -e DATABASE_URL="postgresql+asyncpg://postgres:postgres@callwise-postgres:5432/callwise" `
   -e DATABASE_URL_SYNC="postgresql://postgres:postgres@callwise-postgres:5432/callwise" `
-  callwise-agent -b 11111111-1111-1111-1111-111111111111 -m dev
+  callwise-agent -b 33333333-3333-3333-3333-333333333333 -m dev
 ```
 
 - **What you should see:**
   The agent registers with LiveKit Cloud worker pool:
   ```text
-  Starting LiveKit voice agent worker for business 11111111-1111-1111-1111-111111111111 in 'dev' mode...
+  Starting LiveKit voice agent worker in 'dev' mode (multi-tenant per-call routing; allow_default=False)...
   INFO livekit.agents - starting worker {"version": "1.8.11", "rtc-version": "1.2.0"}
   INFO livekit.agents - registered worker {"agent_name": "", "deployment": "", "id": "AW_...", "url": "wss://callwise-....livekit.cloud", "region": "...", "protocol": 18}
   ```

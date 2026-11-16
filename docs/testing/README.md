@@ -54,7 +54,7 @@ If you have limited time and need to verify the core functionality of Callwise w
 
 1. **`SETUP-01`**: Start Docker PostgreSQL and run `callwise doctor` diagnostic.
 2. **`SETUP-02`**: Seed database tenants with `callwise seed`.
-3. **`AUTH-01`**: Log into dashboard at `http://localhost:3000/login` with `dental.owner@test.com`.
+3. **`AUTH-01`**: Log into dashboard at `http://localhost:3000/login` with `aarav.owner@test.com`.
 4. **`PAGE-INBOX-01`**: View Unified Inbox feed of calls and callback messages.
 5. **`PAGE-APPT-01`**: View Appointments calendar and table view.
 6. **`PAGE-KB-01`**: Verify ingested knowledge documents and chunk counts.

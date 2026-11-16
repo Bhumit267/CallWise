@@ -159,5 +159,94 @@ This document records bugs, gaps, inconsistencies, or unverified items identifie
   - **Initial Build Duration:** ~16 minutes (downloading PyTorch & full ML dependencies over network); layer export & packaging completed in 5m 46s.
   - **LiveKit Cloud Verification:** Container started in `dev` mode for BrightSmile Family Dental (`11111111-1111-1111-1111-111111111111`), registered with LiveKit Cloud worker pool (`AW_KDYFNncwXhWg` on `wss://callwise-0zxd56h9.livekit.cloud`), and is actively waiting for voice session jobs.
 
+---
+
+### FINDING-12: PostgreSQL Row-Level Security (RLS) Policy is Fail-Open When Tenant Session Variable is Unset
+- **Files:** `alembic/versions/7f955143fbe0_add_postgres_rls_policies.py`, `src/callwise/api/deps.py`, `tests/test_tenant_isolation.py`.
+- **Severity:** High (Tenant Isolation / Defense-in-Depth)
+- **Status:** **OPEN / LOGGED (AWAITING REMEDIATION IN PRODUCTION ARCHITECTURE)**
+- **README-Safe Summary:** In the current local development configuration, the application connects to PostgreSQL as superuser `postgres` (bypassing RLS), and RLS policies are written to evaluate to true when `app.current_business_id` is unset; tenant isolation in dev is maintained at the application/API query layer while test suites verify database-level RLS by explicitly assuming the non-superuser `callwise_app` role.
+- **What is wrong:**
+  1. **Superuser Bypass:** In development, the application connects as `POSTGRES_USER=postgres` (a PostgreSQL superuser). Superusers bypass PostgreSQL RLS policies unconditionally by default.
+  2. **Test Role Switching:** The test suites (`tests/test_tenant_isolation.py` and `tests/test_db_models_rls_isolation.py`) only pass because they explicitly execute `SET LOCAL ROLE callwise_app;` within the test transaction to drop superuser privileges to the non-superuser role created in migration `7f955143fbe0`.
+  3. **Empirical Behavior Observed in `callwise_test` as `callwise_app`:**
+     - **Scenario 1 (UNSET):** With `app.current_business_id` unset (`RESET app.current_business_id;`), executing `SELECT id, business_id, name FROM contacts;` returned **2 rows** (all seeded contacts across both Tenant A and Tenant B). **Proven Fail-Open.**
+     - **Scenario 2 (SET to Tenant A):** With `app.current_business_id = '<Tenant A UUID>'`, the same query returned **1 row** (only Tenant A's contact).
+     - **Scenario 3 (Cross-Tenant Query):** Executing `SELECT * FROM contacts WHERE business_id = '<Tenant B UUID>'` while locked to Tenant A returned **0 rows** (blocked by RLS).
+  4. **Fail-Open Policy Logic in Migration `7f955143fbe0`:**
+     ```sql
+     USING (
+         current_setting('app.current_business_id', true) IS NULL
+         OR current_setting('app.current_business_id', true) = ''
+         OR business_id::text = current_setting('app.current_business_id', true)
+     )
+     ```
+     When `app.current_business_id` is unset or empty, the condition `current_setting('app.current_business_id', true) IS NULL` evaluates to `TRUE`. Any query executed under `callwise_app` that omits setting the session variable will silently read all rows across all tenants rather than returning zero rows (fail-closed).
+- **Smallest Recommended Fix:**
+  1. Point the production application database connection string (`DATABASE_URL`) to the non-superuser `callwise_app` role (`NOSUPERUSER NOBYPASSRLS`).
+  2. Update the policy to fail-closed: require `current_setting('app.current_business_id', true)` to be non-null, non-empty, and match `business_id::text`, returning 0 rows if unset.
+  3. Enforce table-level RLS on table owners: `ALTER TABLE <table_name> FORCE ROW LEVEL SECURITY;`.
+
+---
+
+### FINDING-13: Cross-Tenant Data Injection via Body-Supplied Foreign IDs & RLS-Blinded Phone Uniqueness Collision
+- **Files Changed:**
+  - `src/callwise/api/follow_ups.py`
+  - `src/callwise/api/phone_numbers.py`
+  - `src/callwise/api/appointments.py`
+  - `src/callwise/api/widget.py`
+  - `src/callwise/api/onboarding.py`
+  - `tests/test_runtime_tenant_isolation.py`
+- **Severity:** **CRITICAL (Cross-Tenant Association, Session Integrity & Resource Hijacking)**
+- **Status:** **FIXED / VERIFIED AT RUNTIME**
+- **What was wrong:**
+  1. **Cross-Tenant Contact Linkage (`POST /api/follow-ups`):** `create_follow_up` directly assigned `payload.contact_id` without verifying tenant ownership (`Contact.business_id == business.id`). Allowed Tenant A to link tasks to Tenant B's contacts (`HTTP 201 Created`).
+  2. **Cross-Tenant Staff Assignment (`POST /api/follow-ups` and `PATCH /api/follow-ups/{id}`):** Both handlers directly assigned `payload.assigned_to_user_id` without checking if the user belonged to the business (`Membership.user_id == id AND Membership.business_id == business.id`).
+  3. **RLS-Blinded Global Phone Collision (`POST /api/phone-numbers`):** Pre-check uniqueness query under tenant-scoped RLS could not see other tenants' phone numbers. The subsequent INSERT raised an unhandled `UniqueViolationError` on `ix_phone_numbers_e164_number`, crashing with `HTTP 500`.
+  4. **Status Code Misalignment on Missing Service (`POST /api/appointments`):** `book_appointment` raised `ServiceNotFoundError` when passed a foreign `service_id`, but the endpoint handler caught it under `BookingError` and returned `HTTP 400 Bad Request` instead of `HTTP 404 Not Found`.
+  5. **Cross-Tenant Call Session Hijacking (`POST /api/widget/chat`, `POST /api/widget/lead`, `POST /api/onboarding/test-agent`):** Supplying a foreign `call_id` in request payloads failed to validate `Call.business_id == business.id`, allowing session collision or primary key errors.
+- **How it was fixed:**
+  1. In `src/callwise/api/follow_ups.py`:
+     - On `POST`, validated `payload.contact_id` against `Contact.business_id == business.id` (raises `HTTP 404 "Contact '{id}' not found."` on failure).
+     - On `POST` and `PATCH`, validated `payload.assigned_to_user_id` against `Membership.business_id == business.id` (raises `HTTP 404 "User '{id}' not found in business."` on failure).
+  2. In `src/callwise/api/phone_numbers.py`:
+     - Preserved strict tenant scoping (no tenant-bypass query).
+     - Wrapped insertion in `try ... except IntegrityError: await db.rollback(); raise HTTPException(status_code=409, detail="This phone number is not available.")`.
+     - Confirmed the database session remains clean, unpoisoned, and immediately usable for subsequent queries.
+  3. In `src/callwise/api/appointments.py`:
+     - Caught `ServiceNotFoundError` explicitly and raised `HTTP 404 Not Found`.
+  4. In `src/callwise/api/widget.py` & `src/callwise/api/onboarding.py`:
+     - If `payload.call_id` is supplied, validated `Call.id == payload.call_id AND Call.business_id == business.id`; if not found or foreign, raised generic `HTTP 404 "Call session not found."`.
+  5. In `tests/test_runtime_tenant_isolation.py`:
+     - Extended `test_body_supplied_foreign_ids_isolation` to test all create/update endpoints across both attack directions (Aarav attacking Luxe, Luxe attacking Aarav) and across Owner, Manager, and Staff roles. Verified all return 404/403 and zero records are created in DB.
+     - Extended `test_phone_number_cross_tenant_collision` to test both directions, verifying strict 409 status code, generic message, zero tenant metadata disclosure, and verified database session usability after rollback. All 4 isolation test suites pass 100%.
+
+---
+
+### FINDING-14: Voice Agent Bound to Single Business at Startup (Resolved via Multi-Tenant Per-Call Routing)
+- **Files Changed:**
+  - `src/callwise/agent/voice_agent.py`
+  - `src/callwise/cli.py`
+  - `src/callwise/config.py`
+  - `src/callwise/db/models.py`
+  - `src/callwise/api/onboarding.py`
+  - `alembic/versions/d8f419c83204_add_voice_sessions_table.py`
+  - `Dockerfile.agent`
+  - `docker-compose.yml`
+  - `.env.example`
+  - `tests/test_voice_per_call_routing.py`
+- **Severity:** High (Multi-Tenancy & Voice Routing Architecture)
+- **Status:** **FIXED / VERIFIED AT RUNTIME**
+- **What was wrong:**
+  The voice worker process was previously bound to a single business tenant at startup via the `BUSINESS_ID` environment variable and CLI `-b` argument (`WorkerOptions(entrypoint_fnc=entrypoint)` with automatic dispatch). Incoming voice calls or WebRTC rooms assigned to the worker could not dynamically resolve the tenant, meaning only the single pre-configured business could answer calls.
+- **How it was fixed:**
+  1. **Dynamic Inbound Call Resolution:** Refactored `voice_agent.py` so each incoming call inspects caller identity and attributes dynamically inside `entrypoint(ctx)`.
+  2. **SIP Telephony Routing:** For legitimate SIP participants (`participant.kind == ParticipantKind.PARTICIPANT_KIND_SIP`), extracts dialed number (`sip.trunkPhoneNumber` or `sip.dialedNumber`), normalizes to E.164, and looks up `phone_numbers` table. Non-SIP participants attempting to supply `sip.*` attributes are strictly ignored and rejected.
+  3. **Single Source of Truth on Web Voice (`VoiceSession`):** Created a short-lived, single-use `voice_sessions` database table. On token creation (`POST /api/onboarding/test-agent/webrtc-token`), backend creates a `VoiceSession` and embeds only `{"voice_session_id": "<uuid>"}` in token metadata. The voice worker validates the session in the DB, marking it used upon connection. Client-supplied `business_id` in room or token metadata is untrusted and ignored.
+  4. **Anti-Spam Rejection Rate Limiting:** Implemented `VoiceRejectionRateLimiter` capping rejection audio playback (max 3/hour per caller, max 30/min globally) to prevent TTS credit burning. Rejected calls create 0 `Call`, 0 `Contact`, and 0 `UsageRecord` rows.
+  5. **Production Startup Guard:** Added a strict guard in `start_voice_worker` that raises `RuntimeError` if `ALLOW_DEFAULT_BUSINESS` is enabled in `production` mode.
+  6. **Comprehensive Automated Test Suite:** Added `tests/test_voice_per_call_routing.py` (14 tests covering SIP routing, spoof rejection, session lifecycle, rate limiting, and cross-tenant isolation). All 14 tests pass without requiring LiveKit native C/Rust libraries.
+
+
 
 

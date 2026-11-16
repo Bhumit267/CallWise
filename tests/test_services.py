@@ -30,25 +30,25 @@ def test_seed_creates_services_and_contact_info():
     with get_sync_session() as session:
         dental = session.get(Business, DENTAL_CLINIC_ID)
         assert dental is not None
-        assert dental.transfer_number == "+1-617-555-0100"
-        assert dental.notification_email == "frontdesk@brightsmilefamilydental.com"
+        assert dental.transfer_number == "+91-80-25251122"
+        assert dental.notification_email == "contact@aaravdental.test"
 
         dental_services = session.scalars(
             select(Service).where(Service.business_id == DENTAL_CLINIC_ID)
         ).all()
         assert len(dental_services) >= 4
         service_names = [s.name for s in dental_services]
-        assert "Routine Cleaning & Exam" in service_names
-        assert "Zoom In-Office Teeth Whitening" in service_names
+        assert "Root Canal Treatment (Single Sitting)" in service_names
+        assert "Zoom Laser Teeth Whitening" in service_names
 
-        whitening = next(s for s in dental_services if s.name == "Zoom In-Office Teeth Whitening")
+        whitening = next(s for s in dental_services if s.name == "Zoom Laser Teeth Whitening")
         assert whitening.duration_minutes == 60
-        assert whitening.price == 350.0
+        assert whitening.price == 3500.0
 
         salon = session.get(Business, SALON_SPA_ID)
         assert salon is not None
         assert salon.transfer_number == "+1-310-555-0200"
-        assert salon.notification_email == "reception@luxeglowsalon.com"
+        assert salon.notification_email == "reception@luxeglowsalon.test"
 
         salon_services = session.scalars(
             select(Service).where(Service.business_id == SALON_SPA_ID)
@@ -182,9 +182,9 @@ def test_cli_list_and_add_service():
     # Test list-services
     res1 = runner.invoke(app, ["list-services", "--business-id", str(DENTAL_CLINIC_ID)])
     assert res1.exit_code == 0
-    assert "Routine Cleaning & Exam" in res1.output
-    assert "Zoom In-Office Teeth Whitening" in res1.output
-    assert "$350.00" in res1.output
+    assert "Routine Scaling & Ultrasonic Polishing" in res1.output
+    assert "Zoom Laser Teeth Whitening" in res1.output
+    assert "$3500.00" in res1.output
 
     # Test add-service
     test_svc_name = f"Fluoride Treatment {uuid.uuid4().hex[:6]}"

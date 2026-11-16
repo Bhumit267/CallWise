@@ -22,36 +22,28 @@ SALON_TZ = DEMO_BUSINESSES[1]["timezone"]  # America/Los_Angeles
 
 
 def test_dental_clinic_open_and_closed_hours():
-    """Verify dental clinic hours (Mon-Thu 8-17, Fri 8-13, weekends closed)."""
-    ny_tz = zoneinfo.ZoneInfo("America/New_York")
+    """Verify dental clinic hours (Mon-Sat 10-20, Sun 10-14)."""
+    ist_tz = zoneinfo.ZoneInfo("Asia/Kolkata")
 
-    # Wednesday at 10:00 AM NY time -> Open
-    wed_open = datetime(2026, 11, 4, 10, 0, 0, tzinfo=ny_tz)
+    # Wednesday at 11:00 AM IST -> Open
+    wed_open = datetime(2026, 11, 4, 11, 0, 0, tzinfo=ist_tz)
     assert is_open_now(DENTAL_HOURS, DENTAL_TZ, at_time=wed_open) is True
 
-    # Wednesday at 7:30 AM NY time -> Closed (opens at 8:00 AM)
-    wed_early = datetime(2026, 11, 4, 7, 30, 0, tzinfo=ny_tz)
+    # Wednesday at 9:30 AM IST -> Closed (opens at 10:00 AM)
+    wed_early = datetime(2026, 11, 4, 9, 30, 0, tzinfo=ist_tz)
     assert is_open_now(DENTAL_HOURS, DENTAL_TZ, at_time=wed_early) is False
 
-    # Wednesday at 5:01 PM NY time -> Closed (closes at 5:00 PM)
-    wed_late = datetime(2026, 11, 4, 17, 1, 0, tzinfo=ny_tz)
+    # Wednesday at 8:01 PM IST -> Closed (closes at 8:00 PM)
+    wed_late = datetime(2026, 11, 4, 20, 1, 0, tzinfo=ist_tz)
     assert is_open_now(DENTAL_HOURS, DENTAL_TZ, at_time=wed_late) is False
 
-    # Friday at 12:30 PM NY time -> Open (closes at 1:00 PM)
-    fri_open = datetime(2026, 11, 6, 12, 30, 0, tzinfo=ny_tz)
-    assert is_open_now(DENTAL_HOURS, DENTAL_TZ, at_time=fri_open) is True
+    # Sunday at 11:30 AM IST -> Open (closes at 2:00 PM)
+    sun_open = datetime(2026, 11, 8, 11, 30, 0, tzinfo=ist_tz)
+    assert is_open_now(DENTAL_HOURS, DENTAL_TZ, at_time=sun_open) is True
 
-    # Friday at 1:30 PM NY time -> Closed (Friday half day)
-    fri_late = datetime(2026, 11, 6, 13, 30, 0, tzinfo=ny_tz)
-    assert is_open_now(DENTAL_HOURS, DENTAL_TZ, at_time=fri_late) is False
-
-    # Saturday at 11:00 AM NY time -> Closed (Weekend)
-    sat = datetime(2026, 11, 7, 11, 0, 0, tzinfo=ny_tz)
-    assert is_open_now(DENTAL_HOURS, DENTAL_TZ, at_time=sat) is False
-
-    # Sunday at 2:00 PM NY time -> Closed (Weekend)
-    sun = datetime(2026, 11, 8, 14, 0, 0, tzinfo=ny_tz)
-    assert is_open_now(DENTAL_HOURS, DENTAL_TZ, at_time=sun) is False
+    # Sunday at 2:30 PM IST -> Closed (Sunday half day closes at 2:00 PM)
+    sun_late = datetime(2026, 11, 8, 14, 30, 0, tzinfo=ist_tz)
+    assert is_open_now(DENTAL_HOURS, DENTAL_TZ, at_time=sun_late) is False
 
 
 def test_salon_spa_hours_and_monday_closed():
@@ -142,14 +134,14 @@ def test_daylight_saving_time_transitions():
 
 def test_status_and_next_opening_calculation():
     """Verify natural spoken status and next opening time calculation."""
-    ny_tz = zoneinfo.ZoneInfo("America/New_York")
+    ist_tz = zoneinfo.ZoneInfo("Asia/Kolkata")
 
-    # Friday afternoon after dental clinic closed at 1:00 PM -> Should report reopening Monday
-    fri_afternoon = datetime(2026, 11, 6, 15, 0, 0, tzinfo=ny_tz)
-    status = get_business_hours_status((DENTAL_HOURS, DENTAL_TZ), at_time=fri_afternoon)
+    # Sunday afternoon after dental clinic closed at 2:00 PM -> Should report reopening tomorrow (Monday) at 10 AM
+    sun_afternoon = datetime(2026, 11, 8, 15, 0, 0, tzinfo=ist_tz)
+    status = get_business_hours_status((DENTAL_HOURS, DENTAL_TZ), at_time=sun_afternoon)
     assert status.is_open is False
     assert status.next_open_time is not None
-    assert "Monday at 8 AM" in status.next_open_time or "Monday at 8:00 AM" in status.next_open_time
+    assert "tomorrow at 10 AM" in status.next_open_time or "Monday at 10 AM" in status.next_open_time
     assert "currently closed" in status.spoken_summary.lower()
 
 
@@ -169,5 +161,5 @@ def test_cli_check_hours():
         ],
     )
     assert res.exit_code == 0
-    assert "BrightSmile Family Dental" in res.output
+    assert "Aarav Health & Dental Clinic" in res.output
     assert "[OPEN NOW]" in res.output

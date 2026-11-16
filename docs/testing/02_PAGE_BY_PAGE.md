@@ -17,10 +17,10 @@ Ensure the application stack is active:
 - Backend: `http://localhost:8000` (FastAPI)
 - Frontend: `http://localhost:3000` (Next.js)
 
-Seeded Test Users (BrightSmile Family Dental):
-- **Owner:** `dental.owner@test.com` / `Password123!`
-- **Manager:** `dental.manager@test.com` / `Password123!`
-- **Staff:** `dental.staff@test.com` / `Password123!`
+Seeded Test Users (Aarav Health & Dental Clinic):
+- **Owner:** `aarav.owner@test.com` / `Password123!`
+- **Manager:** `aarav.manager@test.com` / `Password123!`
+- **Staff:** `aarav.staff@test.com` / `Password123!`
 
 ---
 
@@ -34,13 +34,13 @@ Seeded Test Users (BrightSmile Family Dental):
 #### Test Steps
 1. Open `http://localhost:3000/login` in an Incognito/Private browser window.
 2. **Visual Inspection:** Verify the Callwise bot logo, "Sign in to Callwise", Email, Password fields, and "Sign in" button render cleanly.
-3. **Negative Test (Invalid Password):** Enter `dental.owner@test.com` and password `WrongPassword999!`. Click **"Sign in"**.
+3. **Negative Test (Invalid Password):** Enter `aarav.owner@test.com` and password `WrongPassword999!`. Click **"Sign in"**.
    - **Expected result:** Form submission displays red alert: *"Invalid email or password"*. User remains on `/login`.
 4. **Negative Test (Malformed Email):** Enter `notanemail` and click **"Sign in"**.
    - **Expected result:** HTML5 / client validation blocks submission requiring a valid email address.
 5. **Brute-Force Rate Limiting Test:** Attempt 5 incorrect logins consecutively.
    - **Expected result:** On the 5th failed attempt, backend rate limiter engages. An error banner displays: *"Too many failed login attempts. Please try again in 900 seconds."*
-6. **Positive Test (Valid Login):** Enter `dental.owner@test.com` and `Password123!`. Click **"Sign in"**.
+6. **Positive Test (Valid Login):** Enter `aarav.owner@test.com` and `Password123!`. Click **"Sign in"**.
    - **Expected result:** Loading spinner appears briefly, session cookie is established, and user is redirected to `/inbox`.
 7. **Demo Autofill Inspection:**
    - **Expected result:** A production-ready login page must use generic demo credentials.
@@ -76,7 +76,7 @@ Seeded Test Users (BrightSmile Family Dental):
 
 #### Test Steps
 1. Open `http://localhost:3000/forgot-password`.
-2. Enter `dental.owner@test.com` and click **"Send Reset Instructions"**.
+2. Enter `aarav.owner@test.com` and click **"Send Reset Instructions"**.
    - **Expected result:** Green success banner appears: *"If an account exists with this email, password reset instructions have been sent."*
 3. Check the FastAPI backend terminal console for the simulated email:
    - Note the reset link containing token: `http://localhost:3000/reset-password?token=...`
@@ -151,7 +151,7 @@ Seeded Test Users (BrightSmile Family Dental):
    - **Expected result:** Button should either be hidden from staff or clicking it displays an Access Denied message.
    - **Known deviation (FINDING-06):** Button is currently clickable by staff; upon clicking, the backend rejects the action with a red banner: *"Action requires at least 'owner' role. Your role is 'staff'."*
 4. **Owner GDPR Test:**
-   - Log out and log in as `dental.owner@test.com`. Navigate to the contact profile. Click **"Delete Customer Data (GDPR)"**.
+   - Log out and log in as `aarav.owner@test.com`. Navigate to the contact profile. Click **"Delete Customer Data (GDPR)"**.
    - **Expected result:** Confirmation dialog opens. Upon confirmation, all customer records and PII are permanently purged.
 
 ---
@@ -218,10 +218,10 @@ Seeded Test Users (BrightSmile Family Dental):
 #### Test Steps
 1. Log in as `dental.staff@test.com`.
 2. Navigate to `http://localhost:3000/test-agent`.
-3. **Greeting Inspection:** Verify initial greeting from BrightSmile Family Dental is pre-loaded.
+3. **Greeting Inspection:** Verify initial greeting from Aarav Health & Dental Clinic is pre-loaded.
 4. **Conversational Turn (Knowledge):**
-   - Type: *"What are your routine cleaning prices?"* and press Enter.
-   - **Expected result:** Agent replies with accurate pricing ($120.00). Turn latency badge displays (e.g. `1240 ms`).
+   - Type: *"What are your routine scaling prices?"* and press Enter.
+   - **Expected result:** Agent replies with accurate pricing (₹1500.00). Turn latency badge displays (e.g. `1240 ms`).
 5. **Speech Audio Synthesis Toggle:**
    - Toggle the **"Voice Audio (TTS)"** switch to ON.
    - Type: *"What are your operating hours?"*
@@ -298,15 +298,15 @@ Seeded Test Users (BrightSmile Family Dental):
    - **Expected result:** "Website Widget" link is **hidden** from sidebar. Direct URL displays **Access Denied**.
    - **Known deviation (FINDING-06):** Link is visible. Inputs are editable. Clicking save triggers a 403 error.
 2. **Manager Configuration Test:**
-   - Log in as `dental.manager@test.com`.
-   - Change Primary Color to `#0284c7` (Sky Blue). Change Widget Greeting to *"Hello! How can BrightSmile help you today?"*.
+   - Log in as `aarav.manager@test.com`.
+   - Change Primary Color to `#0284c7` (Sky Blue). Change Widget Greeting to *"Hello! How can Aarav Dental Clinic help you today?"*.
    - Click **"Save Widget Settings"**.
    - **Expected result:** Save succeeds. Embedded live preview updates in real-time.
 3. **Owner Public Key Rotation Test:**
    - As **Manager**, attempt to click **"Regenerate Public Key"**.
      - **Expected result:** Button disabled or hidden for Manager.
      - **Known deviation (FINDING-06):** Button is active; clicking triggers 403 error (*"Action requires at least 'owner' role"*).
-   - Log in as **Owner** (`dental.owner@test.com`). Click **"Regenerate Public Key"** and confirm.
+   - Log in as **Owner** (`aarav.owner@test.com`). Click **"Regenerate Public Key"** and confirm.
      - **Expected result:** New cryptographic `pk_live_...` key is issued immediately.
 
 ---
@@ -318,11 +318,11 @@ Seeded Test Users (BrightSmile Family Dental):
 
 #### Test Steps
 1. **Staff Access Boundary Test:**
-   - Log in as `dental.staff@test.com`.
+   - Log in as `aarav.staff@test.com`.
    - **Expected result:** "Usage & Limits" link is **hidden** from sidebar. Direct URL displays **Access Denied**.
    - **Known deviation (FINDING-06):** Link is visible and usage statistics are displayed to staff.
 2. **Manager Usage Inspection:**
-   - Log in as `dental.manager@test.com`.
+   - Log in as `aarav.manager@test.com`.
    - Verify Progress Gauges:
      - Voice Call Minutes: Used vs. Cap (e.g. `0 / 500 min`)
      - Web Chat Sessions: Used vs. Cap (e.g. `0 / 1000 chats`)
@@ -338,7 +338,7 @@ Seeded Test Users (BrightSmile Family Dental):
 
 #### Test Steps
 1. **Staff Access Boundary Test:**
-   - Log in as `dental.staff@test.com`.
+   - Log in as `aarav.staff@test.com`.
    - **Expected result:** "Team & Access" link is **hidden** from sidebar. Direct URL navigation to `/team` displays a clean **Access Denied / Restricted to Managers and Owners** page.
    - **Known deviation (FINDING-06):** Link is visible. Navigating to `/team` displays:
      - Counters showing *"Active Team & Invites: 0"*
@@ -346,14 +346,14 @@ Seeded Test Users (BrightSmile Family Dental):
      - An active *"Invite Member"* button
      - A red error banner: *"Action requires at least 'manager' role. Your role is 'staff'."*
 2. **Manager Access Test:**
-   - Log in as `dental.manager@test.com`.
+   - Log in as `aarav.manager@test.com`.
    - **Expected result:** Manager can view the active team members list and pending invitations. Manager cannot edit roles or remove members.
 3. **Owner Team Management Test:**
-   - Log in as `dental.owner@test.com`.
+   - Log in as `aarav.owner@test.com`.
    - Click **"Invite Member"**. Enter Email: `new.colleague@test.com`, Role: `Staff Member`. Click **"Send Invitation"**.
    - **Expected result:** Invitation appears under "Pending Invitations".
 4. **Owner Role Modification:**
-   - Locate `dental.staff@test.com` in the member table. Click **"Edit Role"**. Select `Manager / Admin`. Click **"Save Role"**.
+   - Locate `aarav.staff@test.com` in the member table. Click **"Edit Role"**. Select `Manager / Admin`. Click **"Save Role"**.
    - **Expected result:** Stacy's role badge updates to purple `Manager` tag.
 5. **Security Audit Log Tab:**
    - Click **"Security Audit Logs"** tab.
@@ -369,7 +369,7 @@ Seeded Test Users (BrightSmile Family Dental):
 - **Purpose:** Embeddable iframe providing the customer-facing chat receptionist on external websites.
 
 #### Test Steps
-1. Retrieve the public key for BrightSmile Family Dental (from `/widget` page or API).
+1. Retrieve the public key for Aarav Health & Dental Clinic (from `/widget` page or API).
 2. Open in browser: `http://localhost:3000/widget-frame/<public_key>`.
 3. **Visual Inspection:** Verify tenant branding, custom header color, business title, and avatar icon render.
 4. **Interactive Chat:**

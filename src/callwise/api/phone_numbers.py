@@ -7,6 +7,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from callwise.api.audit import record_audit_log
@@ -68,13 +69,13 @@ async def create_phone_number(
     user, business, _, _ = auth_ctx
     norm_phone = normalize_e164(payload.e164_number)
 
-    # Check for uniqueness across the platform
+    # Check for uniqueness within tenant
     existing_stmt = select(PhoneNumber).where(PhoneNumber.e164_number == norm_phone)
     existing = (await db.execute(existing_stmt)).scalar_one_or_none()
     if existing:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Phone number {norm_phone} is already assigned to a business tenant.",
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This phone number is not available.",
         )
 
     phone = PhoneNumber(
@@ -86,19 +87,25 @@ async def create_phone_number(
         is_active=payload.is_active,
     )
     db.add(phone)
-    await db.flush()
-
-    await record_audit_log(
-        db=db,
-        business_id=business.id,
-        user_id=user.id,
-        action="phone_number_create",
-        resource_type="phone_number",
-        resource_id=str(phone.id),
-        changes={"e164_number": phone.e164_number, "label": phone.label},
-        ip_address=request.client.host if request.client else None,
-    )
-    await db.commit()
+    try:
+        await db.flush()
+        await record_audit_log(
+            db=db,
+            business_id=business.id,
+            user_id=user.id,
+            action="phone_number_create",
+            resource_type="phone_number",
+            resource_id=str(phone.id),
+            changes={"e164_number": phone.e164_number, "label": phone.label},
+            ip_address=request.client.host if request.client else None,
+        )
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This phone number is not available.",
+        )
     return phone
 
 

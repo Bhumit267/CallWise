@@ -52,15 +52,16 @@ const path = require('path');
   } finally {
     await browser.close();
 
-    // Self-cleaning teardown: remove test business and user created during test
-    console.log('7. Running self-cleaning teardown...');
+    // Self-cleaning teardown: remove ONLY the specific user and business created during this test run
+    console.log(`7. Running self-cleaning teardown for ${testEmail}...`);
     try {
       const rootDir = path.resolve(__dirname, '../../..');
-      execSync('uv run python scripts/testing/clean_test_biz.py', {
+      const cleanupCmd = `uv run python -c "from callwise.db.session import SyncSessionLocal; from callwise.db.models import Business, User, Membership; from sqlalchemy import select, delete; s = SyncSessionLocal(); u = s.scalar(select(User).where(User.email == '${testEmail}')); mems = s.scalars(select(Membership).where(Membership.user_id == u.id)).all() if u else []; biz_ids = [m.business_id for m in mems]; s.execute(delete(User).where(User.id == u.id)) if u else None; [s.execute(delete(Business).where(Business.id == bid)) for bid in biz_ids]; s.commit(); s.close()"`;
+      execSync(cleanupCmd, {
         cwd: rootDir,
         stdio: 'inherit'
       });
-      console.log('8. Test database cleaned: only original seed businesses remain.');
+      console.log(`8. Test database cleaned: purged user ${testEmail} and associated test business.`);
     } catch (cleanupErr) {
       console.warn('Cleanup warning:', cleanupErr.message);
     }

@@ -64,15 +64,15 @@ The following matrix documents the **Official Product Intended Design**, the **B
 
 To ensure complete isolation and reproducible test execution, the following test accounts are configured across both seeded demo businesses.
 
-### Tenant 1: BrightSmile Family Dental
-- **Business UUID:** `11111111-1111-1111-1111-111111111111`
-- **Timezone:** `America/New_York`
+### Tenant 1: Aarav Health & Dental Clinic
+- **Business UUID:** `33333333-3333-3333-3333-333333333333`
+- **Timezone:** `Asia/Kolkata`
 
 | Role | Name | Email Address | Password | User UUID |
 |---|---|---|---|---|
-| **Owner** | Dr. Sarah Dental | `dental.owner@test.com` | `Password123!` | `aaaaaaaa-1111-0000-0000-000000000001` |
-| **Manager** | Mark Manager | `dental.manager@test.com` | `Password123!` | `aaaaaaaa-1111-0000-0000-000000000002` |
-| **Staff** | Stacy Staff | `dental.staff@test.com` | `Password123!` | `aaaaaaaa-1111-0000-0000-000000000003` |
+| **Owner** | Dr. Aarav Sharma | `aarav.owner@test.com` | `Password123!` | `aaaaaaaa-1111-0000-0000-000000000001` |
+| **Manager** | Priya Manager | `aarav.manager@test.com` | `Password123!` | `aaaaaaaa-1111-0000-0000-000000000002` |
+| **Staff** | Rohan Staff | `aarav.staff@test.com` | `Password123!` | `aaaaaaaa-1111-0000-0000-000000000003` |
 
 ### Tenant 2: Luxe Glow Salon & Spa
 - **Business UUID:** `22222222-2222-2222-2222-222222222222`
@@ -100,12 +100,12 @@ uv run python scripts/testing/seed_test_accounts.py
 ### Expected Output
 ```
 === Seeding Manual Testing Accounts ===
-[CREATED] User: dental.owner@test.com (Name: Dr. Sarah Dental)
-  └─ Added membership: owner in 11111111-1111-1111-1111-111111111111
-[CREATED] User: dental.manager@test.com (Name: Mark Manager)
-  └─ Added membership: manager in 11111111-1111-1111-1111-111111111111
-[CREATED] User: dental.staff@test.com (Name: Stacy Staff)
-  └─ Added membership: staff in 11111111-1111-1111-1111-111111111111
+[CREATED] User: aarav.owner@test.com (Name: Dr. Aarav Sharma)
+  └─ Added membership: owner in 33333333-3333-3333-3333-333333333333
+[CREATED] User: aarav.manager@test.com (Name: Priya Manager)
+  └─ Added membership: manager in 33333333-3333-3333-3333-333333333333
+[CREATED] User: aarav.staff@test.com (Name: Rohan Staff)
+  └─ Added membership: staff in 33333333-3333-3333-3333-333333333333
 [CREATED] User: salon.owner@test.com (Name: Chloe Glow)
   └─ Added membership: owner in 22222222-2222-2222-2222-222222222222
 [CREATED] User: salon.manager@test.com (Name: Mike Stylist)
@@ -134,7 +134,7 @@ If you prefer to test user creation through the web interface itself:
 4. The system creates the `User` and `Business` records, assigns the `owner` role in `memberships`, establishes an authenticated session, and redirects to the `/onboarding` wizard.
 
 ### Method B: Team Member Invitation Flow (Creates Manager or Staff)
-1. Sign in as an **Owner** or **Manager** (e.g. `dental.owner@test.com`).
+1. Sign in as an **Owner** or **Manager** (e.g. `aarav.owner@test.com`).
 2. Navigate to **Team & Access** (`http://localhost:3000/team`).
 3. Click the **"Invite Member"** button in the top right.
 4. Fill in:
@@ -144,7 +144,7 @@ If you prefer to test user creation through the web interface itself:
 6. Because `EMAIL_PROVIDER=console` is active, open the backend terminal running FastAPI (`uv run python -m uvicorn callwise.api.main:app`) to inspect the generated invitation link:
    ```
    [ConsoleEmailProvider] Sending email to: invited.colleague@test.com
-   Subject: You've been invited to join BrightSmile Family Dental on Callwise
+   Subject: You've been invited to join Aarav Health & Dental Clinic on Callwise
    Body: Click here to accept: http://localhost:3000/accept-invite?token=...
    ```
 7. Open the invitation link in an incognito window, enter a full name and password, and complete signup.
@@ -155,8 +155,8 @@ If you prefer to test user creation through the web interface itself:
 
 To confirm account setup in the web dashboard:
 1. Open `http://localhost:3000/login`.
-2. Enter `dental.owner@test.com` and `Password123!`.
-3. Verify the top navbar shows the badge **`Owner`** and business name **`BrightSmile Family Dental`**.
+2. Enter `aarav.owner@test.com` and `Password123!`.
+3. Verify the top navbar shows the badge **`Owner`** and business name **`Aarav Health & Dental Clinic`**.
 4. Log out using the exit icon in the bottom left.
-5. Log in as `dental.staff@test.com` and verify the badge shows **`Staff`**.
+5. Log in as `aarav.staff@test.com` and verify the badge shows **`Staff`**.
 

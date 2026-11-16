@@ -34,6 +34,20 @@ class Settings(BaseSettings):
     livekit_url: str = Field(default="", description="LiveKit server WebSocket URL")
     livekit_api_key: str = Field(default="", description="LiveKit API Key")
     livekit_api_secret: str = Field(default="", description="LiveKit API Secret")
+    livekit_agent_name: Optional[str] = Field(
+        default=None,
+        description="Explicit agent name for LiveKit explicit dispatch. Leave None for automatic dispatch",
+    )
+
+    # Multi-tenant Voice & Routing
+    allow_default_business: bool = Field(
+        default=False,
+        description="Allow fallback to default BUSINESS_ID when inbound call/token lacks tenant routing info (DEV ONLY)",
+    )
+    default_business_id: Optional[str] = Field(
+        default="33333333-3333-3333-3333-333333333333",
+        description="Default business UUID fallback when allow_default_business=True",
+    )
 
     # LLM Settings
     llm_provider: Literal["groq", "gemini", "ollama"] = Field(

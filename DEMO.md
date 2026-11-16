@@ -6,14 +6,13 @@ Callwise is a multi-tenant voice and chat AI receptionist built for local busine
 
 ## 1. Quickstart Login (Seed User)
 
-Callwise comes pre-seeded with full demonstration businesses (Apex Dental Clinic and Serenity Spa).
+Callwise comes pre-seeded with two demonstration businesses (Aarav Health & Dental Clinic and Luxe Glow Salon & Spa).
 
 - **Web Dashboard URL:** [http://localhost:3000](http://localhost:3000)
 - **Login URL:** [http://localhost:3000/login](http://localhost:3000/login)
 - **Demo Credentials:**
-  - **Email:** `dental.owner@test.com`
+  - **Email:** `aarav.owner@test.com`
   - **Password:** `Password123!`
-  - *(Tip: Click the "Autofill dental.owner@test.com" button on the login screen to fill credentials instantly).*
 
 ---
 
@@ -106,7 +105,7 @@ Callwise supports live voice calls via LiveKit SIP trunks and free SIP softphone
 3. In Callwise Dashboard -> **Phone Numbers**, link the extension or phone number (e.g. `+15551234567`).
 4. Start the voice worker:
    ```powershell
-   uv run python -m callwise.cli run-agent --business-id 11111111-1111-1111-1111-111111111111
+   uv run python -m callwise.cli run-agent --business-id 33333333-3333-3333-3333-333333333333
    ```
 5. Place a test call from your softphone to the assigned number. The AI receptionist will pick up and speak the customized greeting.
 
@@ -136,7 +135,7 @@ curl -i http://localhost:8000/metrics
 
 ### 3. Public Widget Configuration Retrieval
 ```bash
-curl -i http://localhost:8000/api/widget/config/cw_live_11111111111111111111111111111111
+curl -i http://localhost:8000/api/widget/config/cw_live_33333333333333333333333333333333
 ```
 
 ### 4. Interactive Public Chat Message
@@ -144,7 +143,7 @@ curl -i http://localhost:8000/api/widget/config/cw_live_111111111111111111111111
 curl -i -X POST http://localhost:8000/api/widget/chat \
   -H "Content-Type: application/json" \
   -d '{
-    "public_key": "cw_live_11111111111111111111111111111111",
+    "public_key": "cw_live_33333333333333333333333333333333",
     "session_id": "demo-session-123",
     "message": "What time do you open on Tuesday?"
   }'
@@ -155,7 +154,7 @@ curl -i -X POST http://localhost:8000/api/widget/chat \
 curl -i -X POST http://localhost:8000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "dental.owner@test.com",
+    "email": "aarav.owner@test.com",
     "password": "Password123!"
   }'
 ```
@@ -244,8 +243,8 @@ uv run python -m callwise.cli killswitch enable --reason "Scheduled maintenance"
 uv run python -m callwise.cli killswitch disable
 
 # 6. Manage caller blocklist
-uv run python -m callwise.cli blocklist add 11111111-1111-1111-1111-111111111111 "+15559998888" --reason "Telemarketing flood" --days 30
-uv run python -m callwise.cli blocklist list 11111111-1111-1111-1111-111111111111
-uv run python -m callwise.cli blocklist remove 11111111-1111-1111-1111-111111111111 "+15559998888"
+uv run python -m callwise.cli blocklist add 33333333-3333-3333-3333-333333333333 "+15559998888" --reason "Telemarketing flood" --days 30
+uv run python -m callwise.cli blocklist list 33333333-3333-3333-3333-333333333333
+uv run python -m callwise.cli blocklist remove 33333333-3333-3333-3333-333333333333 "+15559998888"
 ```
 

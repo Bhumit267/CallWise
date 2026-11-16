@@ -10,23 +10,23 @@ Each test is mapped directly to actual routes in `src/callwise/api/` and schemas
 
 1. **Strict Content-Type:** All POST/PUT/PATCH requests require `Content-Type: application/json`.
 2. **Bearer Token Authentication:** Protected routes expect `Authorization: Bearer <token>`.
-3. **Multi-Tenant Isolation:** Verify that authenticated users can only view or mutate data belonging to their active business context (`11111111-1111-1111-1111-111111111111` for BrightSmile). Any attempt to access data belonging to Luxe Glow (`22222222-2222-2222-2222-222222222222`) must return `404 Not Found` or `403 Forbidden`.
+3. **Multi-Tenant Isolation:** Verify that authenticated users can only view or mutate data belonging to their active business context (`33333333-3333-3333-3333-333333333333` for Aarav Health & Dental Clinic). Any attempt to access data belonging to Luxe Glow (`22222222-2222-2222-2222-222222222222`) must return `404 Not Found` or `403 Forbidden`.
 4. **Validation Error Formatting:** Ensure validation errors return HTTP 422 with structured details, which the frontend converts into human-readable strings via `formatApiError`.
 
 ---
 
 ## 1. PowerShell Authentication Helper
 
-Before executing test cases, open a PowerShell terminal and run this initialization snippet. It authenticates as the BrightSmile Owner and stores the token and headers in `$headers`:
+Before executing test cases, open a PowerShell terminal and run this initialization snippet. It authenticates as the Aarav Clinic Owner and stores the token and headers in `$headers`:
 
 ```powershell
 # 1. Base URL
 $API_BASE = "http://localhost:8000"
 
-# 2. Login as BrightSmile Owner (dental.owner@test.com)
+# 2. Login as Aarav Clinic Owner (aarav.owner@test.com)
 $loginBody = @{
-    email    = "dental.owner@test.com"
-    password = "password123"
+    email    = "aarav.owner@test.com"
+    password = "Password123!"
 } | ConvertTo-Json
 
 $authResp = Invoke-RestMethod -Uri "$API_BASE/api/auth/login" -Method Post -Body $loginBody -ContentType "application/json"
@@ -79,12 +79,12 @@ Section 2.16: System Health & Diagnostics (API-SYS-01 .. API-SYS-03)
 - **Permissions:** Public
 - **Test Command:**
   ```powershell
-  $body = @{ email = "dental.owner@test.com"; password = "password123" } | ConvertTo-Json
+  $body = @{ email = "aarav.owner@test.com"; password = "Password123!" } | ConvertTo-Json
   $res = Invoke-RestMethod -Uri "$API_BASE/api/auth/login" -Method Post -Body $body -ContentType "application/json"
   $res | Select-Object -ExpandProperty user
   ```
 - **Expected Status:** `200 OK`
-- **Expected Output:** Returns `access_token`, `token_type: "bearer"`, and user object containing `email: "dental.owner@test.com"`, `role: "owner"`.
+- **Expected Output:** Returns `access_token`, `token_type: "bearer"`, and user object containing `email: "aarav.owner@test.com"`, `role: "owner"`.
 
 #### `API-AUTH-02`: Current User Profile (`GET /api/auth/me`)
 - **Method:** `GET`
@@ -95,7 +95,7 @@ Section 2.16: System Health & Diagnostics (API-SYS-01 .. API-SYS-03)
   Invoke-RestMethod -Uri "$API_BASE/api/auth/me" -Method Get -Headers $headers
   ```
 - **Expected Status:** `200 OK`
-- **Expected Output:** JSON object with `id`, `email`, `role`, and `business_id: "11111111-1111-1111-1111-111111111111"`.
+- **Expected Output:** JSON object with `id`, `email`, `role`, and `business_id: "33333333-3333-3333-3333-333333333333"`.
 
 #### `API-AUTH-03`: CSRF Cookie Generation (`GET /api/auth/csrf`)
 - **Method:** `GET`
@@ -140,7 +140,7 @@ Section 2.16: System Health & Diagnostics (API-SYS-01 .. API-SYS-03)
 - **Route:** `/api/auth/forgot-password`
 - **Test Command:**
   ```powershell
-  $body = @{ email = "dental.owner@test.com" } | ConvertTo-Json
+  $body = @{ email = "aarav.owner@test.com" } | ConvertTo-Json
   Invoke-RestMethod -Uri "$API_BASE/api/auth/forgot-password" -Method Post -Body $body -ContentType "application/json"
   ```
 - **Expected Status:** `200 OK`
@@ -212,7 +212,7 @@ Section 2.16: System Health & Diagnostics (API-SYS-01 .. API-SYS-03)
   $sett | Select-Object name, business_type, timezone, transfer_number
   ```
 - **Expected Status:** `200 OK`
-- **Expected Output:** `name: "BrightSmile Family Dental"`, `business_type: "Dental Clinic"`, `timezone: "America/New_York"`.
+- **Expected Output:** `name: "Aarav Health & Dental Clinic"`, `business_type: "Dental Clinic"`, `timezone: "Asia/Kolkata"`.
 
 #### `API-SETT-02`: Update Business Profile (`PUT /api/settings/profile`)
 - **Method:** `PUT`
@@ -221,11 +221,11 @@ Section 2.16: System Health & Diagnostics (API-SYS-01 .. API-SYS-03)
 - **Test Command:**
   ```powershell
   $update = @{
-      name            = "BrightSmile Family Dental"
+      name            = "Aarav Health & Dental Clinic"
       business_type   = "Dental Clinic"
-      timezone        = "America/New_York"
-      greeting        = "Thank you for calling BrightSmile Family Dental. How can our team help your smile today?"
-      transfer_number = "+1-617-555-0100"
+      timezone        = "Asia/Kolkata"
+      greeting        = "Namaste! Thank you for calling Aarav Health & Dental Clinic, Indiranagar. How can I assist you with your dental care today?"
+      transfer_number = "+91-80-25251122"
   } | ConvertTo-Json
   Invoke-RestMethod -Uri "$API_BASE/api/settings/profile" -Method Put -Body $update -Headers $headers
   ```
@@ -314,7 +314,7 @@ Section 2.16: System Health & Diagnostics (API-SYS-01 .. API-SYS-03)
   $sources | Format-Table id, filename, source_type, status, chunk_count
   ```
 - **Expected Status:** `200 OK`
-- **Expected Output:** Lists ingested documents and Q&A items for BrightSmile.
+- **Expected Output:** Lists ingested documents and Q&A items for Aarav Health & Dental Clinic.
 
 #### `API-KB-02`: Create Manual Q&A Pair (`POST /api/knowledge/qa`)
 - **Method:** `POST`
@@ -322,8 +322,8 @@ Section 2.16: System Health & Diagnostics (API-SYS-01 .. API-SYS-03)
 - **Test Command:**
   ```powershell
   $qaBody = @{
-      question = "Do you accept Delta Dental insurance plans?"
-      answer   = "Yes, BrightSmile Family Dental is an in-network premier provider for Delta Dental PPO and Premier networks."
+      question = "Do you accept UPI QR code payments?"
+      answer   = "Yes, Aarav Health & Dental Clinic accepts all major UPI apps and QR code scan-and-pay at the reception desk."
   } | ConvertTo-Json
   $qa = Invoke-RestMethod -Uri "$API_BASE/api/knowledge/qa" -Method Post -Body $qaBody -Headers $headers
   Write-Host "Created Q&A ID: $($qa.id)" -ForegroundColor Green
@@ -403,7 +403,7 @@ Section 2.16: System Health & Diagnostics (API-SYS-01 .. API-SYS-03)
   $calls | Format-Table id, caller_phone, duration_seconds, status, sentiment
   ```
 - **Expected Status:** `200 OK`
-- **Expected Output:** Array of calls scoped to BrightSmile.
+- **Expected Output:** Array of calls scoped to Aarav Health & Dental Clinic.
 
 #### `API-CALL-02`: Get Call Detail with Transcripts (`GET /api/calls/{call_id}`)
 - **Method:** `GET`
@@ -668,7 +668,7 @@ Section 2.16: System Health & Diagnostics (API-SYS-01 .. API-SYS-03)
   $team | Format-Table id, email, full_name, role
   ```
 - **Expected Status:** `200 OK`
-- **Expected Output:** Lists BrightSmile users (`dental.owner@test.com` [owner], manager, staff).
+- **Expected Output:** Lists Aarav Clinic users (`aarav.owner@test.com` [owner], manager, staff).
 
 #### `API-TEAM-02`: List Pending Invites (`GET /api/team/invites`)
 - **Method:** `GET`
@@ -685,7 +685,7 @@ Section 2.16: System Health & Diagnostics (API-SYS-01 .. API-SYS-03)
 - **Test Command:**
   ```powershell
   $inviteBody = @{
-      email = "reception.assistant@brightsmilefamilydental.com"
+      email = "frontdesk@aaravdental.test"
       role  = "staff"
   } | ConvertTo-Json
   $invite = Invoke-RestMethod -Uri "$API_BASE/api/team/invites" -Method Post -Body $inviteBody -Headers $headers
@@ -826,7 +826,7 @@ Section 2.16: System Health & Diagnostics (API-SYS-01 .. API-SYS-03)
   $pubConfig | Select-Object business_name, primary_color, greeting
   ```
 - **Expected Status:** `200 OK`
-- **Expected Output:** Returns public branding (`business_name: "BrightSmile Family Dental"`) without exposing internal database IDs or secret keys.
+- **Expected Output:** Returns public branding (`business_name: "Aarav Health & Dental Clinic"`) without exposing internal database IDs or secret keys.
 
 #### `API-WIDG-02`: Public Chat Turn (`POST /api/widget/chat`)
 - **Method:** `POST`
@@ -844,7 +844,7 @@ Section 2.16: System Health & Diagnostics (API-SYS-01 .. API-SYS-03)
   Write-Host "AI Response: $($chatResp.reply)" -ForegroundColor Green
   ```
 - **Expected Status:** `200 OK`
-- **Expected Output:** Answer generated by `TextAgent` referencing Friday operating hours (closes at 13:00).
+- **Expected Output:** Answer generated by `TextAgent` referencing Friday operating hours (closes at 20:00).
 
 #### `API-WIDG-03`: Submit Lead from Widget (`POST /api/widget/lead`)
 - **Method:** `POST`
@@ -882,7 +882,7 @@ Section 2.16: System Health & Diagnostics (API-SYS-01 .. API-SYS-03)
   $patchWidget = @{
       is_enabled    = $true
       primary_color = "#2563EB"
-      greeting      = "Welcome to BrightSmile! How may our AI assistant help you?"
+      greeting      = "Namaste! Welcome to Aarav Health & Dental Clinic! How may our AI assistant help you?"
   } | ConvertTo-Json
   Invoke-RestMethod -Uri "$API_BASE/api/widget/settings" -Method Patch -Body $patchWidget -Headers $headers
   ```
@@ -908,11 +908,11 @@ Section 2.16: System Health & Diagnostics (API-SYS-01 .. API-SYS-03)
 - **Test Command:**
   ```powershell
   $onbd = @{
-      business_name   = "BrightSmile Family Dental"
+      business_name   = "Aarav Health & Dental Clinic"
       business_type   = "Dental Clinic"
-      timezone        = "America/New_York"
-      greeting        = "Thank you for calling BrightSmile Family Dental."
-      transfer_number = "+1-617-555-0100"
+      timezone        = "Asia/Kolkata"
+      greeting        = "Namaste! Thank you for calling Aarav Health & Dental Clinic."
+      transfer_number = "+91-80-25251122"
   } | ConvertTo-Json
   Invoke-RestMethod -Uri "$API_BASE/api/onboarding/setup" -Method Post -Body $onbd -Headers $headers
   ```

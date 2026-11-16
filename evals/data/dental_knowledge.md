@@ -1,25 +1,22 @@
-# BrightSmile Family Dental - Knowledge Base & FAQ
+# Aarav Health & Dental Clinic - Knowledge Base & FAQ
 
 ## About Us
-BrightSmile Family Dental is a premier dental practice committed to compassionate, gentle, and comprehensive dental care for patients of all ages.
-- Address: 123 Healthcare Blvd, Suite 200, Boston, MA 02118
-- Parking: Free dedicated patient parking is located directly behind the clinic.
-- Lead Dentist: Dr. Sarah Johnson, DDS
-- Orthodontist: Dr. Michael Chang, DMD
+Aarav Health & Dental Clinic is a specialized dental clinic committed to gentle, high-precision oral healthcare.
+- Address: 100 Feet Road, HAL 2nd Stage, Indiranagar, Bengaluru, Karnataka 560038
+- Nearest Landmark: Near 12th Main junction, 600m from Indiranagar Metro Station (Exit A).
+- Parking: Dedicated two-wheeler parking in front; complimentary valet parking for four-wheelers during clinic hours.
+- Clinical Team: Senior specialist dental surgeons, BDS, MDS in Endodontics and Oral Implantology.
 
 ## Services and Pricing
-- Routine Cleaning, Exam & Bitewing X-Rays: $120
-- In-Office Zoom Teeth Whitening: $350 (includes full consultation, 45-minute treatment, and home touch-up kit)
-- Single Porcelain Dental Crown: $950
-- Comprehensive Emergency Dental Exam: $85
-- Root Canal Therapy (molar or anterior): Starting from $800
+- Root Canal Treatment (Single Sitting): ₹4,500
+- Zoom Laser Teeth Whitening: ₹3,500 (in-clinic enamel-safe laser procedure)
+- Routine Scaling & Ultrasonic Polishing: ₹1,500
+- Dental Implant Consultation & 3D CBCT Scan: ₹800
 
-## Insurance & Payment
-- In-Network Insurance Plans: Delta Dental, Cigna Dental, MetLife, Aetna Dental, and BlueCross BlueShield.
-- Out-of-network plans: We file out-of-network insurance claims on behalf of patients.
-- Payment Options: Cash, major credit cards (Visa, MasterCard, Amex), FSA/HSA, and CareCredit financing.
+## Payment & Insurance
+- Payment Methods: All major UPI applications (including QR code scan-and-pay), debit/credit cards, net banking, and cash.
+- Health Insurance: Cashless corporate dental claims supported for major health insurance providers. Complete itemized tax invoices and diagnostic digital x-rays provided for reimbursement.
 
-## Appointment & Cancellation Policy
-- Cancellations: We require at least 24 hours advance notice to cancel or reschedule an appointment. Cancellations made with less than 24 hours notice incur a $50 late cancellation fee.
-- Emergencies: Same-day emergency appointments are available for severe toothaches, chipped teeth, and trauma. Please call early in the morning.
-
+## Appointment & Operating Hours
+- Operating Hours: Monday through Saturday 10:00 AM – 8:00 PM IST; Sunday 10:00 AM – 2:00 PM IST.
+- Cancellations: We request at least 24 hours advance notice to reschedule or cancel an appointment.

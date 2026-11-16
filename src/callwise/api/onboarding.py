@@ -1,7 +1,8 @@
 """Onboarding Wizard API router: new business initial setup, website/document queue, and test receptionist chat."""
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+import json
 import time
 from typing import Any, Dict, List, Optional
 import uuid
@@ -17,7 +18,16 @@ from callwise.api.audit import record_audit_log
 from callwise.api.deps import get_auth_context, get_db, get_tenant_db
 from callwise.api.permissions import require_owner, require_staff
 from callwise.api.settings import ServiceCreate
-from callwise.db.models import Business, Call, Job, Membership, Service, Session as UserSession, User
+from callwise.db.models import (
+    Business,
+    Call,
+    Job,
+    Membership,
+    Service,
+    Session as UserSession,
+    User,
+    VoiceSession,
+)
 from callwise.knowledge.url_fetcher import validate_public_url
 
 router = APIRouter(prefix="/onboarding", tags=["Onboarding"])
@@ -222,12 +232,17 @@ async def test_receptionist_agent(
     """
     _, business, _, _ = auth_ctx
 
-    call_id = payload.call_id or uuid.uuid4()
-
-    # Ensure a Call session record exists for transcript logging
-    call_stmt = select(Call).where(Call.id == call_id, Call.business_id == business.id)
-    call_record = (await db.execute(call_stmt)).scalar_one_or_none()
-    if not call_record:
+    if payload.call_id:
+        call_stmt = select(Call).where(Call.id == payload.call_id, Call.business_id == business.id)
+        call_record = (await db.execute(call_stmt)).scalar_one_or_none()
+        if not call_record:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Call session not found.",
+            )
+        call_id = call_record.id
+    else:
+        call_id = uuid.uuid4()
         call_record = Call(
             id=call_id,
             business_id=business.id,
@@ -272,8 +287,10 @@ async def get_test_agent_webrtc_token(
         )
 
     call_id = uuid.uuid4()
+    voice_session_id = uuid.uuid4()
     room_name = f"call-{business.id}-{uuid.uuid4().hex[:8]}"
     participant_identity = f"web-caller-{uuid.uuid4().hex[:6]}"
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
 
     # Ensure an initial active Call record exists
     new_call = Call(
@@ -283,6 +300,19 @@ async def get_test_agent_webrtc_token(
         summary=f"In-browser WebRTC live voice call for {business.name}",
     )
     db.add(new_call)
+
+    # Create short-lived single-use VoiceSession linking session_id -> business_id
+    voice_session = VoiceSession(
+        id=voice_session_id,
+        business_id=business.id,
+        user_id=user.id if user else None,
+        caller_identity=participant_identity,
+        room_name=room_name,
+        call_id=call_id,
+        is_used=False,
+        expires_at=expires_at,
+    )
+    db.add(voice_session)
     await db.flush()
 
     try:
@@ -295,6 +325,7 @@ async def get_test_agent_webrtc_token(
             )
             .with_identity(participant_identity)
             .with_name(user.name if user else "Web Caller")
+            .with_metadata(json.dumps({"voice_session_id": str(voice_session_id)}))
             .with_grants(
                 VideoGrants(
                     room_join=True,

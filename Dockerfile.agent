@@ -50,7 +50,8 @@ RUN groupadd -g 1001 callwise && \
 ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    HF_HOME="/home/callwise/.cache/huggingface"
+    HF_HOME="/home/callwise/.cache/huggingface" \
+    BUSINESS_ID="33333333-3333-3333-3333-333333333333"
 
 # Switch to non-root user
 USER callwise
@@ -63,5 +64,5 @@ RUN python -m livekit.agents download-files && \
     python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 
 ENTRYPOINT ["python", "-m", "callwise.cli", "run-agent"]
-CMD ["-b", "11111111-1111-1111-1111-111111111111", "-m", "dev"]
+CMD ["-m", "dev"]
 

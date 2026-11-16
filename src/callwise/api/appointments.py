@@ -21,7 +21,7 @@ from callwise.api.schemas import (
     mask_phone_number,
     parse_query_datetime,
 )
-from callwise.booking.service import BookingError, book_appointment
+from callwise.booking.service import BookingError, ServiceNotFoundError, book_appointment
 from callwise.db.models import (
     Appointment,
     Business,
@@ -228,6 +228,11 @@ async def create_manual_appointment(
             customer_name=payload.customer_name,
             customer_phone=payload.customer_phone,
             customer_email=str(payload.customer_email) if payload.customer_email else None,
+        )
+    except ServiceNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
         )
     except BookingError as exc:
         raise HTTPException(

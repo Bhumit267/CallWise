@@ -405,22 +405,44 @@ def cli_chat(
 
 @app.command("run-agent")
 def cli_run_agent(
-    business_id: str = typer.Option(..., "--business-id", "-b", help="Business tenant UUID"),
+    business_id: Optional[str] = typer.Option(
+        None,
+        "--business-id",
+        "-b",
+        help="Optional fallback business UUID for dev/console testing",
+    ),
     mode: str = typer.Option(
         "dev",
         "--mode",
         "-m",
         help="Worker mode: 'dev' (connect to LiveKit Cloud / Playground) or 'console' (local mic/speaker)",
     ),
+    allow_default: bool = typer.Option(
+        False,
+        "--allow-default-business",
+        help="Enable fallback to default business when inbound call lacks tenant routing (DEV ONLY)",
+    ),
 ):
-    """Launch the LiveKit voice agent worker for a business tenant."""
-    try:
-        biz_uuid = uuid.UUID(business_id)
-    except ValueError:
-        typer.secho(f"Invalid business UUID: {business_id}", fg=typer.colors.RED)
-        raise typer.Exit(code=1)
+    """Launch the LiveKit multi-tenant voice agent worker."""
+    from callwise.config import settings
 
-    typer.echo(f"Starting LiveKit voice agent worker for business {business_id} in '{mode}' mode...")
+    if allow_default:
+        settings.allow_default_business = True
+
+    biz_uuid: Optional[uuid.UUID] = None
+    if business_id:
+        try:
+            biz_uuid = uuid.UUID(business_id)
+            if allow_default:
+                settings.default_business_id = str(biz_uuid)
+        except ValueError:
+            typer.secho(f"Invalid business UUID: {business_id}", fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+
+    typer.echo(
+        f"Starting LiveKit voice agent worker in '{mode}' mode "
+        f"(multi-tenant per-call routing; allow_default={settings.allow_default_business})..."
+    )
     from callwise.agent.voice_agent import start_voice_worker
     start_voice_worker(biz_uuid, mode=mode)
 

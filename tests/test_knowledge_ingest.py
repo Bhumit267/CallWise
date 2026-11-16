@@ -88,7 +88,7 @@ def test_ssrf_blocking(invalid_url, expected_err):
 def test_embedding_provider_shape():
     """Verify local embedding provider returns correct normalized dimensions."""
     provider = LocalEmbeddingProvider()
-    vec = provider.embed_text("BrightSmile Family Dental office hours and procedures")
+    vec = provider.embed_text("Aarav Health & Dental Clinic office hours and procedures")
     assert len(vec) == settings.embedding_dimension
     # Unit vector magnitude check (~1.0 for normalized embeddings)
     norm = sum(x * x for x in vec) ** 0.5
@@ -106,11 +106,11 @@ def test_ingest_file_to_database(tmp_path):
 
     faq_file = tmp_path / "dental_faq.txt"
     faq_file.write_text(
-        "BrightSmile Family Dental FAQ.\n\n"
-        "We are located at 123 Main Street, Suite 400, New York, NY.\n"
-        "We accept Delta Dental, MetLife, Cigna, and Guardian PPO insurance.\n"
-        "Routine cleanings take approximately 45 minutes.\n"
-        "Parking is validated for up to two hours in the adjacent garage.",
+        "Aarav Health & Dental Clinic FAQ.\n\n"
+        "We are located on 100 Feet Road, HAL 2nd Stage, Indiranagar, Bengaluru.\n"
+        "We accept major corporate dental health insurance policies.\n"
+        "Routine scaling takes approximately 45 minutes.\n"
+        "Valet parking is available for patients.",
         encoding="utf-8",
     )
 
@@ -132,7 +132,7 @@ def test_ingest_file_to_database(tmp_path):
         assert len(stored_chunks) >= 1
         assert stored_chunks[0].business_id == DENTAL_CLINIC_ID
         assert len(stored_chunks[0].embedding) == settings.embedding_dimension
-        assert "BrightSmile Family Dental" in stored_chunks[0].content
+        assert "Aarav Health & Dental Clinic" in stored_chunks[0].content
 
 
 def test_cli_ingest_and_list_documents(tmp_path):

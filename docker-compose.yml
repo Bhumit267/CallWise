@@ -18,6 +18,7 @@ services:
       retries: 5
 
   agent:
+    image: callwise-agent:latest
     build:
       context: .
       dockerfile: Dockerfile.agent
@@ -31,9 +32,11 @@ services:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@callwise-postgres:5432/callwise
       DATABASE_URL_SYNC: postgresql://postgres:postgres@callwise-postgres:5432/callwise
       PYTHONPATH: /app/src
+      ALLOW_DEFAULT_BUSINESS: ${ALLOW_DEFAULT_BUSINESS:-false}
+      BUSINESS_ID: ${BUSINESS_ID:-33333333-3333-3333-3333-333333333333}
     volumes:
       - ./src:/app/src
-    command: ["-b", "11111111-1111-1111-1111-111111111111", "-m", "dev"]
+    command: ["-m", "dev"]
     depends_on:
       postgres:
         condition: service_healthy
