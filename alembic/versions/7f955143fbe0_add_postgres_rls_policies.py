@@ -48,7 +48,7 @@ def upgrade() -> None:
             IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'callwise_app') THEN
                 CREATE ROLE callwise_app WITH LOGIN PASSWORD 'callwise_app' NOSUPERUSER NOBYPASSRLS;
             END IF;
-            GRANT ALL PRIVILEGES ON DATABASE callwise TO callwise_app;
+            EXECUTE format('GRANT ALL PRIVILEGES ON DATABASE %I TO callwise_app', current_database());
             GRANT ALL ON SCHEMA public TO callwise_app;
             GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO callwise_app;
             GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO callwise_app;
