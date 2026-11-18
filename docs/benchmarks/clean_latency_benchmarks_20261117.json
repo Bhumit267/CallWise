@@ -1,0 +1,430 @@
+{
+  "metadata": {
+    "date": "2026-11-17",
+    "timestamp": "2026-11-17T06:42:10.374857+00:00",
+    "provider": "groq",
+    "model": "openai/gpt-oss-20b",
+    "total_turns": 32,
+    "turns_with_retries": 30,
+    "machine_context": {
+      "os": "Windows-11-10.0.26300-SP0",
+      "python": "3.13.15",
+      "node": "Bhumit"
+    },
+    "pipeline_scope": "Text agent path only (LLM inference + native function tool calls + pgvector knowledge search). Voice pipeline (STT/TTS) is not measured."
+  },
+  "summary": {
+    "n": 32,
+    "median_ms": 32284.3,
+    "mean_ms": 46382.0,
+    "p95_ms": 55602.1,
+    "min_ms": 2125.4,
+    "max_ms": 676804.4,
+    "turns_with_retries": 30
+  },
+  "by_category": {
+    "pricing": {
+      "count": 6,
+      "median_ms": 34177.2,
+      "p95_ms": 36860.3,
+      "min_ms": 3375.5,
+      "max_ms": 36860.3
+    },
+    "hours": {
+      "count": 6,
+      "median_ms": 32016.6,
+      "p95_ms": 33076.8,
+      "min_ms": 14675.3,
+      "max_ms": 33076.8
+    },
+    "scheduling": {
+      "count": 6,
+      "median_ms": 44302.1,
+      "p95_ms": 676804.4,
+      "min_ms": 14886.8,
+      "max_ms": 676804.4
+    },
+    "policy": {
+      "count": 4,
+      "median_ms": 23405.4,
+      "p95_ms": 35457.7,
+      "min_ms": 2125.4,
+      "max_ms": 35457.7
+    },
+    "unanswerable": {
+      "count": 4,
+      "median_ms": 25741.2,
+      "p95_ms": 35015.3,
+      "min_ms": 15339.5,
+      "max_ms": 35015.3
+    },
+    "advice_refusal": {
+      "count": 4,
+      "median_ms": 15562.4,
+      "p95_ms": 15970.9,
+      "min_ms": 14312.8,
+      "max_ms": 15970.9
+    },
+    "message": {
+      "count": 2,
+      "median_ms": 25475.1,
+      "p95_ms": 34122.7,
+      "min_ms": 16827.4,
+      "max_ms": 34122.7
+    }
+  },
+  "turns": [
+    {
+      "turn_index": 1,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "pricing",
+      "question": "How much does a routine dental cleaning and scaling cost?",
+      "reply": "Routine scaling and ultrasonic polishing costs one thousand five hundred rupees.",
+      "latency_ms": 11477.27,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 2,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "pricing",
+      "question": "What is the fee for root canal treatment?",
+      "reply": "The fee for a single-sitting root canal treatment is four thousand five hundred rupees.",
+      "latency_ms": 3375.5,
+      "retried": false,
+      "error": null
+    },
+    {
+      "turn_index": 3,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "hours",
+      "question": "What time does your clinic open on Saturday?",
+      "reply": "Our clinic opens at 10 AM and closes at 8 PM on Saturdays.",
+      "latency_ms": 31878.9,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 4,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "hours",
+      "question": "Are you open on Sundays for consultations?",
+      "reply": "Yes, we're open on Sundays from 10 AM to 2 PM for consultations. How can I help you today?",
+      "latency_ms": 15077.23,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 5,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "scheduling",
+      "question": "Can you check what appointment times are open for cleaning tomorrow?",
+      "reply": "We have openings for Routine Scaling & Ultrasonic Polishing tomorrow at 10:00 AM, 1:00 PM, and 4:00 PM. Which of those times would suit you best?",
+      "latency_ms": 53860.93,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 6,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "scheduling",
+      "question": "What services do you offer for dental hygiene?",
+      "reply": "We offer a Routine Scaling & Ultrasonic Polishing service, which is a comprehensive dental hygiene appointment. It lasts about 45 minutes and helps remove plaque and tartar while polishing your teeth. If you'd like to book or learn more, I can help you find a convenient time.",
+      "latency_ms": 34743.33,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 7,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "policy",
+      "question": "Do you accept digital UPI payments like Google Pay or PhonePe?",
+      "reply": "Yes, we accept all major UPI apps, including Google Pay and PhonePe, as well as QR-code scan-and-pay.",
+      "latency_ms": 35457.72,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 8,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "policy",
+      "question": "Do you offer cashless dental insurance with Star Health?",
+      "reply": "Yes, we do. Aarav Dental accepts cashless corporate dental claims with major health insurance providers, including Star Health.",
+      "latency_ms": 34837.78,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 9,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "unanswerable",
+      "question": "Do you repair cracked iPhone screens while patients wait?",
+      "reply": "I'm sorry, but I don't have that information in our records. I can note your question and let the team look into it. May I have your name and phone number so we can get back to you?",
+      "latency_ms": 34150.23,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 10,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "unanswerable",
+      "question": "Can I leave my pet parrot with your reception staff during my visit?",
+      "reply": "I'm sorry, but I don't have that information in our records. I can note your question and let the team look into it for you. Would you like me to take a message?",
+      "latency_ms": 35015.31,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 11,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "advice_refusal",
+      "question": "Can you prescribe me Amoxicillin 500mg for my swollen gum right now?",
+      "reply": "I'm sorry, but I can't provide medical prescriptions or advice. I can help you schedule an appointment with one of our dentists or transfer you to a staff member who can assist further. How would you like to proceed?",
+      "latency_ms": 15358.83,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 12,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "advice_refusal",
+      "question": "Should I invest in sovereign gold bonds or fixed deposits for dental savings?",
+      "reply": "I'm sorry, but I'm not able to give financial advice. I can note your question for our team or connect you with a human representative if you'd like.",
+      "latency_ms": 14312.81,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 13,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "pricing",
+      "question": "How much is an in-office teeth whitening session?",
+      "reply": "The in-office teeth whitening session costs \u20b93,500.",
+      "latency_ms": 35998.02,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 14,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "hours",
+      "question": "Are you open right now?",
+      "reply": "Yes, we're open now and will be until 8 PM today. How can I help you?",
+      "latency_ms": 33076.82,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 15,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "scheduling",
+      "question": "How do I cancel an existing appointment?",
+      "reply": "Sure, I can help you cancel your appointment. Could you please share the 6-character booking reference code that was given to you, along with your full name or the phone number you used when booking? That will help me locate the appointment and proceed with the cancellation.",
+      "latency_ms": 34394.3,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 16,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "message",
+      "question": "Can you take a message for Dr. Aarav to call back regarding my x-ray report?",
+      "reply": "Sure, I can do that. May I have your full name and the phone number you'd like us to use for the callback?",
+      "latency_ms": 34122.71,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 17,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "pricing",
+      "question": "How much does a full custom balayage cost?",
+      "reply": "A full custom balayage with gloss and tone is $220.",
+      "latency_ms": 36860.31,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 18,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "pricing",
+      "question": "What is the price for a signature hydrafacial?",
+      "reply": "I'm sorry, but I don't have that specific pricing information in my records right now. I can note your request and have the team get back to you, or I can pass along a message to the staff. What would you prefer?",
+      "latency_ms": 33005.31,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 19,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "hours",
+      "question": "What are your business hours on Friday?",
+      "reply": "We're open on Fridays from 10 a.m. to 8 p.m. PST. Let me know if you'd like to book an appointment or have any other questions!",
+      "latency_ms": 32154.33,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 20,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "hours",
+      "question": "Are you open on Monday mornings?",
+      "reply": "I'm sorry, but we're closed on Mondays. Let me know if you'd like to schedule for another day!",
+      "latency_ms": 32414.34,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 21,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "scheduling",
+      "question": "Can you check if there are appointments available for a blowout this Saturday?",
+      "reply": "I apologize, but our voice assistant is currently experiencing technical difficulties. May I take down your name and callback number so someone can assist you directly?",
+      "latency_ms": 55602.05,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 22,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "scheduling",
+      "question": "What hair styling services do you provide?",
+      "reply": "I apologize, but our voice assistant is currently experiencing technical difficulties. May I take down your name and callback number so someone can assist you directly?",
+      "latency_ms": 676804.45,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 23,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "policy",
+      "question": "What is your cancellation policy if I need to cancel my haircut?",
+      "reply": "Our cancellation policy for a standard haircut is 24-hour notice. For chemical or color services we need 48-hour notice. Late cancellations or no-shows will forfeit any deposit.",
+      "latency_ms": 2125.44,
+      "retried": false,
+      "error": null
+    },
+    {
+      "turn_index": 24,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "policy",
+      "question": "Is there parking available near your salon?",
+      "reply": "Yes, we offer complimentary valet parking right at the Sunset Plaza entrance for all our guests.",
+      "latency_ms": 11973.09,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 25,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "unanswerable",
+      "question": "Do you sell prescription Botox injections for home use?",
+      "reply": "I'm sorry, but I can't provide that information. I can take a message for you or connect you with a staff member who can help. How would you like to proceed?",
+      "latency_ms": 15339.54,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 26,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "unanswerable",
+      "question": "Can I rent the entire salon overnight for a private wedding reception?",
+      "reply": "I'm sorry, but I don't have any information about renting the salon for an overnight wedding reception. I can take a message and have someone get back to you with the details.",
+      "latency_ms": 17332.14,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 27,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "advice_refusal",
+      "question": "I have an itchy oozing skin rash on my neck. What topical steroid ointment should I apply?",
+      "reply": "I'm sorry, but I can't give medical advice. I can take a message for our team or connect you with a staff member who can help. Which would you prefer?",
+      "latency_ms": 15970.89,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 28,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "advice_refusal",
+      "question": "Can I sue my prior salon in small claims court for hair dye burns?",
+      "reply": "I'm sorry, but I'm not able to give legal advice. If you'd like, I can note your concern and have a member of our team follow up with you, or I can connect you with a professional who can help. How would you like to proceed?",
+      "latency_ms": 15765.95,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 29,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "pricing",
+      "question": "How much is a women's signature haircut and blowout?",
+      "reply": "The Women's Signature Haircut, Blowout & Style is $75.",
+      "latency_ms": 35349.16,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 30,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "hours",
+      "question": "What time do you close on Saturday?",
+      "reply": "We close at 6 PM on Saturdays. Let me know if you'd like to book an appointment or have any other questions!",
+      "latency_ms": 14675.28,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 31,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "scheduling",
+      "question": "How do I reschedule a spa appointment?",
+      "reply": "Sure thing! To reschedule your spa appointment, just let me know your 6-character booking reference code, your full name, and the phone number you used when you booked. Once I have those, I'll check our calendar for the next available slots and we can lock in a new time that works for you.",
+      "latency_ms": 14886.82,
+      "retried": true,
+      "error": null
+    },
+    {
+      "turn_index": 32,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "message",
+      "question": "Please take a message for master stylist Elena that Sarah called about extensions.",
+      "reply": "Sure thing! May I have your phone number so we can get back to you?",
+      "latency_ms": 16827.43,
+      "retried": true,
+      "error": null
+    }
+  ]
+}

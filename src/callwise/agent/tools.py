@@ -2,6 +2,7 @@
 
 from datetime import date, datetime, timedelta
 import logging
+import re
 from typing import Any, Callable, Dict, List, Optional
 import uuid
 from zoneinfo import ZoneInfo
@@ -121,7 +122,7 @@ class CallwiseToolset:
 
         return f"{status.spoken_summary} Full weekly schedule: {status.weekly_schedule_summary}."
 
-    # 2. Knowledge Retrieval
+    # 2. Knowledge Retrieval (Unified Hybrid Service + Document Search)
     async def search_knowledge(self, query: str) -> str:
         """
         Search the business's official documents, pricing, and services to answer caller questions.
@@ -129,21 +130,73 @@ class CallwiseToolset:
         Args:
             query: The specific question or search keywords to look up in the business knowledge base.
         """
+        # 1. Query structured catalog services for matches
+        matched_services = []
+        try:
+            async with get_async_session() as session:
+                stmt = select(Service).where(
+                    Service.business_id == self.business_id,
+                    Service.is_active == True,
+                )
+                services = (await session.execute(stmt)).scalars().all()
+
+            query_lower = query.lower()
+            stopwords = {
+                "what", "how", "much", "does", "cost", "price", "pricing", "fee", "fees",
+                "appointment", "consultation", "session", "visit", "for", "the", "a", "an",
+                "is", "in", "at", "do", "you", "have", "offer", "any", "can", "i", "get",
+                "book", "schedule", "charge", "rate", "rates", "please", "tell", "me", "about"
+            }
+            query_tokens = [w for w in re.findall(r"\b\w+\b", query_lower) if len(w) >= 3 and w not in stopwords]
+
+            seen_ids = set()
+            for s in services:
+                if s.id in seen_ids:
+                    continue
+                s_name_lower = s.name.lower()
+                # Direct phrase match or token overlap
+                if s_name_lower in query_lower or any(token in s_name_lower for token in query_tokens if len(token) >= 4):
+                    matched_services.append(s)
+                    seen_ids.add(s.id)
+                elif any(qw in s_name_lower for qw in query_tokens):
+                    matched_services.append(s)
+                    seen_ids.add(s.id)
+        except Exception as exc:
+            logger.warning(f"Error checking structured services in search_knowledge: {exc}")
+
+        # 2. Query document embeddings
+        # If we already matched catalog services, don't log a false miss if embeddings return no match
         result = await search_knowledge_async(
             business_id=self.business_id,
             query=query,
             call_id=self.call_id,
-            log_miss=True,
+            log_miss=not bool(matched_services),
         )
 
+        context_sections = []
+
+        if matched_services:
+            tz_str = str(self.business.timezone or "").lower()
+            currency_sym = "₹" if "kolkata" in tz_str or "india" in tz_str else "$"
+            service_lines = []
+            for s in matched_services:
+                desc = f" ({s.description})" if s.description else ""
+                service_lines.append(
+                    f"- {s.name}: {currency_sym}{s.price:,.0f} (Duration: {s.duration_minutes} minutes){desc}"
+                )
+            context_sections.append("Official Bookable Services & Pricing:\n" + "\n".join(service_lines))
+
         if result.is_match and result.matches:
-            top_match = result.matches[0]
-            context_text = "\n\n".join(m.content for m in result.matches)
+            top_source = result.matches[0].source_title
+            doc_context = "\n\n".join(m.content for m in result.matches)
+            context_sections.append(f"Information found in '{top_source}':\n{doc_context}")
+
+        if context_sections:
+            full_context = "\n\n".join(context_sections)
             return (
-                f"Information found in '{top_match.source_title}':\n"
-                f"{context_text}\n\n"
+                f"{full_context}\n\n"
                 "Instruction: Answer the caller's question concisely using ONLY this information. "
-                "Keep your answer short for speech."
+                "State the exact price and duration if applicable. Keep your answer short and natural for phone speech."
             )
 
         return (

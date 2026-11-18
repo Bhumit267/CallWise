@@ -1,0 +1,766 @@
+{
+  "metadata": {
+    "date": "2026-11-16",
+    "provider": "groq",
+    "model": "openai/gpt-oss-20b",
+    "pipeline_scope": "Text agent path only (LLM inference + native function tool calls + pgvector knowledge search). Excludes WebRTC SIP/audio pipeline (STT/TTS).",
+    "machine_context": {
+      "os": "Windows-11-10.0.26300-SP0",
+      "python": "3.13.15",
+      "node": "Bhumit"
+    },
+    "free_tier_throttling_observed": true,
+    "throttling_details": "Groq on_demand free tier enforced 30 RPM and 200,000 TPD limits. Turns with latency >= 10,000ms encountered exponential retry backoff in tenacity."
+  },
+  "statistics": {
+    "total_turns": 81,
+    "median_ms": 31991.7,
+    "mean_ms": 27702.9,
+    "p95_ms": 53995.9,
+    "min_ms": 1010.0,
+    "max_ms": 97303.4,
+    "unthrottled_subset_under_10s": {
+      "count": 16,
+      "median_ms": 1916.2,
+      "min_ms": 1010.0,
+      "max_ms": 9506.9
+    },
+    "throttled_subset_over_10s": {
+      "count": 65,
+      "median_ms": 37318.5,
+      "min_ms": 12551.6,
+      "max_ms": 97303.4
+    }
+  },
+  "turns": [
+    {
+      "turn_index": 1,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "A full custom balayage with gloss and tone is $220.",
+      "latency_ms": 38999.66,
+      "timestamp": "2026-11-14T20:32:41.481400+00:00"
+    },
+    {
+      "turn_index": 2,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "Yes, we're open on Sundays from 11 a.m. to 4 p.m. If you'd like to book an appointment or have any other questions, just let me know!",
+      "latency_ms": 17488.35,
+      "timestamp": "2026-11-14T20:32:59.062026+00:00"
+    },
+    {
+      "turn_index": 3,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "All of our facials use Dermalogica clinical skincare products.",
+      "latency_ms": 38954.62,
+      "timestamp": "2026-11-14T20:33:38.107034+00:00"
+    },
+    {
+      "turn_index": 4,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "We're located at 456 Sunset Plaza in West Hollywood, Los Angeles. Complimentary valet parking is available right at the Sunset Plaza entrance for all guests.",
+      "latency_ms": 37318.52,
+      "timestamp": "2026-11-14T20:34:15.530543+00:00"
+    },
+    {
+      "turn_index": 5,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, I don't have the exact cost for a single-sitting root canal in my records. I can note your request and have a team member get back to you with the details. Could I take your name and phone number to pass along?",
+      "latency_ms": 40175.37,
+      "timestamp": "2026-11-15T06:02:59.499034+00:00"
+    },
+    {
+      "turn_index": 6,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "We have openings for Routine Scaling & Ultrasonic Polishing on Monday, November 23 at 10:00 AM, 1:00 PM, or 4:00 PM. Which of those times would suit you?",
+      "latency_ms": 26436.61,
+      "timestamp": "2026-11-15T06:03:28.222299+00:00"
+    },
+    {
+      "turn_index": 7,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "You're welcome! If you need anything else, feel free to call us. Have a wonderful day!",
+      "latency_ms": 20835.41,
+      "timestamp": "2026-11-15T06:03:51.349490+00:00"
+    },
+    {
+      "turn_index": 8,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, but I don't have that specific information in our records right now. I can note your question and have a team member get back to you. May I have your phone number to send a callback?",
+      "latency_ms": 39052.05,
+      "timestamp": "2026-11-15T06:04:39.157137+00:00"
+    },
+    {
+      "turn_index": 9,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "Your message has been recorded and forwarded to Dr. Aarav. He will call you back shortly. Thank you for reaching out, and have a wonderful day!",
+      "latency_ms": 39087.31,
+      "timestamp": "2026-11-15T06:05:20.503616+00:00"
+    },
+    {
+      "turn_index": 10,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "You're very welcome! Have a great day. Goodbye!",
+      "latency_ms": 21727.31,
+      "timestamp": "2026-11-15T06:05:44.561509+00:00"
+    },
+    {
+      "turn_index": 11,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, we don't have a slot at 2 PM on Monday. We do have openings at 10 AM, 1 PM, and 4 PM. Which of those times would suit you best?",
+      "latency_ms": 38846.42,
+      "timestamp": "2026-11-15T06:06:31.244588+00:00"
+    },
+    {
+      "turn_index": 12,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, but I couldn't locate an active appointment with the code BK-4X2. It's possible the booking was already cancelled or the code was entered incorrectly. Could you double-check the code or let me know if there's another reference number? If you'd like, I can take a message for the team or help you book a new slot.",
+      "latency_ms": 38555.59,
+      "timestamp": "2026-11-15T06:07:11.904533+00:00"
+    },
+    {
+      "turn_index": 13,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, but I couldn't locate an active appointment with that code, so there was nothing to cancel. If you need any further assistance or want to book a new slot, just let me know. Otherwise, have a wonderful day and take care!",
+      "latency_ms": 19826.51,
+      "timestamp": "2026-11-15T06:07:34.042010+00:00"
+    },
+    {
+      "turn_index": 14,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, but I don't have the exact cost for a single-sitting root canal in my records. I can note your request and have a team member get back to you with the pricing. May I take your name and phone number to set that up?",
+      "latency_ms": 2616.59,
+      "timestamp": "2026-11-15T06:10:40.916479+00:00"
+    },
+    {
+      "turn_index": 15,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "We have openings on Monday, November 23 at 10 AM, 1 PM, and 4 PM. Would any of those times work for you?",
+      "latency_ms": 45254.99,
+      "timestamp": "2026-11-15T06:11:28.481388+00:00"
+    },
+    {
+      "turn_index": 16,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "Just to confirm, you'd like to book a Routine Scaling & Ultrasonic Polishing appointment on Monday, November 23 at 10 AM for Rahul Mehta, phone +91 0000 00100, with the email rahul.mehta@example.test. Is that correct?",
+      "latency_ms": 48181.86,
+      "timestamp": "2026-11-15T06:12:18.962915+00:00"
+    },
+    {
+      "turn_index": 17,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "You're welcome! We look forward to seeing you on the 23rd. Have a wonderful day!",
+      "latency_ms": 25174.79,
+      "timestamp": "2026-11-15T06:12:46.407773+00:00"
+    },
+    {
+      "turn_index": 18,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "We have openings for a Dental Implant Consultation on Monday, November 23 at 11:00 AM, 1:30 PM, or 4:00 PM. Do any of those times work for you?",
+      "latency_ms": 35823.58,
+      "timestamp": "2026-11-15T06:13:32.899291+00:00"
+    },
+    {
+      "turn_index": 19,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I apologize, but our voice assistant is currently experiencing technical difficulties. May I take down your name and callback number so someone can assist you directly?",
+      "latency_ms": 18185.88,
+      "timestamp": "2026-11-15T06:13:53.379337+00:00"
+    },
+    {
+      "turn_index": 20,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, but I couldn't find an active appointment with the booking code BK-XYZ. If you'd like, I can take a message for you so our team can look into it and get back to you.",
+      "latency_ms": 40483.92,
+      "timestamp": "2026-11-15T06:14:36.183028+00:00"
+    },
+    {
+      "turn_index": 21,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, but I couldn't locate an appointment with that booking code, so there's nothing to cancel. If you need any further assistance or want to reschedule, just let me know. Have a wonderful day!",
+      "latency_ms": 1478.43,
+      "timestamp": "2026-11-15T06:14:40.015703+00:00"
+    },
+    {
+      "turn_index": 22,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, I don't have the exact cost for a Root Canal Treatment in my records. I can note your request and have a team member get back to you with the pricing details. May I take your name and phone number to send a callback?",
+      "latency_ms": 22111.24,
+      "timestamp": "2026-11-16T03:16:54.560818+00:00"
+    },
+    {
+      "turn_index": 23,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "We offer a range of dental services: a dental implant consultation with a 3-D CBCT scan that takes about 45 minutes and costs $800, routine scaling and ultrasonic polishing for 45 minutes at $1,500, a 60-minute Zoom laser teeth whitening session for $3,500, and a single-session root canal treatment that also takes 60 minutes and is priced at $4,500. If you'd like more details or want to book an appointment, just let me know.",
+      "latency_ms": 1791.87,
+      "timestamp": "2026-11-16T03:17:13.879365+00:00"
+    },
+    {
+      "turn_index": 24,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, but I don't have the specific pricing details for a root canal or teeth cleaning in my records right now. I can note your request and have a team member get back to you with the exact prices. May I take your name and phone number to pass along?",
+      "latency_ms": 12551.61,
+      "timestamp": "2026-11-16T03:17:41.609420+00:00"
+    },
+    {
+      "turn_index": 25,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "We have openings for a Dental Implant Consultation on Monday, November 23 at 11:00 AM, 1:30 PM, or 4:00 PM. Which of those times would suit you?",
+      "latency_ms": 1974.84,
+      "timestamp": "2026-11-16T03:18:30.136942+00:00"
+    },
+    {
+      "turn_index": 26,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "Just to confirm, you'd like to book a Dental Implant Consultation on Monday, November 23 at 11:00 AM for Vikram Patel, phone +91 0000 00300, email vikram.patel@example.test. Is that correct?",
+      "latency_ms": 1231.99,
+      "timestamp": "2026-11-16T03:18:33.497904+00:00"
+    },
+    {
+      "turn_index": 27,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "Your appointment is all set for Monday, November 23 at 11:00 AM. We've sent a confirmation to your email. If you need anything else, just let me know. Have a great day, Vikram!",
+      "latency_ms": 36915.61,
+      "timestamp": "2026-11-16T03:19:12.543271+00:00"
+    },
+    {
+      "turn_index": 28,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, but I couldn't locate an active appointment with the code BK-XYZ. It's possible the code was entered incorrectly or the appointment has already been cancelled. If you'd like, I can double-check for you or take a message so one of our staff can look into it. How would you like to proceed?",
+      "latency_ms": 43138.94,
+      "timestamp": "2026-11-16T03:19:57.852659+00:00"
+    },
+    {
+      "turn_index": 29,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, but I couldn't locate an appointment with that booking code, so I wasn't able to cancel it. I can take a message for you or have one of our team members look into it right away. Let me know how you'd like to proceed. Have a wonderful day!",
+      "latency_ms": 4549.19,
+      "timestamp": "2026-11-16T03:20:04.565015+00:00"
+    },
+    {
+      "turn_index": 30,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "We have openings for the Dental Implant Consultation on Monday, November 23 at 12:00 PM, 2:30 PM, and 5:00 PM. Which of those times would suit you best?",
+      "latency_ms": 1850.87,
+      "timestamp": "2026-11-16T03:21:34.583237+00:00"
+    },
+    {
+      "turn_index": 31,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, but 4:00 PM isn't available for a Dental Implant Consultation on Monday, November 23. We do have openings at 12:00 PM, 2:30 PM, and 5:00 PM. Which of those times would you prefer?",
+      "latency_ms": 1009.96,
+      "timestamp": "2026-11-16T03:21:37.748174+00:00"
+    },
+    {
+      "turn_index": 32,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, but I couldn't locate an active appointment with the booking code BK-4X2. It's possible the code was entered incorrectly or the appointment has already been cancelled. Would you like me to double-check or take a message for you?",
+      "latency_ms": 38922.65,
+      "timestamp": "2026-11-16T03:22:18.815569+00:00"
+    },
+    {
+      "turn_index": 33,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, but I couldn't locate an active appointment with that booking code, so it wasn't cancelled. If you'd like, I can double-check or help you find the correct code. Otherwise, I'm happy to take a message for you. Have a wonderful day!",
+      "latency_ms": 18209.39,
+      "timestamp": "2026-11-16T03:22:39.156835+00:00"
+    },
+    {
+      "turn_index": 34,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "We have openings for a Dental Implant Consultation on Monday, November 23 at 12:00 PM, 2:30 PM, or 5:00 PM. Would any of those times work for you?",
+      "latency_ms": 1777.05,
+      "timestamp": "2026-11-16T03:23:33.231926+00:00"
+    },
+    {
+      "turn_index": 35,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "Your appointment is confirmed for a Dental Implant Consultation on Monday, November 23 at 12:00 PM. Name: Vikram Patel Phone: +91 0000 00300 Email: vikram.patel@example.test Booking reference: BK-TSZ. A confirmation email and calendar invite have been sent to your address. Is there anything else I can help you with today?",
+      "latency_ms": 36349.07,
+      "timestamp": "2026-11-16T03:24:11.692523+00:00"
+    },
+    {
+      "turn_index": 36,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "Sure, just to confirm: you'd like a Dental Implant Consultation on Monday, November 23 at 12:00 PM, under the name Vikram Patel, phone +91 0000 00300, with the booking reference BK-TSZ. Is that correct?",
+      "latency_ms": 22416.77,
+      "timestamp": "2026-11-16T03:24:36.377254+00:00"
+    },
+    {
+      "turn_index": 37,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "Your appointment has been cancelled. A confirmation has been sent to your email. If you'd like to reschedule or need any other assistance, just let me know. Have a great day!",
+      "latency_ms": 45335.66,
+      "timestamp": "2026-11-16T03:25:23.851445+00:00"
+    },
+    {
+      "turn_index": 38,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "You're very welcome! If you need anything else, feel free to call us. Have a wonderful day!",
+      "latency_ms": 20171.55,
+      "timestamp": "2026-11-16T03:25:46.889806+00:00"
+    },
+    {
+      "turn_index": 39,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "The in-office Zoom Laser Teeth Whitening costs \u20b93,500.",
+      "latency_ms": 1857.56,
+      "timestamp": "2026-11-16T11:10:44.685987+00:00"
+    },
+    {
+      "turn_index": 40,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "Our office is open on Monday from 10 AM to 8 PM. Let me know if you'd like to book an appointment or have any other questions.",
+      "latency_ms": 16346.38,
+      "timestamp": "2026-11-16T11:11:01.109197+00:00"
+    },
+    {
+      "turn_index": 41,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "Yes, we do. We support cashless corporate dental insurance claims with major health insurance providers.",
+      "latency_ms": 37867.5,
+      "timestamp": "2026-11-16T11:11:39.051898+00:00"
+    },
+    {
+      "turn_index": 42,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "We accept all major UPI apps, debit and credit cards, net banking, and cash at the front desk. If you're using a corporate dental plan, we can handle cashless claims with the major insurers.",
+      "latency_ms": 36690.26,
+      "timestamp": "2026-11-16T11:12:15.817842+00:00"
+    },
+    {
+      "turn_index": 43,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, but I don't have any information about acupuncture or cupping therapy at Aarav Health & Dental Clinic. I can take a message for you if you'd like.",
+      "latency_ms": 38965.14,
+      "timestamp": "2026-11-16T11:12:54.857924+00:00"
+    },
+    {
+      "turn_index": 44,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, but we don't offer motorcycle repair services. I can take a message for you if you'd like.",
+      "latency_ms": 20377.27,
+      "timestamp": "2026-11-16T11:13:15.323616+00:00"
+    },
+    {
+      "turn_index": 45,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, I don't have that information in our records. I can take a message for you if you'd like.",
+      "latency_ms": 40017.62,
+      "timestamp": "2026-11-16T11:13:55.418671+00:00"
+    },
+    {
+      "turn_index": 46,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm going to connect you with one of our specialists right away. Please hold for a moment.",
+      "latency_ms": 39526.37,
+      "timestamp": "2026-11-16T11:14:35.030128+00:00"
+    },
+    {
+      "turn_index": 47,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, but I'm not able to give legal advice. I can connect you with a member of our team who can help you further, or I can take a message so someone can get back to you. Which would you prefer?",
+      "latency_ms": 18439.75,
+      "timestamp": "2026-11-16T11:14:53.586326+00:00"
+    },
+    {
+      "turn_index": 48,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, but I can't give financial advice. If you'd like, I can note your question and pass it along to someone who can help, or I can connect you with a specialist. How would you like to proceed?",
+      "latency_ms": 18125.65,
+      "timestamp": "2026-11-16T11:15:11.814129+00:00"
+    },
+    {
+      "turn_index": 49,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "We offer a range of bookable services: a Dental Implant Consultation with a 3D CBCT scan that takes about 45 minutes, Routine Scaling and Ultrasonic Polishing for 45 minutes, Zoom Laser Teeth Whitening for an hour, and a single-session Root Canal Treatment that also takes an hour. If you'd like to book any of these or need more details, just let me know.",
+      "latency_ms": 37471.3,
+      "timestamp": "2026-11-16T11:15:49.438580+00:00"
+    },
+    {
+      "turn_index": 50,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "We have openings for Routine Scaling & Ultrasonic Polishing on Friday, November 20th at 10 AM, 1 PM, or 4 PM. Would any of those times work for you?",
+      "latency_ms": 60201.23,
+      "timestamp": "2026-11-16T11:16:49.756744+00:00"
+    },
+    {
+      "turn_index": 51,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "To cancel an appointment, please have your 6-character booking reference code handy, along with your full name and phone number. We also ask for at least 24 hours' notice before the scheduled time.",
+      "latency_ms": 37320.57,
+      "timestamp": "2026-11-16T11:17:27.168624+00:00"
+    },
+    {
+      "turn_index": 52,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I am transferring you now to our team at +91-80-25251122. Please hold on for just a moment.",
+      "latency_ms": 38044.17,
+      "timestamp": "2026-11-16T11:18:05.300557+00:00"
+    },
+    {
+      "turn_index": 53,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, I don't have that specific information in my records right now. I can take a message and have someone get back to you with the details. Would you like me to do that?",
+      "latency_ms": 38689.26,
+      "timestamp": "2026-11-16T11:18:44.074287+00:00"
+    },
+    {
+      "turn_index": 54,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm sorry, but I can't arrange that. I can help you schedule a regular dental appointment if you'd like, or I can take a message for you. How would you like to proceed?",
+      "latency_ms": 19036.89,
+      "timestamp": "2026-11-16T11:19:03.194438+00:00"
+    },
+    {
+      "turn_index": 55,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I'm not a dentist, so I can't give you professional advice on fixing a cracked crown. It's best to wait for a proper dental appointment. If you'd like, I can note your concern and let the clinic team follow up with you.",
+      "latency_ms": 97303.44,
+      "timestamp": "2026-11-16T11:20:40.567698+00:00"
+    },
+    {
+      "turn_index": 56,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "The full custom balayage with gloss and tone is $220.",
+      "latency_ms": 9506.88,
+      "timestamp": "2026-11-16T11:21:22.836728+00:00"
+    },
+    {
+      "turn_index": 57,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "Yes, we're open on Sundays from 11 a.m. to 4 p.m. PST. Let me know if you'd like to book an appointment!",
+      "latency_ms": 9411.87,
+      "timestamp": "2026-11-16T11:21:32.321579+00:00"
+    },
+    {
+      "turn_index": 58,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "We use Dermalogica clinical skincare products for our facials.",
+      "latency_ms": 38970.74,
+      "timestamp": "2026-11-16T11:22:11.394425+00:00"
+    },
+    {
+      "turn_index": 59,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "We're located at 456 Sunset Plaza in West Hollywood, and we offer complimentary valet parking right at the Sunset Plaza entrance.",
+      "latency_ms": 38006.82,
+      "timestamp": "2026-11-16T11:22:49.471204+00:00"
+    },
+    {
+      "turn_index": 60,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "I'm sorry, but we don't offer pet grooming or dog washing services. If there's anything else you'd like to know or if you'd like me to take a message for you, just let me know.",
+      "latency_ms": 37893.72,
+      "timestamp": "2026-11-16T11:23:27.445059+00:00"
+    },
+    {
+      "turn_index": 61,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "I'm sorry, but I don't have that information in my records. I can note your request and pass it along to the team. May I have your name and phone number so we can follow up with you?",
+      "latency_ms": 37101.32,
+      "timestamp": "2026-11-16T11:24:04.620332+00:00"
+    },
+    {
+      "turn_index": 62,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "I'm sorry, but I can't provide medical advice. Luxe Glow Salon & Spa isn't a medical provider, so we don't sell prescription Botox for migraines. I can pass your question along to a staff member or put you on a callback list if that would help.",
+      "latency_ms": 19018.26,
+      "timestamp": "2026-11-16T11:24:23.708063+00:00"
+    },
+    {
+      "turn_index": 63,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "I'm sorry to hear how uncomfortable that's making you feel, but I'm not able to give medical advice. I can take a message for our team or connect you with a professional if you'd like.",
+      "latency_ms": 19572.54,
+      "timestamp": "2026-11-16T11:24:43.345816+00:00"
+    },
+    {
+      "turn_index": 64,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "I'm sorry to hear about your experience, but I'm not able to give legal advice. I can take a message for you or connect you with a human representative who can help you further. Which would you prefer?",
+      "latency_ms": 18188.82,
+      "timestamp": "2026-11-16T11:25:01.610213+00:00"
+    },
+    {
+      "turn_index": 65,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "I'm not able to give tax or legal advice. I can't answer that question, but I can pass your query along to our team or connect you with a professional if you'd like. How would you like to proceed?",
+      "latency_ms": 19299.3,
+      "timestamp": "2026-11-16T11:25:20.993322+00:00"
+    },
+    {
+      "turn_index": 66,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "We offer a range of bookable services, including: - Women's Haircut & Blowout - 45 minutes, $75 - Signature Glow Facial - 60 minutes, $110 - Full Custom Balayage - 120 minutes, $220 - Keratin Smoothing Treatment - 90 minutes, $275 Would you like to schedule a haircut, a facial, or perhaps a combo? Let me know which service interests you and we can find a time that works best.",
+      "latency_ms": 57937.71,
+      "timestamp": "2026-11-16T11:26:19.014072+00:00"
+    },
+    {
+      "turn_index": 67,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "Thank you. Is there anything else I can help you with today?",
+      "latency_ms": 58333.28,
+      "timestamp": "2026-11-16T11:27:17.439779+00:00"
+    },
+    {
+      "turn_index": 68,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "I apologize, but our voice assistant is currently experiencing technical difficulties. May I take down your name and callback number so someone can assist you directly?",
+      "latency_ms": 20408.33,
+      "timestamp": "2026-11-16T11:27:37.917937+00:00"
+    },
+    {
+      "turn_index": 69,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "I'm sorry, but our office is currently closed. We'll be open again tomorrow at 10 AM. Would you like me to leave a message for our team to call you back?",
+      "latency_ms": 36380.3,
+      "timestamp": "2026-11-16T11:28:14.368769+00:00"
+    },
+    {
+      "turn_index": 70,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "The Women's Signature Haircut, Blowout & Style is $75.",
+      "latency_ms": 39769.36,
+      "timestamp": "2026-11-16T11:28:54.208487+00:00"
+    },
+    {
+      "turn_index": 71,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "I'm sorry, but we don't offer pet fur dyeing services in our salon. If you'd like, I can take a message and let the team know you're interested in that kind of service.",
+      "latency_ms": 37643.83,
+      "timestamp": "2026-11-16T11:29:31.929686+00:00"
+    },
+    {
+      "turn_index": 72,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "I'm sorry to hear how uncomfortable you're feeling, but I'm not able to give medical advice. It would be best to reach out to a qualified healthcare professional or your dermatologist right away. If you'd like, I can note your concern and have a team member follow up with you, or I can connect you to a human representative who can help you further.",
+      "latency_ms": 18112.31,
+      "timestamp": "2026-11-16T11:29:50.115159+00:00"
+    },
+    {
+      "turn_index": 73,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "speaker": "agent",
+      "text": "A 20% non-refundable deposit is required when you book a specialty service like balayage.",
+      "latency_ms": 40177.04,
+      "timestamp": "2026-11-16T11:30:30.371393+00:00"
+    },
+    {
+      "turn_index": 74,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "The routine cleaning and scaling comes to one thousand five hundred rupees.",
+      "latency_ms": 16043.77,
+      "timestamp": "2026-11-16T11:38:02.147817+00:00"
+    },
+    {
+      "turn_index": 75,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "The fee for a single-sitting root canal treatment is four thousand five hundred rupees.",
+      "latency_ms": 1795.57,
+      "timestamp": "2026-11-16T11:38:06.148197+00:00"
+    },
+    {
+      "turn_index": 76,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "The clinic opens at 10 AM and closes at 8 PM on Saturdays.",
+      "latency_ms": 31991.74,
+      "timestamp": "2026-11-16T11:38:40.288298+00:00"
+    },
+    {
+      "turn_index": 77,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "Yes, we're open on Sundays from 10 AM to 2 PM. How can I help you today?",
+      "latency_ms": 35889.83,
+      "timestamp": "2026-11-16T11:39:18.377827+00:00"
+    },
+    {
+      "turn_index": 78,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "We have openings for Routine Scaling & Ultrasonic Polishing on Tuesday, November 17 at 10:00 AM, 1:00 PM, and 4:00 PM. Would any of those times work for you? If you'd like to book, could you please share your name and phone number?",
+      "latency_ms": 53995.91,
+      "timestamp": "2026-11-16T11:40:14.581784+00:00"
+    },
+    {
+      "turn_index": 79,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I apologize, but our voice assistant is currently experiencing technical difficulties. May I take down your name and callback number so someone can assist you directly?",
+      "latency_ms": 3003.36,
+      "timestamp": "2026-11-16T11:40:19.708526+00:00"
+    },
+    {
+      "turn_index": 80,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I apologize, but our voice assistant is currently experiencing technical difficulties. May I take down your name and callback number so someone can assist you directly?",
+      "latency_ms": 2400.71,
+      "timestamp": "2026-11-16T11:40:24.225810+00:00"
+    },
+    {
+      "turn_index": 81,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "speaker": "agent",
+      "text": "I apologize, but our voice assistant is currently experiencing technical difficulties. May I take down your name and callback number so someone can assist you directly?",
+      "latency_ms": 1986.64,
+      "timestamp": "2026-11-16T11:40:28.432703+00:00"
+    }
+  ]
+}

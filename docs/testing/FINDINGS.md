@@ -11,7 +11,7 @@ This document records bugs, gaps, inconsistencies, or unverified items identifie
 - **Severity:** Low (Privacy / Pre-production Hygiene)
 - **Status:** **FIXED**
 - **What was wrong:** The login page rendered a quick helper button with the label `"Autofill dental.owner@test.com"` which pre-populated personal email credentials.
-- **Resolution:** Replaced with generic demo credentials for the seeded BrightSmile owner: `dental.owner@test.com` / `password123` with the label `"Autofill Demo (BrightSmile Owner)"`.
+- **Resolution:** Replaced with generic demo credentials for the seeded clinic owner: `aarav.owner@test.com` / `Password123!` with the label `"Autofill Demo (Aarav Clinic Owner)"`.
 
 ---
 
@@ -116,7 +116,7 @@ This document records bugs, gaps, inconsistencies, or unverified items identifie
 - **What was wrong:** The signup E2E and formatApiError tests resided in ad-hoc test scripts outside the frontend project root, and the E2E signup test left orphaned test businesses and accounts in the development database.
 - **Resolution:**
   1. **Standardized Test Organization:** Integrated unit and E2E suites into `web/tests/unit/format-api-error.test.js` and `web/tests/e2e/signup.test.js`.
-  2. **Automated Self-Cleaning Teardown:** Built an automated post-test cleanup routine into `signup.test.js` using Python database commands to purge the newly created test tenant immediately after asserting navigation to `/onboarding`. Verified database business count remains exactly 2 (`BrightSmile Family Dental` and `Luxe Glow Salon & Spa`).
+  2. **Automated Self-Cleaning Teardown:** Built an automated post-test cleanup routine into `signup.test.js` using Python database commands to purge the newly created test tenant immediately after asserting navigation to `/onboarding`. Verified database business count remains exactly 2 (`Aarav Health & Dental Clinic` and `Luxe Glow Salon & Spa`).
   3. **NPM Test Automation:** Configured `test:unit`, `test:e2e`, and `test` scripts in `web/package.json` (`npm --prefix web test`), achieving 100% test pass rate.
 
 ---
@@ -157,7 +157,7 @@ This document records bugs, gaps, inconsistencies, or unverified items identifie
   - **Docker Image:** `callwise-agent:latest`
   - **Image Content Size:** `3.4 GB` (`9.97 GB` virtual uncompressed disk usage including PyTorch, HuggingFace embeddings, Silero VAD models)
   - **Initial Build Duration:** ~16 minutes (downloading PyTorch & full ML dependencies over network); layer export & packaging completed in 5m 46s.
-  - **LiveKit Cloud Verification:** Container started in `dev` mode for BrightSmile Family Dental (`11111111-1111-1111-1111-111111111111`), registered with LiveKit Cloud worker pool (`AW_KDYFNncwXhWg` on `wss://callwise-0zxd56h9.livekit.cloud`), and is actively waiting for voice session jobs.
+  - **LiveKit Cloud Verification:** Container started in multi-tenant mode, registered with LiveKit Cloud worker pool (`AW_KDYFNncwXhWg` on `wss://callwise-0zxd56h9.livekit.cloud`), and is actively waiting for voice session jobs.
 
 ---
 

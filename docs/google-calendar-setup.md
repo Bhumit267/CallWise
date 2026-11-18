@@ -48,7 +48,7 @@ When you are ready to connect Callwise to a live Google Calendar, follow these s
 
 ### Step 4: Share Your Google Calendar with the Service Account
 1. Open [Google Calendar](https://calendar.google.com/).
-2. Under "My calendars" on the left, find the calendar you want Callwise to manage (or create a dedicated calendar, e.g. "BrightSmile Appointments").
+2. Under "My calendars" on the left, find the calendar you want Callwise to manage (or create a dedicated calendar, e.g. "Clinic Appointments").
 3. Hover over the calendar name, click the **three dots** (Options), and select **Settings and sharing**.
 4. Scroll down to **Share with specific people or groups** and click **Add people and groups**.
 5. Paste the **Service Account Email** address (e.g. `callwise-calendar-sync@<project-id>.iam.gserviceaccount.com`).

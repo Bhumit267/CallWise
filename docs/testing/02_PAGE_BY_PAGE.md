@@ -43,7 +43,7 @@ Seeded Test Users (Aarav Health & Dental Clinic):
 6. **Positive Test (Valid Login):** Enter `aarav.owner@test.com` and `Password123!`. Click **"Sign in"**.
    - **Expected result:** Loading spinner appears briefly, session cookie is established, and user is redirected to `/inbox`.
 7. **Demo Autofill Inspection:**
-   - **Expected result:** A production-ready login page must use generic demo credentials.
+   - **Expected result:** A standard login page must use generic demo credentials.
    - **Known deviation (FINDING-01):** Page currently displays a helper button *"Autofill dental.owner@test.com"* containing a personal email address.
 
 ---

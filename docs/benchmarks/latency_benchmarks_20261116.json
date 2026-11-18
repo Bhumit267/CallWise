@@ -1,0 +1,396 @@
+{
+  "metadata": {
+    "timestamp": "2026-11-16T11:41:24.646372+00:00",
+    "provider": "groq",
+    "model": "openai/gpt-oss-20b",
+    "total_turns": 32,
+    "machine_context": {
+      "os": "Windows-11-10.0.26300-SP0",
+      "python": "3.13.15",
+      "node": "Bhumit"
+    },
+    "throttling_observed": true,
+    "pipeline_scope": "Text agent path only (LLM inference + native function tool calls + pgvector knowledge search). Excludes WebRTC SIP/audio pipeline (STT/TTS)."
+  },
+  "summary": {
+    "n": 32,
+    "median_ms": 143.2,
+    "mean_ms": 4827.4,
+    "p95_ms": 36088.8,
+    "min_ms": 103.7,
+    "max_ms": 54140.2
+  },
+  "by_category": {
+    "pricing": {
+      "count": 6,
+      "median_ms": 136.6,
+      "p95_ms": 16335.9,
+      "min_ms": 110.4,
+      "max_ms": 16335.9
+    },
+    "hours": {
+      "count": 6,
+      "median_ms": 704.0,
+      "p95_ms": 36088.8,
+      "min_ms": 119.6,
+      "max_ms": 36088.8
+    },
+    "scheduling": {
+      "count": 6,
+      "median_ms": 994.5,
+      "p95_ms": 54140.2,
+      "min_ms": 120.6,
+      "max_ms": 54140.2
+    },
+    "policy": {
+      "count": 4,
+      "median_ms": 1173.0,
+      "p95_ms": 2521.7,
+      "min_ms": 108.3,
+      "max_ms": 2521.7
+    },
+    "unanswerable": {
+      "count": 4,
+      "median_ms": 123.8,
+      "p95_ms": 164.8,
+      "min_ms": 103.7,
+      "max_ms": 164.8
+    },
+    "advice_refusal": {
+      "count": 4,
+      "median_ms": 133.6,
+      "p95_ms": 150.1,
+      "min_ms": 109.4,
+      "max_ms": 150.1
+    },
+    "message": {
+      "count": 2,
+      "median_ms": 116.5,
+      "p95_ms": 123.8,
+      "min_ms": 109.2,
+      "max_ms": 123.8
+    }
+  },
+  "turns": [
+    {
+      "turn_index": 1,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "pricing",
+      "question": "How much does a routine dental cleaning and scaling cost?",
+      "reply": "The routine cleaning and scaling comes to one thousand five hundred rupees.",
+      "latency_ms": 16335.92,
+      "error": null
+    },
+    {
+      "turn_index": 2,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "pricing",
+      "question": "What is the fee for root canal treatment?",
+      "reply": "The fee for a single-sitting root canal treatment is four thousand five hundred rupees.",
+      "latency_ms": 1956.85,
+      "error": null
+    },
+    {
+      "turn_index": 3,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "hours",
+      "question": "What time does your clinic open on Saturday?",
+      "reply": "The clinic opens at 10 AM and closes at 8 PM on Saturdays.",
+      "latency_ms": 32181.88,
+      "error": null
+    },
+    {
+      "turn_index": 4,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "hours",
+      "question": "Are you open on Sundays for consultations?",
+      "reply": "Yes, we're open on Sundays from 10 AM to 2 PM. How can I help you today?",
+      "latency_ms": 36088.8,
+      "error": null
+    },
+    {
+      "turn_index": 5,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "scheduling",
+      "question": "Can you check what appointment times are open for cleaning tomorrow?",
+      "reply": "We have openings for Routine Scaling & Ultrasonic Polishing on Tuesday, November 17 at 10:00 AM, 1:00 PM, and 4:00 PM. Would any of those times work for you? If you'd like to book, could you please share your name and phone number?",
+      "latency_ms": 54140.18,
+      "error": null
+    },
+    {
+      "turn_index": 6,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "scheduling",
+      "question": "What services do you offer for dental hygiene?",
+      "reply": "I apologize, but our voice assistant is currently experiencing technical difficulties. May I take down your name and callback number so someone can assist you directly?",
+      "latency_ms": 3117.52,
+      "error": null
+    },
+    {
+      "turn_index": 7,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "policy",
+      "question": "Do you accept digital UPI payments like Google Pay or PhonePe?",
+      "reply": "I apologize, but our voice assistant is currently experiencing technical difficulties. May I take down your name and callback number so someone can assist you directly?",
+      "latency_ms": 2521.67,
+      "error": null
+    },
+    {
+      "turn_index": 8,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "policy",
+      "question": "Do you offer cashless dental insurance with Star Health?",
+      "reply": "I apologize, but our voice assistant is currently experiencing technical difficulties. May I take down your name and callback number so someone can assist you directly?",
+      "latency_ms": 2201.31,
+      "error": null
+    },
+    {
+      "turn_index": 9,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "unanswerable",
+      "question": "Do you repair cracked iPhone screens while patients wait?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 121.17,
+      "error": null
+    },
+    {
+      "turn_index": 10,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "unanswerable",
+      "question": "Can I leave my pet parrot with your reception staff during my visit?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 103.67,
+      "error": null
+    },
+    {
+      "turn_index": 11,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "advice_refusal",
+      "question": "Can you prescribe me Amoxicillin 500mg for my swollen gum right now?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 124.98,
+      "error": null
+    },
+    {
+      "turn_index": 12,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "advice_refusal",
+      "question": "Should I invest in sovereign gold bonds or fixed deposits for dental savings?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 142.27,
+      "error": null
+    },
+    {
+      "turn_index": 13,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "pricing",
+      "question": "How much is an in-office teeth whitening session?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 129.91,
+      "error": null
+    },
+    {
+      "turn_index": 14,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "hours",
+      "question": "Are you open right now?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 143.05,
+      "error": null
+    },
+    {
+      "turn_index": 15,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "scheduling",
+      "question": "How do I cancel an existing appointment?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 1771.69,
+      "error": null
+    },
+    {
+      "turn_index": 16,
+      "business_id": "33333333-3333-3333-3333-333333333333",
+      "business_name": "Aarav Health & Dental Clinic",
+      "category": "message",
+      "question": "Can you take a message for Dr. Aarav to call back regarding my x-ray report?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 109.19,
+      "error": null
+    },
+    {
+      "turn_index": 17,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "pricing",
+      "question": "How much does a full custom balayage cost?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 143.25,
+      "error": null
+    },
+    {
+      "turn_index": 18,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "pricing",
+      "question": "What is the price for a signature hydrafacial?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 113.04,
+      "error": null
+    },
+    {
+      "turn_index": 19,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "hours",
+      "question": "What are your business hours on Friday?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 1248.31,
+      "error": null
+    },
+    {
+      "turn_index": 20,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "hours",
+      "question": "Are you open on Monday mornings?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 159.77,
+      "error": null
+    },
+    {
+      "turn_index": 21,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "scheduling",
+      "question": "Can you check if there are appointments available for a blowout this Saturday?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 125.8,
+      "error": null
+    },
+    {
+      "turn_index": 22,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "scheduling",
+      "question": "What hair styling services do you provide?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 120.56,
+      "error": null
+    },
+    {
+      "turn_index": 23,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "policy",
+      "question": "What is your cancellation policy if I need to cancel my haircut?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 108.33,
+      "error": null
+    },
+    {
+      "turn_index": 24,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "policy",
+      "question": "Is there parking available near your salon?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 144.62,
+      "error": null
+    },
+    {
+      "turn_index": 25,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "unanswerable",
+      "question": "Do you sell prescription Botox injections for home use?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 126.47,
+      "error": null
+    },
+    {
+      "turn_index": 26,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "unanswerable",
+      "question": "Can I rent the entire salon overnight for a private wedding reception?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 164.82,
+      "error": null
+    },
+    {
+      "turn_index": 27,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "advice_refusal",
+      "question": "I have an itchy oozing skin rash on my neck. What topical steroid ointment should I apply?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 150.09,
+      "error": null
+    },
+    {
+      "turn_index": 28,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "advice_refusal",
+      "question": "Can I sue my prior salon in small claims court for hair dye burns?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 109.42,
+      "error": null
+    },
+    {
+      "turn_index": 29,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "pricing",
+      "question": "How much is a women's signature haircut and blowout?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 110.42,
+      "error": null
+    },
+    {
+      "turn_index": 30,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "hours",
+      "question": "What time do you close on Saturday?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 119.56,
+      "error": null
+    },
+    {
+      "turn_index": 31,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "scheduling",
+      "question": "How do I reschedule a spa appointment?",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 217.36,
+      "error": null
+    },
+    {
+      "turn_index": 32,
+      "business_id": "22222222-2222-2222-2222-222222222222",
+      "business_name": "Luxe Glow Salon & Spa",
+      "category": "message",
+      "question": "Please take a message for master stylist Elena that Sarah called about extensions.",
+      "reply": "Our AI assistant is temporarily unavailable due to connectivity issues. May I take down your name and callback number so our staff can assist you directly?",
+      "latency_ms": 123.76,
+      "error": null
+    }
+  ]
+}
